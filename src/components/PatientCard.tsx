@@ -27,6 +27,17 @@ function StatusBadge({ status }: { status: Patient["status"] }) {
   return null;
 }
 
+const WARNING_FINDINGS = new Set([
+  "Chipped tooth",
+  "Non-restorable #18",
+  "Bone loss detected",
+  "Periapical radiolucency",
+]);
+
+function isWarningFinding(finding: string): boolean {
+  return WARNING_FINDINGS.has(finding);
+}
+
 function AiFindings({
   findings,
   maxVisible = 2,
@@ -34,7 +45,10 @@ function AiFindings({
   findings: string[];
   maxVisible?: number;
 }) {
-  const visible = findings.slice(0, maxVisible);
+  const sorted = [...findings].sort(
+    (a, b) => (isWarningFinding(b) ? 1 : 0) - (isWarningFinding(a) ? 1 : 0)
+  );
+  const visible = sorted.slice(0, maxVisible);
   const overflow = findings.length - maxVisible;
 
   return (
@@ -43,8 +57,16 @@ function AiFindings({
         <Badge
           key={finding}
           variant="secondary"
-          className="text-[11px] font-normal px-1.5 py-0 h-5 bg-gray-100 text-gray-600 hover:bg-gray-200"
+          className={cn(
+            "text-[11px] font-normal px-1.5 py-0 h-5",
+            isWarningFinding(finding)
+              ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 font-medium"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          )}
         >
+          {isWarningFinding(finding) && (
+            <i className="fa-solid fa-triangle-exclamation text-[9px] text-amber-500" />
+          )}
           {finding}
         </Badge>
       ))}
