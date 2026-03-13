@@ -92,9 +92,9 @@ function PerioIcon({ className }: { className?: string }) {
 }
 
 const CTA_BUTTONS: { icon?: string; label: string; customIcon?: React.ReactNode }[] = [
-  { icon: "fa-regular fa-image", label: "Images" },
-  { icon: "fa-regular fa-microphone", label: "Note" },
-  { label: "Perio", customIcon: <PerioIcon className="text-[16px]" /> },
+  { icon: "fa-regular fa-image", label: "View Images" },
+  { icon: "fa-regular fa-microphone", label: "Start Note" },
+  { label: "Start Perio", customIcon: <PerioIcon className="text-[16px]" /> },
 ];
 
 export default function PatientCard({
@@ -224,14 +224,14 @@ export default function PatientCard({
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 mt-2">
+        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
           {CTA_BUTTONS.map(({ icon, label, customIcon }) => (
             <button
               key={label}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[13px] font-medium bg-[#EEF4FF] text-[#5C7890] hover:bg-[#DBE7FE] hover:text-deep-teal active:bg-[#BFD6FE] transition-colors"
+              className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] font-medium bg-[#EEF4FF] text-[#5C7890] hover:bg-[#DBE7FE] hover:text-deep-teal active:bg-[#BFD6FE] transition-colors whitespace-nowrap"
             >
-              {customIcon ?? <i className={cn(icon, "text-[13px]")} />}
+              {customIcon ?? <i className={cn(icon, "text-[12px]")} />}
               {label}
             </button>
           ))}
