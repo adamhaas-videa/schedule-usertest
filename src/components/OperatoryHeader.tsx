@@ -16,7 +16,7 @@ export default function OperatoryHeader({
   return (
     <div
       className={cn(
-        "px-4 py-3 flex items-center justify-between bg-[#E8F0F4]",
+        "px-4 py-2.5 flex items-center justify-between",
         className
       )}
     >

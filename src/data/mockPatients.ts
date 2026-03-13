@@ -46,9 +46,10 @@ export function computeAge(dob: string): number {
 
 export const mockPatients: Patient[] = [
   // ─── Operatory 1 ───────────────────────────────────────────
-  // 8:00–9:30  Maria Garcia        | 9:30–10:00 OPEN
-  // 10:00–11:30 James Wilson       | 11:30–12:30 Helen Foster
-  // 12:30–1:00 OPEN                | 1:00–2:00 Sarah Chen
+  // 8:00–9:00  Maria Garcia        | 9:00–10:00 OPEN
+  // 10:00–11:00 James Wilson       | 11:00–11:30 OPEN
+  // 11:30–12:30 Helen Foster       | 12:30–1:00 OPEN
+  // 1:00–2:00 Sarah Chen
   // 2:00–3:00  Thomas Rivera       | 3:00–4:00 Diane Patel
   // 4:00–5:00  Raymond Scott
   {
@@ -62,7 +63,7 @@ export const mockPatients: Patient[] = [
     status: "in-chair",
     aiFindings: ["Restorative work needed", "Possible fracture line"],
     appointmentDate: "2026-03-12",
-    durationMinutes: 90,
+    durationMinutes: 60,
   },
   {
     id: "p2",
@@ -74,7 +75,7 @@ export const mockPatients: Patient[] = [
     status: "upcoming",
     aiFindings: ["Bone loss detected", "Periapical radiolucency", "Restorative work needed", "Calculus buildup"],
     appointmentDate: "2026-03-12",
-    durationMinutes: 90,
+    durationMinutes: 60,
   },
   {
     id: "p13",
@@ -96,6 +97,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "1:00 PM",
     operatory: 1,
     status: "upcoming",
+    aiFindings: ["Caries detected #12"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -132,6 +134,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:00 PM",
     operatory: 1,
     status: "upcoming",
+    aiFindings: ["Calculus buildup", "Gingival inflammation"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -175,6 +178,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "10:30 AM",
     operatory: 2,
     status: "upcoming",
+    aiFindings: ["Early decalcification noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
@@ -210,6 +214,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "1:00 PM",
     operatory: 2,
     status: "upcoming",
+    aiFindings: ["Marginal fit verified"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -221,6 +226,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "2:00 PM",
     operatory: 2,
     status: "upcoming",
+    aiFindings: ["Enamel erosion detected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -244,13 +250,14 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:30 PM",
     operatory: 2,
     status: "upcoming",
+    aiFindings: ["Healing within normal limits"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
 
   // ─── Operatory 3 ───────────────────────────────────────────
-  // 8:00–9:00  Frank Robinson      | 9:00–9:45 David Martinez
-  // 9:45–10:30 OPEN                | 10:30–11:30 Amanda Wright
+  // 8:00–9:00  Frank Robinson      | 9:00–10:00 David Martinez
+  // 10:00–10:30 OPEN               | 10:30–11:30 Amanda Wright
   // 11:30–12:30 Catherine Young    | 12:30–1:30 Joseph Harris
   // 1:30–2:00  Kevin Nguyen        | 2:00–3:00 Rachel Morgan
   // 3:00–3:30 OPEN                 | 3:30–4:30 Daniel Cooper
@@ -263,6 +270,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "8:00 AM",
     operatory: 3,
     status: "completed",
+    aiFindings: ["Calculus buildup"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -276,7 +284,7 @@ export const mockPatients: Patient[] = [
     status: "in-chair",
     aiFindings: ["Possible fracture line"],
     appointmentDate: "2026-03-12",
-    durationMinutes: 45,
+    durationMinutes: 60,
   },
   {
     id: "p9",
@@ -359,13 +367,15 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:30 PM",
     operatory: 3,
     status: "upcoming",
+    aiFindings: ["Impacted third molars", "Caries detected #14"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
 
   // ─── Operatory 4 ───────────────────────────────────────────
   // 8:00–8:30  Patricia Davis      | 8:30–9:00 OPEN
-  // 9:00–10:30 Christopher Lee     | 10:30–11:30 Brian Murphy
+  // 9:00–10:00 Christopher Lee     | 10:00–10:30 OPEN
+  // 10:30–11:30 Brian Murphy
   // 11:30–12:00 Jennifer Reed      | 12:00–1:00 William Carter
   // 1:00–1:30 OPEN                 | 1:30–2:30 Stephanie Brooks
   // 2:30–3:30  Andrew Torres       | 3:30–4:00 OPEN
@@ -392,7 +402,7 @@ export const mockPatients: Patient[] = [
     status: "in-chair",
     aiFindings: ["Restorative work needed", "Enamel erosion detected"],
     appointmentDate: "2026-03-12",
-    durationMinutes: 90,
+    durationMinutes: 60,
   },
   {
     id: "p28",
@@ -414,6 +424,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "11:30 AM",
     operatory: 4,
     status: "upcoming",
+    aiFindings: ["TMJ irregularity noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
@@ -463,6 +474,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:00 PM",
     operatory: 4,
     status: "upcoming",
+    aiFindings: ["Mild gingivitis noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface PatientCardProps {
   patient: Patient;
-  variant: "full" | "compact";
+  variant: "full" | "compact" | "calendar";
   isPeek?: boolean;
   privacyMode?: boolean;
   onClick: (patient: Patient) => void;
@@ -88,7 +88,52 @@ export default function PatientCard({
       ? "border-l-green-600"
       : patient.status === "completed"
         ? "border-l-gray-300"
-        : "border-l-gray-200";
+        : "border-l-gray-400";
+
+  if (variant === "calendar") {
+    return (
+      <Card
+        className={cn(
+          "border-l-[4px] px-3 py-2.5 cursor-pointer hover:shadow-lg transition-all rounded-[10px] shadow-base h-full overflow-hidden flex flex-col",
+          borderColor,
+          patient.status === "in-chair" && "bg-white",
+          patient.status === "completed" && "opacity-50"
+        )}
+        onClick={() => onClick(patient)}
+      >
+        <div className="min-h-0">
+          <div className="space-y-0.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className={cn("text-[13px] font-semibold text-gray-950 truncate", nameClass)}>
+                {patient.name}
+              </div>
+              <StatusBadge status={patient.status} />
+            </div>
+            <span className="text-[12px] text-muted-foreground tabular-nums block">
+              {patient.appointmentTime}
+            </span>
+          </div>
+          {patient.aiFindings && patient.aiFindings.length > 0 && (
+            <div className="mt-2.5">
+              <AiFindings findings={patient.aiFindings} maxVisible={2} />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 mt-auto pt-1.5">
+          {CTA_BUTTONS.map(({ icon, label, customIcon }) => (
+            <button
+              key={label}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 h-6 px-1.5 rounded-md text-[12px] font-medium bg-[#EEF4FF] text-[#5C7890] hover:bg-[#DBE7FE] hover:text-deep-teal active:bg-[#BFD6FE] transition-colors"
+            >
+              {customIcon ?? <i className={cn(icon, "text-[12px]")} />}
+              {label}
+            </button>
+          ))}
+        </div>
+      </Card>
+    );
+  }
 
   if (variant === "compact") {
     return (
@@ -138,42 +183,31 @@ export default function PatientCard({
       )}
       onClick={() => onClick(patient)}
     >
-      <div className="space-y-2">
-        {/* Row 1: Name + Status badge */}
-        <div className="flex items-start justify-between gap-2">
-          <div className={cn("text-sm font-semibold text-gray-950", nameClass)}>
-            {patient.name}
+      <div>
+        <div className="space-y-0.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className={cn("text-sm font-semibold text-gray-950", nameClass)}>
+              {patient.name}
+            </div>
+            <StatusBadge status={patient.status} />
           </div>
-          <StatusBadge status={patient.status} />
-        </div>
-
-        {/* Row 2: DOB + Time */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[13px] text-muted-foreground">
-            {patient.dob}
-          </span>
-          <span className="text-[13px] text-muted-foreground tabular-nums">
+          <span className="text-[13px] text-muted-foreground tabular-nums block">
             {patient.appointmentTime}
           </span>
         </div>
 
-        {/* Row 3: Procedure */}
-        <div className="text-[13px] font-semibold text-gray-700">
-          {patient.procedure}
-        </div>
-
-        {/* AI Findings */}
         {patient.aiFindings && patient.aiFindings.length > 0 && (
-          <AiFindings findings={patient.aiFindings} />
+          <div className="mt-3">
+            <AiFindings findings={patient.aiFindings} />
+          </div>
         )}
 
-        {/* CTA Buttons - always visible */}
-        <div className="flex items-center gap-1.5 pt-1">
+        <div className="flex items-center gap-1.5 mt-2">
           {CTA_BUTTONS.map(({ icon, label, customIcon }) => (
             <button
               key={label}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[13px] font-medium text-[#5C7890] hover:bg-[#EEF4FF] hover:text-deep-teal active:bg-[#E0EBFF] transition-colors"
+              className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[13px] font-medium bg-[#EEF4FF] text-[#5C7890] hover:bg-[#DBE7FE] hover:text-deep-teal active:bg-[#BFD6FE] transition-colors"
             >
               {customIcon ?? <i className={cn(icon, "text-[13px]")} />}
               {label}

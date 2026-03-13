@@ -14,7 +14,7 @@ export default function PrivacyToggle({ enabled, onToggle }: PrivacyToggleProps)
       onClick={() => onToggle(!enabled)}
       className={cn(
         "relative inline-flex h-6 w-[52px] shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer",
-        enabled ? "bg-primary" : "bg-input"
+        enabled ? "bg-deep-teal" : "bg-input"
       )}
     >
       <span
@@ -27,7 +27,7 @@ export default function PrivacyToggle({ enabled, onToggle }: PrivacyToggleProps)
         <i
           className={cn(
             "text-[9px] transition-colors",
-            enabled ? "fa-solid fa-eye-slash text-primary" : "fa-solid fa-eye text-muted-foreground"
+            enabled ? "fa-solid fa-eye-slash text-deep-teal" : "fa-solid fa-eye text-muted-foreground"
           )}
         />
       </span>

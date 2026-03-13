@@ -61,8 +61,8 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
     >
       {/* Logo */}
       <div className={cn(
-        "flex items-center shrink-0 h-14",
-        expanded ? "px-4" : "justify-center px-3 py-3 h-[73px]"
+        "flex items-center shrink-0 h-[73px] px-2",
+        expanded ? "px-4" : "justify-center"
       )}>
         {expanded ? (
           <img src={videaLogoHoriz} alt="Videa" className="h-8" />
@@ -72,29 +72,28 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
       </div>
 
       {/* Nav items */}
-      <div className={cn(
-        "flex-1 flex flex-col pt-6",
-        expanded ? "px-3" : "items-center px-2.5"
-      )}>
+      <div className="flex-1 flex flex-col pt-6 px-2">
         <div className="flex flex-col gap-1">
           {navItems.map((item) => (
             <button
               key={item.label}
               className={cn(
-                "flex items-center rounded-lg transition-colors",
-                expanded
-                  ? "gap-3 px-3 py-2 w-full"
-                  : "justify-center w-9 h-9",
+                "group/nav relative flex items-center rounded-lg transition-colors",
                 item.active ? "bg-gray-200" : "hover:bg-gray-100"
               )}
-              title={expanded ? undefined : item.label}
             >
-              <NavIcon item={item} />
-              {expanded && (
+              <div className="flex items-center justify-center w-10 h-10 shrink-0">
+                <NavIcon item={item} />
+              </div>
+              {expanded ? (
                 <span
-                  className="text-sm font-medium whitespace-nowrap"
+                  className="text-sm font-medium whitespace-nowrap pr-3"
                   style={{ color: item.active ? "#123C4D" : INACTIVE_COLOR }}
                 >
+                  {item.label}
+                </span>
+              ) : (
+                <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none group-hover/nav:opacity-100 transition-opacity duration-100 shadow-lg">
                   {item.label}
                 </span>
               )}
@@ -104,11 +103,13 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
       </div>
 
       {/* Expand/Collapse */}
-      <div className={cn("p-4 flex", expanded ? "justify-end" : "justify-start")}>
+      <div className="px-2 pb-4 flex">
         <button
           onClick={onToggle}
-          className="flex items-center justify-center w-5 h-5"
-          title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+          className={cn(
+            "group/nav relative flex items-center justify-center w-10 h-10 shrink-0",
+            expanded && "ml-auto w-auto px-2"
+          )}
         >
           <i
             className={cn(
@@ -116,6 +117,11 @@ export default function Sidebar({ expanded, onToggle }: SidebarProps) {
               expanded ? "fa-square-chevron-left" : "fa-square-chevron-right"
             )}
           />
+          {!expanded && (
+            <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none group-hover/nav:opacity-100 transition-opacity duration-100 shadow-lg">
+              Expand sidebar
+            </span>
+          )}
         </button>
       </div>
     </div>

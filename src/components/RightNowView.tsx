@@ -13,9 +13,12 @@ interface RightNowViewProps {
 }
 
 const OPERATORIES = [1, 2, 3, 4];
-const WINDOW_HOURS = 3;
+const WINDOW_HOURS = 1;
 const MIN_HOUR = 7;
 const MAX_HOUR = 19;
+const PEEK_HEIGHT = 56;
+const VIEWPORT_MASK =
+  "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)";
 
 type TimeSlot =
   | { type: "patient"; patient: Patient }
@@ -58,6 +61,75 @@ function getVisibleSlots(
   }
 
   return slots;
+}
+
+function getPeekPatients(
+  patients: Patient[],
+  windowStart: number,
+  windowEnd: number,
+  direction: "before" | "after"
+): Patient[] {
+  const peekStart = direction === "before" ? windowStart - 60 : windowEnd;
+  const peekEnd = direction === "before" ? windowStart : windowEnd + 60;
+
+  return patients
+    .filter((p) => {
+      const start = timeToMinutes(p.appointmentTime);
+      const end = start + p.durationMinutes;
+      const overlapsMain = start < windowEnd && end > windowStart;
+      const overlapsPeek = start < peekEnd && end > peekStart;
+      return overlapsPeek && !overlapsMain;
+    })
+    .sort((a, b) => {
+      const aStart = timeToMinutes(a.appointmentTime);
+      const bStart = timeToMinutes(b.appointmentTime);
+      return direction === "before" ? bStart - aStart : aStart - bStart;
+    });
+}
+
+function PeekZone({
+  patients,
+  direction,
+  privacyMode,
+}: {
+  patients: Patient[];
+  direction: "top" | "bottom";
+  privacyMode: boolean;
+}) {
+  const isTop = direction === "top";
+  const maskGradient = isTop
+    ? "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 100%)"
+    : "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)";
+
+  return (
+    <div
+      className="shrink-0 overflow-hidden pointer-events-none relative"
+      style={{ height: PEEK_HEIGHT }}
+    >
+      {patients.length > 0 && (
+        <div
+          className={cn(
+            "px-2 blur-[3px]",
+            isTop && "absolute inset-x-0 bottom-0"
+          )}
+          style={{
+            maskImage: maskGradient,
+            WebkitMaskImage: maskGradient,
+          }}
+        >
+          {patients.slice(0, 1).map((p) => (
+            <PatientCard
+              key={p.id}
+              patient={p}
+              variant="full"
+              privacyMode={privacyMode}
+              onClick={() => {}}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function formatWindowHour(hour: number): string {
@@ -125,51 +197,83 @@ export default function RightNowView({
         </div>
       </div>
 
-      {/* Operatory columns */}
+      {/* Operatory columns — slot-machine viewport */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
         {OPERATORIES.map((op) => {
           const opPatients = patients.filter((p) => p.operatory === op);
-          const occupied = opPatients.some((p) => p.status === "in-chair");
           const slots = getVisibleSlots(opPatients, windowStart, windowEnd);
+          const hasPatientInWindow = slots.some((s) => s.type === "patient");
+          const peekBefore = getPeekPatients(
+            opPatients,
+            windowStart,
+            windowEnd,
+            "before"
+          );
+          const peekAfter = getPeekPatients(
+            opPatients,
+            windowStart,
+            windowEnd,
+            "after"
+          );
 
           return (
             <div
               key={op}
-              className="flex flex-col rounded-xl overflow-hidden border border-slate-200 bg-white max-h-[calc(100vh-200px)]"
+              className="flex flex-col rounded-xl overflow-hidden border border-slate-200 bg-slate-100/60 max-h-[calc(100vh-200px)]"
             >
-              <OperatoryHeader operatory={op} occupied={occupied} />
+              <OperatoryHeader operatory={op} occupied={hasPatientInWindow} />
 
-              {/* Slots */}
-              <div className="p-2 space-y-2 overflow-y-auto">
-                {slots.map((slot, i) => {
-                  if (slot.type === "open") {
+              <div className="flex flex-col min-h-0">
+                <PeekZone
+                  patients={peekBefore}
+                  direction="top"
+                  privacyMode={privacyMode}
+                />
+
+                {/* Clear viewport window */}
+                <div
+                  className="bg-white px-3 py-4 space-y-3 overflow-y-auto flex-1 min-h-0"
+                  style={{
+                    maskImage: VIEWPORT_MASK,
+                    WebkitMaskImage: VIEWPORT_MASK,
+                  }}
+                >
+                  {slots.map((slot) => {
+                    if (slot.type === "open") {
+                      return (
+                        <div
+                          key={`open-${slot.startTime}`}
+                          className="px-3 py-2.5 rounded-lg border border-dashed border-slate-200 text-xs text-muted-foreground"
+                        >
+                          {minutesToTime(slot.startTime)} &mdash; Open
+                        </div>
+                      );
+                    }
                     return (
-                      <div
-                        key={`open-${slot.startTime}`}
-                        className="px-3 py-2.5 rounded-lg border border-dashed border-slate-200 text-xs text-muted-foreground"
-                      >
-                        {minutesToTime(slot.startTime)} &mdash; Open
-                      </div>
+                      <PatientCard
+                        key={slot.patient.id}
+                        patient={slot.patient}
+                        variant="full"
+                        privacyMode={privacyMode}
+                        onClick={onSelectPatient}
+                      />
                     );
-                  }
-                  return (
-                    <PatientCard
-                      key={slot.patient.id}
-                      patient={slot.patient}
-                      variant="full"
-                      privacyMode={privacyMode}
-                      onClick={onSelectPatient}
-                    />
-                  );
-                })}
+                  })}
 
-                {slots.length === 0 && (
-                  <div className="flex items-center justify-center h-full">
-                    <span className="text-sm text-muted-foreground">
-                      No appointments
-                    </span>
-                  </div>
-                )}
+                  {slots.length === 0 && (
+                    <div className="flex items-center justify-center py-8">
+                      <span className="text-sm text-muted-foreground">
+                        No appointments
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <PeekZone
+                  patients={peekAfter}
+                  direction="bottom"
+                  privacyMode={privacyMode}
+                />
               </div>
             </div>
           );
