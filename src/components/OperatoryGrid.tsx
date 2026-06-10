@@ -10,7 +10,7 @@ import {
   END_MINUTES,
   minutesToY,
   formatHour,
-  getNowMinutes,
+  getSimulatedNowMinutes,
 } from "@/lib/timeline";
 
 interface OperatoryGridProps {
@@ -31,10 +31,13 @@ export default function OperatoryGrid({
   onSelectPatient,
   scrollRef,
 }: OperatoryGridProps) {
-  const [nowMinutes, setNowMinutes] = useState(getNowMinutes);
+  const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
 
   useEffect(() => {
-    const interval = setInterval(() => setNowMinutes(getNowMinutes()), 60_000);
+    const interval = setInterval(
+      () => setNowMinutes(getSimulatedNowMinutes()),
+      60_000
+    );
     return () => clearInterval(interval);
   }, []);
 

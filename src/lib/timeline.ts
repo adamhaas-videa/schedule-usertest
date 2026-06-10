@@ -24,11 +24,20 @@ export function formatHour(hour: number): string {
   return `${h} ${meridiem}`;
 }
 
+// Simulated "current time" for the demo. Anchored mid-morning so the day
+// shows a healthy mix of completed, in-progress, and upcoming appointments.
+// Change this single value to advance the simulated clock.
+export const SIMULATED_NOW_MINUTES = 10 * 60 + 45; // 10:45 AM
+export const READY_FOR_CHAIR_WINDOW_MIN = 15;
+
+export function getSimulatedNowMinutes(): number {
+  return SIMULATED_NOW_MINUTES;
+}
+
 export function getNowMinutes(): number {
-  const now = new Date();
-  return now.getHours() * 60 + now.getMinutes();
+  return SIMULATED_NOW_MINUTES;
 }
 
 export function getCurrentHour(): number {
-  return 9;
+  return Math.floor(SIMULATED_NOW_MINUTES / 60);
 }

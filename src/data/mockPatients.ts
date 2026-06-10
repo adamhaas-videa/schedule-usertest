@@ -8,8 +8,10 @@ export interface Patient {
   operatory: number;
   status: "in-chair" | "upcoming" | "completed";
   aiFindings?: string[];
+  visitTags?: string[];
   appointmentDate: string;
   durationMinutes: number;
+  readyForChair?: boolean;
 }
 
 export function timeToMinutes(time: string): number {
@@ -32,6 +34,43 @@ export function minutesToTime(totalMinutes: number): string {
   return `${hours12}:${minutes.toString().padStart(2, "0")} ${meridiem}`;
 }
 
+export function derivePatientStatus(
+  patient: Patient,
+  nowMinutes: number
+): Patient["status"] {
+  const start = timeToMinutes(patient.appointmentTime);
+  const end = start + patient.durationMinutes;
+  if (nowMinutes >= end) return "completed";
+  if (nowMinutes >= start) return "in-chair";
+  return "upcoming";
+}
+
+export function deriveReadyForChair(
+  patient: Patient,
+  nowMinutes: number,
+  windowMinutes: number
+): boolean {
+  const start = timeToMinutes(patient.appointmentTime);
+  const delta = start - nowMinutes;
+  return delta > 0 && delta <= windowMinutes;
+}
+
+export function applySimulatedTime(
+  patient: Patient,
+  nowMinutes: number,
+  readyWindowMinutes: number
+): Patient {
+  const status = derivePatientStatus(patient, nowMinutes);
+  return {
+    ...patient,
+    status,
+    readyForChair:
+      status === "upcoming"
+        ? deriveReadyForChair(patient, nowMinutes, readyWindowMinutes)
+        : false,
+  };
+}
+
 export function computeAge(dob: string): number {
   const [month, day, year] = dob.split("/").map(Number);
   const birth = new Date(year, month - 1, day);
@@ -46,25 +85,11 @@ export function computeAge(dob: string): number {
 
 export const mockPatients: Patient[] = [
   // ─── Operatory 1 ───────────────────────────────────────────
-  // 8:00–9:00  Maria Garcia        | 9:00–10:00 OPEN
-  // 10:00–11:00 James Wilson       | 11:00–11:30 OPEN
-  // 11:30–12:30 Helen Foster       | 12:30–1:00 OPEN
-  // 1:00–2:00 Sarah Chen
+  // 8:00–10:00 OPEN
+  // 10:00–11:00 James Wilson       | 11:00–12:00 OPEN
+  // 12:00–1:00 Christina Mendoza   | 1:00–2:00 OPEN
   // 2:00–3:00  Thomas Rivera       | 3:00–4:00 Diane Patel
   // 4:00–5:00  Raymond Scott
-  {
-    id: "p1",
-    name: "Maria Garcia",
-    dob: "05/14/1985",
-    allergies: ["Penicillin", "Latex"],
-    procedure: "Crown Prep",
-    appointmentTime: "8:00 AM",
-    operatory: 1,
-    status: "in-chair",
-    aiFindings: ["Restorative work needed", "Chipped tooth"],
-    appointmentDate: "2026-03-12",
-    durationMinutes: 60,
-  },
   {
     id: "p2",
     name: "James Wilson",
@@ -73,31 +98,22 @@ export const mockPatients: Patient[] = [
     appointmentTime: "10:00 AM",
     operatory: 1,
     status: "upcoming",
+    visitTags: ["#19 root canal"],
     aiFindings: ["Bone loss detected", "Periapical radiolucency", "Restorative work needed", "Calculus buildup"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
   {
     id: "p13",
-    name: "Helen Foster",
+    name: "Christina Mendoza",
     dob: "09/02/1963",
     procedure: "Periodontal Maintenance",
-    appointmentTime: "11:30 AM",
+    appointmentTime: "12:00 PM",
     operatory: 1,
     status: "upcoming",
+    readyForChair: true,
+    visitTags: ["perio maintenance"],
     aiFindings: ["Calculus buildup", "Gingival recession noted"],
-    appointmentDate: "2026-03-12",
-    durationMinutes: 60,
-  },
-  {
-    id: "p3",
-    name: "Sarah Chen",
-    dob: "03/08/1998",
-    procedure: "Composite Filling",
-    appointmentTime: "1:00 PM",
-    operatory: 1,
-    status: "upcoming",
-    aiFindings: ["Caries detected #12"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
   },
@@ -110,6 +126,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "2:00 PM",
     operatory: 1,
     status: "upcoming",
+    visitTags: ["#30 implant placement"],
     aiFindings: ["Bone density adequate", "Ridge augmentation recommended"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -122,6 +139,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "3:00 PM",
     operatory: 1,
     status: "upcoming",
+    visitTags: ["SRP UR/UL"],
     aiFindings: ["Candidate for perio treatment"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -134,6 +152,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:00 PM",
     operatory: 1,
     status: "upcoming",
+    visitTags: ["prophy", "perio"],
     aiFindings: ["Calculus buildup", "Gingival inflammation"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -155,6 +174,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "8:30 AM",
     operatory: 2,
     status: "completed",
+    visitTags: ["limited exam"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
@@ -166,6 +186,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "9:30 AM",
     operatory: 2,
     status: "in-chair",
+    visitTags: ["SRP 4Q", "perio"],
     aiFindings: ["Candidate for perio treatment", "Bone loss detected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -178,6 +199,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "10:30 AM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["fluoride tx"],
     aiFindings: ["Early decalcification noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
@@ -190,6 +212,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "11:00 AM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["#4–6 bridge impression"],
     aiFindings: ["Restorative work needed"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -202,6 +225,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "12:00 PM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["#14 onlay prep"],
     aiFindings: ["Restorative work needed", "Caries detected #14"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -214,6 +238,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "1:00 PM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["#3 crown seat"],
     aiFindings: ["Marginal fit verified"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -226,6 +251,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "2:00 PM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["in-office whitening"],
     aiFindings: ["Enamel erosion detected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -238,6 +264,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "3:30 PM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["night guard impression"],
     aiFindings: ["Bruxism wear patterns"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -250,6 +277,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:30 PM",
     operatory: 2,
     status: "upcoming",
+    visitTags: ["post-op check"],
     aiFindings: ["Healing within normal limits"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
@@ -270,6 +298,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "8:00 AM",
     operatory: 3,
     status: "completed",
+    visitTags: ["prophy", "periodic exam"],
     aiFindings: ["Calculus buildup"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -282,6 +311,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "9:00 AM",
     operatory: 3,
     status: "in-chair",
+    visitTags: ["#30 extraction", "implant prep"],
     aiFindings: ["Chipped tooth"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -295,6 +325,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "10:30 AM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["implant consult"],
     aiFindings: ["Bone loss detected", "Candidate for perio treatment", "Ridge deficiency noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -307,6 +338,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "11:30 AM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["#30 root canal"],
     aiFindings: ["Periapical radiolucency", "Pulpitis suspected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -320,6 +352,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "12:30 PM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["#19 composite"],
     aiFindings: ["Caries detected #19"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -332,6 +365,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "1:30 PM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["sealants #3,14,19,30"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
@@ -343,6 +377,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "2:00 PM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["#30 crown prep"],
     aiFindings: ["Restorative work needed", "Fracture line #30"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -355,6 +390,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "3:30 PM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["perio eval", "FMX"],
     aiFindings: ["Bone loss detected", "Pocket depths 5mm+"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -367,6 +403,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:30 PM",
     operatory: 3,
     status: "upcoming",
+    visitTags: ["FMX", "new patient consult"],
     aiFindings: ["Impacted third molars", "Caries detected #14"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
@@ -388,6 +425,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "8:00 AM",
     operatory: 4,
     status: "completed",
+    visitTags: ["denture adjustment"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
   },
@@ -400,6 +438,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "9:00 AM",
     operatory: 4,
     status: "in-chair",
+    visitTags: ["#8–10 veneer prep"],
     aiFindings: ["Restorative work needed", "Enamel erosion detected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -412,6 +451,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "10:30 AM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["#3 & 4 fillings"],
     aiFindings: ["Caries detected #3"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -424,6 +464,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "11:30 AM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["occlusal adjustment"],
     aiFindings: ["TMJ irregularity noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 30,
@@ -437,6 +478,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "12:00 PM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["SRP LR/LL", "perio"],
     aiFindings: ["Candidate for perio treatment", "Calculus buildup"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -449,6 +491,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "1:30 PM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["#19–21 bridge prep"],
     aiFindings: ["Restorative work needed"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -462,6 +505,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "2:30 PM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["#18 extraction", "bone graft"],
     aiFindings: ["Non-restorable #18", "Chipped tooth"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
@@ -474,6 +518,7 @@ export const mockPatients: Patient[] = [
     appointmentTime: "4:00 PM",
     operatory: 4,
     status: "upcoming",
+    visitTags: ["prophy"],
     aiFindings: ["Mild gingivitis noted"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
