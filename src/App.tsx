@@ -1,11 +1,15 @@
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import AppShell from "@/components/layout/AppShell";
 import OperatoryGrid from "@/components/OperatoryGrid";
 import RightNowView from "@/components/RightNowView";
 import PatientDetailDrawer from "@/components/PatientDetailDrawer";
-import { mockPatients } from "@/data/mockPatients";
+import { mockPatients, applySimulatedTime } from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
-import { getCurrentHour } from "@/lib/timeline";
+import {
+  getCurrentHour,
+  getSimulatedNowMinutes,
+  READY_FOR_CHAIR_WINDOW_MIN,
+} from "@/lib/timeline";
 
 export default function App() {
   const [viewMode, setViewMode] = useState<"rightnow" | "fullday">("rightnow");
@@ -21,6 +25,13 @@ export default function App() {
     setDrawerOpen(true);
   };
 
+  const patients = useMemo(() => {
+    const now = getSimulatedNowMinutes();
+    return mockPatients.map((p) =>
+      applySimulatedTime(p, now, READY_FOR_CHAIR_WINDOW_MIN)
+    );
+  }, []);
+
   return (
     <AppShell
       selectedDate={selectedDate}
@@ -33,7 +44,7 @@ export default function App() {
     >
       {viewMode === "rightnow" ? (
         <RightNowView
-          patients={mockPatients}
+          patients={patients}
           windowHour={windowHour}
           onWindowHourChange={setWindowHour}
           privacyMode={privacyMode}
@@ -42,7 +53,7 @@ export default function App() {
       ) : (
         <OperatoryGrid
           scrollRef={scrollRef}
-          patients={mockPatients}
+          patients={patients}
           privacyMode={privacyMode}
           onSelectPatient={handleSelectPatient}
         />
