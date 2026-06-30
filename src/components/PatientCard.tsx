@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
+import type { ClinicalTab } from "@/App";
 import { cn } from "@/lib/utils";
 
 interface PatientCardProps {
@@ -10,7 +11,7 @@ interface PatientCardProps {
   variant: "full" | "compact" | "calendar";
   isPeek?: boolean;
   privacyMode?: boolean;
-  onClick: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
 }
 
 function PerioIcon({ className }: { className?: string }) {
@@ -86,44 +87,53 @@ function ProviderChip({ patient }: { patient: Patient }) {
       <span className="text-[11px] font-medium text-muted-foreground shrink-0">
         {provider.role}
       </span>
-      {patient.hygienist && (
-        <>
-          <span className="text-muted-foreground/60 text-[10px] shrink-0">·</span>
-          <span className="text-[11px] text-muted-foreground truncate">
-            w/ {patient.hygienist.initials}
-          </span>
-        </>
-      )}
     </div>
   );
 }
 
+// CTA order per Figma: 1) Images, 2) Microphone, 3) Perio.
+// Buttons are static (always visible) on every card and muted on past /
+// completed appointments.
 function CardActions({
-  onStop,
-  pinned = false,
+  onAction,
+  muted = false,
 }: {
-  onStop: (e: React.MouseEvent) => void;
-  pinned?: boolean;
+  onAction: (e: React.MouseEvent, tab: ClinicalTab) => void;
+  muted?: boolean;
 }) {
+  const mutedClass = muted
+    ? "bg-muted text-muted-foreground hover:bg-muted-hover hover:text-foreground"
+    : "";
   return (
     <div
       className={cn(
         "absolute inset-x-0 bottom-0 flex items-center justify-end gap-1.5 px-2.5 pt-3 pb-2.5",
-        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent",
-        "transition-opacity duration-150",
-        pinned
-          ? "opacity-100 pointer-events-auto"
-          : "opacity-0 pointer-events-none group-hover/card:opacity-100 group-hover/card:pointer-events-auto"
+        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent"
       )}
     >
-      <Button size="icon" onClick={onStop} aria-label="Voice note">
+      <Button
+        size="icon"
+        className={mutedClass}
+        onClick={(e) => onAction(e, "xray")}
+        aria-label="Images"
+      >
+        <i className="fa-regular fa-images w-4 h-4" aria-hidden />
+      </Button>
+      <Button
+        size="icon"
+        className={mutedClass}
+        onClick={(e) => onAction(e, "voice")}
+        aria-label="Voice note"
+      >
         <i className="fa-regular fa-microphone w-4 h-4" aria-hidden />
       </Button>
-      <Button size="icon" onClick={onStop} aria-label="Perio">
+      <Button
+        size="icon"
+        className={mutedClass}
+        onClick={(e) => onAction(e, "perio")}
+        aria-label="Perio"
+      >
         <PerioIcon className="w-4 h-4" />
-      </Button>
-      <Button size="icon" onClick={onStop} aria-label="Images">
-        <i className="fa-regular fa-images w-4 h-4" aria-hidden />
       </Button>
     </div>
   );
@@ -132,29 +142,30 @@ function CardActions({
 interface CardChromeProps {
   patient: Patient;
   privacyMode: boolean;
-  onClick: () => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   className?: string;
 }
 
 function FullCard({
   patient,
   privacyMode,
-  onClick,
+  onOpenClinical,
   className,
 }: CardChromeProps) {
   const status = deriveStatus(patient);
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
-  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+  const handleAction = (e: React.MouseEvent, tab: ClinicalTab) => {
+    e.stopPropagation();
+    onOpenClinical(patient, tab);
+  };
 
   return (
     <div
       className={cn(
-        "group/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] border-border bg-card p-2.5 cursor-pointer transition-colors overflow-hidden",
-        "hover:border-primary/30",
+        "relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] border-border bg-card p-2.5 overflow-hidden",
         className
       )}
-      onClick={onClick}
     >
       {/* Top — patient + optional status */}
       <div
@@ -189,8 +200,8 @@ function FullCard({
         <ProviderChip patient={patient} />
       </div>
 
-      {/* Action strip — pinned for the in-chair patient, hover-revealed otherwise */}
-      <CardActions onStop={stopPropagation} pinned={status === "in-chair"} />
+      {/* Action strip — static on every card, muted on completed */}
+      <CardActions onAction={handleAction} muted={status === "completed"} />
     </div>
   );
 }
@@ -200,21 +211,18 @@ function PatientCard({
   variant,
   isPeek = false,
   privacyMode = false,
-  onClick,
+  onOpenClinical,
 }: PatientCardProps) {
-  const handleClick = () => onClick(patient);
-
   if (variant === "compact") {
     const status = deriveStatus(patient);
     const nameClass = privacyMode ? "blur-sm select-none" : "";
     return (
       <div
         className={cn(
-          "group/card flex items-center justify-between gap-2 rounded-[10px] border-[1.5px] border-border bg-card px-3 py-2 cursor-pointer transition-colors hover:bg-muted/40",
+          "flex items-center justify-between gap-2 rounded-[10px] border-[1.5px] border-border bg-card px-3 py-2 transition-colors",
           isPeek && "opacity-50",
           status === "completed" && "opacity-60"
         )}
-        onClick={handleClick}
       >
         <div className="flex items-center gap-2 min-w-0">
           <span
@@ -248,7 +256,7 @@ function PatientCard({
     <FullCard
       patient={patient}
       privacyMode={privacyMode}
-      onClick={handleClick}
+      onOpenClinical={onOpenClinical}
       className={variant === "calendar" ? "h-full" : ""}
     />
   );

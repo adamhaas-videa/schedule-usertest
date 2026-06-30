@@ -5,12 +5,14 @@ import type {
   Patient,
 } from "@/data/mockPatients";
 import { computeAge, timeToMinutes } from "@/data/mockPatients";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import type { ClinicalTab } from "@/App";
 import { cn } from "@/lib/utils";
 
 interface PatientListViewProps {
   patients: Patient[];
   privacyMode: boolean;
-  onSelectPatient: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
 }
 
 // Figma columns (in order): Time | Patient | Clinical Summary | Buttons
@@ -102,36 +104,39 @@ function clinicalSummaryText(patient: Patient): string {
 }
 
 interface RowActionsProps {
-  onStop: (e: React.MouseEvent) => void;
+  onAction: (tab: ClinicalTab) => void;
 }
 
-function RowActions({ onStop }: RowActionsProps) {
+function RowActions({ onAction }: RowActionsProps) {
+  const base =
+    "flex items-center justify-center size-10 rounded-md transition-colors";
+  const tone = "bg-primary text-primary-foreground hover:bg-primary-hover";
   return (
     <div className="flex items-center gap-2 shrink-0">
       <button
         type="button"
-        onClick={onStop}
+        onClick={() => onAction("xray")}
         aria-label="Images"
         title="Images"
-        className="flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+        className={cn(base, tone)}
       >
         <i className="fa-regular fa-images w-5 h-5" aria-hidden />
       </button>
       <button
         type="button"
-        onClick={onStop}
+        onClick={() => onAction("voice")}
         aria-label="Voice note"
         title="Voice note"
-        className="flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+        className={cn(base, tone)}
       >
         <i className="fa-regular fa-microphone w-5 h-5" aria-hidden />
       </button>
       <button
         type="button"
-        onClick={onStop}
+        onClick={() => onAction("perio")}
         aria-label="Perio"
         title="Perio"
-        className="flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+        className={cn(base, tone)}
       >
         <PerioIcon className="w-5 h-5" />
       </button>
@@ -142,50 +147,51 @@ function RowActions({ onStop }: RowActionsProps) {
 interface PatientRowProps {
   patient: Patient;
   privacyMode: boolean;
-  onSelect: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
 }
 
 const PatientRow = memo(function PatientRow({
   patient,
   privacyMode,
-  onSelect,
+  onOpenClinical,
 }: PatientRowProps) {
   const age = computeAge(patient.dob);
   const summary = clinicalSummaryText(patient);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
-  const stop = (e: React.MouseEvent) => e.stopPropagation();
-  const completed = patient.status === "completed";
 
   return (
     <div
       role="row"
-      tabIndex={0}
-      onClick={() => onSelect(patient)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect(patient);
-        }
-      }}
       className={cn(
-        "grid items-center gap-3 px-4 py-3 border-b border-border bg-card cursor-pointer transition-colors min-h-[96px]",
+        "grid items-center gap-3 px-4 py-3 border-b border-border bg-card transition-colors min-h-[96px]",
         "[content-visibility:auto] [contain-intrinsic-size:auto_96px]",
-        GRID_TEMPLATE,
-        "hover:bg-accent-muted focus-visible:outline-none focus-visible:bg-accent-muted"
+        GRID_TEMPLATE
       )}
     >
-      {/* Time */}
-      <div role="cell" className={cn("min-w-0", completed && "opacity-70")}>
+      {/* Time + provider badge + operatory */}
+      <div role="cell" className="flex flex-col gap-1.5 min-w-0">
         <span className="text-sm text-foreground tabular-nums">
           {formatTimeShort(patient.appointmentTime)}
         </span>
+        {patient.provider && (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Avatar
+              size="sm"
+              className="size-[22px] bg-periwinkle-100 after:border-transparent shrink-0"
+            >
+              <AvatarFallback className="bg-periwinkle-100 text-deep-teal-600 text-[10px] font-semibold">
+                {patient.provider.initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+              Op {patient.operatory}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Patient */}
-      <div
-        role="cell"
-        className={cn("flex flex-col gap-2 min-w-0", completed && "opacity-70")}
-      >
+      <div role="cell" className="flex flex-col gap-2 min-w-0">
         <span
           className={cn(
             "text-base font-semibold text-foreground leading-none truncate",
@@ -200,7 +206,7 @@ const PatientRow = memo(function PatientRow({
       </div>
 
       {/* Clinical Summary */}
-      <div role="cell" className={cn("flex min-w-0", completed && "opacity-70")}>
+      <div role="cell" className="flex min-w-0">
         <div className="flex flex-col items-start gap-1.5 min-w-0">
           {patient.conditionAlert && <AlertChip alert={patient.conditionAlert} />}
           {summary && (
@@ -213,7 +219,7 @@ const PatientRow = memo(function PatientRow({
 
       {/* Actions (no header label in Figma) */}
       <div role="cell" className="flex items-center justify-end">
-        <RowActions onStop={stop} />
+        <RowActions onAction={(tab) => onOpenClinical(patient, tab)} />
       </div>
     </div>
   );
@@ -222,7 +228,7 @@ const PatientRow = memo(function PatientRow({
 export default function PatientListView({
   patients,
   privacyMode,
-  onSelectPatient,
+  onOpenClinical,
 }: PatientListViewProps) {
   const sortedPatients = useMemo(
     () =>
@@ -277,7 +283,7 @@ export default function PatientListView({
                   key={patient.id}
                   patient={patient}
                   privacyMode={privacyMode}
-                  onSelect={onSelectPatient}
+                  onOpenClinical={onOpenClinical}
                 />
               ))
             )}

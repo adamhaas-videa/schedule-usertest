@@ -40,6 +40,32 @@ export interface Patient {
   conditionAlert?: ConditionAlert;
 }
 
+// Non-appointment time blocks (e.g. lunch) rendered on the operatory timeline.
+export interface ScheduleBlock {
+  id: string;
+  operatory: number;
+  startTime: string;
+  durationMinutes: number;
+  label: string;
+}
+
+export const mockBlocks: ScheduleBlock[] = [
+  {
+    id: "lunch-op1",
+    operatory: 1,
+    startTime: "1:00 PM",
+    durationMinutes: 60,
+    label: "Lunch — No chair time",
+  },
+  {
+    id: "lunch-op4",
+    operatory: 4,
+    startTime: "1:00 PM",
+    durationMinutes: 30,
+    label: "Lunch — No chair time",
+  },
+];
+
 export function timeToMinutes(time: string): number {
   const [timePart, meridiem] = time.split(" ");
   const [hoursStr, minutesStr] = timePart.split(":");

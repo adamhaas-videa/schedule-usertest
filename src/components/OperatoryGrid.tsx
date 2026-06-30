@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Patient } from "@/data/mockPatients";
-import { minutesToTime } from "@/data/mockPatients";
+import { minutesToTime, timeToMinutes } from "@/data/mockPatients";
 import OperatoryColumn from "./OperatoryColumn";
 import OperatoryHeader from "./OperatoryHeader";
 import {
@@ -12,7 +12,7 @@ import {
   formatHour,
   getSimulatedNowMinutes,
 } from "@/lib/timeline";
-import type { OperatoryFilter } from "@/App";
+import type { ClinicalTab, OperatoryFilter } from "@/App";
 import { cn } from "@/lib/utils";
 
 interface OperatoryGridProps {
@@ -20,7 +20,7 @@ interface OperatoryGridProps {
   privacyMode: boolean;
   operatoryFilter: OperatoryFilter;
   onOperatoryFilterChange: (op: OperatoryFilter) => void;
-  onSelectPatient: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -34,10 +34,22 @@ export default function OperatoryGrid({
   privacyMode,
   operatoryFilter,
   onOperatoryFilterChange,
-  onSelectPatient,
+  onOpenClinical,
   scrollRef,
 }: OperatoryGridProps) {
   const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
+
+  // Scroll the timeline so the given patient's card is centered. Used by the
+  // operatory header shortcut (click the in-chair patient name).
+  const scrollToPatient = (patient: Patient) => {
+    if (!scrollRef.current) return;
+    const y = TOP_PAD + minutesToY(timeToMinutes(patient.appointmentTime));
+    const halfHeight = scrollRef.current.clientHeight / 2;
+    scrollRef.current.scrollTo({
+      top: Math.max(0, y - halfHeight),
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     const interval = setInterval(
@@ -100,6 +112,11 @@ export default function OperatoryGrid({
                 activePatientName={inChairPatient?.name}
                 onClick={
                   focused ? undefined : () => onOperatoryFilterChange(op)
+                }
+                onPatientNameClick={
+                  inChairPatient
+                    ? () => scrollToPatient(inChairPatient)
+                    : undefined
                 }
               />
             </div>
@@ -181,7 +198,7 @@ export default function OperatoryGrid({
                     operatory={op}
                     patients={opPatients}
                     privacyMode={privacyMode}
-                    onSelectPatient={onSelectPatient}
+                    onOpenClinical={onOpenClinical}
                   />
                 </div>
               </div>

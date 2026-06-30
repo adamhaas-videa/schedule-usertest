@@ -7,11 +7,10 @@ interface NavItem {
   key: string;
   label: string;
   iconClass: string;
-  active?: boolean;
 }
 
 const primaryItems: NavItem[] = [
-  { key: "schedule", label: "Schedule", iconClass: "fa-regular fa-calendar", active: true },
+  { key: "schedule", label: "Schedule", iconClass: "fa-regular fa-calendar" },
   { key: "voice-notes", label: "Voice Notes", iconClass: "fa-regular fa-microphone" },
   { key: "auto-verify", label: "AutoVerify", iconClass: "fa-regular fa-shield-check" },
   { key: "clean-claims", label: "Clean Claims", iconClass: "fa-regular fa-file-lines" },
@@ -31,17 +30,28 @@ function NavIcon({ item }: { item: NavItem }) {
   );
 }
 
-function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function NavRow({
+  item,
+  collapsed,
+  active,
+  onSelect,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  active: boolean;
+  onSelect?: (key: string) => void;
+}) {
   return (
     <button
       type="button"
-      aria-current={item.active ? "page" : undefined}
+      onClick={() => onSelect?.(item.key)}
+      aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.label : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "group/nav flex w-full items-center rounded-md transition-all duration-200 ease-in-out overflow-hidden text-left",
+        "group/nav flex w-full items-center rounded-md transition-all duration-200 ease-in-out overflow-hidden text-left cursor-pointer",
         collapsed ? "justify-center h-9 p-2" : "gap-3 h-9 px-3",
-        item.active
+        active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "text-sidebar-foreground hover:bg-sidebar-item-hover hover:text-sidebar-item-hover-foreground"
       )}
@@ -67,12 +77,16 @@ interface SidebarProps {
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
+  activeKey?: string;
+  onNavigate?: (key: string) => void;
 }
 
 export default function Sidebar({
   collapsed: controlledCollapsed,
-  defaultCollapsed = false,
+  defaultCollapsed = true,
   onCollapsedChange,
+  activeKey = "schedule",
+  onNavigate,
 }: SidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const collapsed = controlledCollapsed ?? internalCollapsed;
@@ -115,7 +129,13 @@ export default function Sidebar({
       >
         <div className="flex flex-col gap-0.5">
           {primaryItems.map((item) => (
-            <NavRow key={item.key} item={item} collapsed={collapsed} />
+            <NavRow
+              key={item.key}
+              item={item}
+              collapsed={collapsed}
+              active={activeKey === item.key}
+              onSelect={onNavigate}
+            />
           ))}
         </div>
 
@@ -125,7 +145,13 @@ export default function Sidebar({
 
         <div className="flex flex-col gap-0.5">
           {secondaryItems.map((item) => (
-            <NavRow key={item.key} item={item} collapsed={collapsed} />
+            <NavRow
+              key={item.key}
+              item={item}
+              collapsed={collapsed}
+              active={activeKey === item.key}
+              onSelect={onNavigate}
+            />
           ))}
         </div>
       </nav>
