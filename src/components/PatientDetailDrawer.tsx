@@ -121,9 +121,6 @@ export default function PatientDetailDrawer({
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {patient.provider.role}
-                    {patient.hygienist
-                      ? ` · w/ ${patient.hygienist.name} (${patient.hygienist.role})`
-                      : ""}
                   </span>
                 </div>
               </div>

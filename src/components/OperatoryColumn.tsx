@@ -1,6 +1,7 @@
-import type { Patient } from "@/data/mockPatients";
-import { timeToMinutes, minutesToTime } from "@/data/mockPatients";
+import type { Patient, ScheduleBlock } from "@/data/mockPatients";
+import { timeToMinutes, minutesToTime, mockBlocks } from "@/data/mockPatients";
 import PatientCard from "./PatientCard";
+import type { ClinicalTab } from "@/App";
 import {
   minutesToY,
   durationToHeight,
@@ -12,7 +13,7 @@ interface OperatoryColumnProps {
   operatory: number;
   patients: Patient[];
   privacyMode: boolean;
-  onSelectPatient: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
 }
 
 const CARD_GAP = 2;
@@ -25,20 +26,23 @@ interface OpenSlot {
   durationMin: number;
 }
 
-function getOpenSlots(patients: Patient[]): OpenSlot[] {
-  const sorted = [...patients].sort(
-    (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
-  );
+interface Occupied {
+  startMin: number;
+  endMin: number;
+}
+
+// Open slots are gaps not covered by an appointment OR a schedule block (lunch).
+function getOpenSlots(occupied: Occupied[]): OpenSlot[] {
+  const sorted = [...occupied].sort((a, b) => a.startMin - b.startMin);
 
   const slots: OpenSlot[] = [];
   let cursor = DAY_START;
 
-  for (const p of sorted) {
-    const start = timeToMinutes(p.appointmentTime);
-    if (start > cursor && start - cursor >= MIN_OPEN_SLOT) {
-      slots.push({ startMin: cursor, durationMin: start - cursor });
+  for (const o of sorted) {
+    if (o.startMin > cursor && o.startMin - cursor >= MIN_OPEN_SLOT) {
+      slots.push({ startMin: cursor, durationMin: o.startMin - cursor });
     }
-    cursor = Math.max(cursor, start + p.durationMinutes);
+    cursor = Math.max(cursor, o.endMin);
   }
 
   if (DAY_END > cursor && DAY_END - cursor >= MIN_OPEN_SLOT) {
@@ -49,15 +53,31 @@ function getOpenSlots(patients: Patient[]): OpenSlot[] {
 }
 
 export default function OperatoryColumn({
+  operatory,
   patients,
   privacyMode,
-  onSelectPatient,
+  onOpenClinical,
 }: OperatoryColumnProps) {
   const sorted = [...patients].sort(
     (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
   );
 
-  const openSlots = getOpenSlots(patients);
+  const blocks: ScheduleBlock[] = mockBlocks.filter(
+    (b) => b.operatory === operatory
+  );
+
+  const occupied: Occupied[] = [
+    ...patients.map((p) => {
+      const start = timeToMinutes(p.appointmentTime);
+      return { startMin: start, endMin: start + p.durationMinutes };
+    }),
+    ...blocks.map((b) => {
+      const start = timeToMinutes(b.startTime);
+      return { startMin: start, endMin: start + b.durationMinutes };
+    }),
+  ];
+
+  const openSlots = getOpenSlots(occupied);
 
   return (
     <div className="relative h-full">
@@ -78,6 +98,33 @@ export default function OperatoryColumn({
         );
       })}
 
+      {/* Lunch / schedule blocks — hatched, distinct from open slots */}
+      {blocks.map((block) => {
+        const startMin = timeToMinutes(block.startTime);
+        const top = minutesToY(startMin);
+        const height = durationToHeight(block.durationMinutes) - CARD_GAP;
+        return (
+          <div
+            key={block.id}
+            className="absolute left-2 right-2"
+            style={{ top: top + 1, height }}
+          >
+            <div
+              className="h-full flex items-center justify-center rounded-[10px] border border-border text-[12px] font-medium text-muted-foreground"
+              style={{
+                backgroundColor: "var(--muted)",
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, transparent, transparent 6px, color-mix(in srgb, var(--muted-foreground) 14%, transparent) 6px, color-mix(in srgb, var(--muted-foreground) 14%, transparent) 12px)",
+              }}
+            >
+              <span className="px-2 py-0.5 rounded bg-card/80 text-foreground/80">
+                {block.label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+
       {/* Patient cards */}
       {sorted.map((patient) => {
         const startMin = timeToMinutes(patient.appointmentTime);
@@ -87,6 +134,8 @@ export default function OperatoryColumn({
         return (
           <div
             key={patient.id}
+            id={`appt-${patient.id}`}
+            data-patient-id={patient.id}
             className="absolute left-2 right-2"
             style={{
               top: top + 1,
@@ -99,7 +148,7 @@ export default function OperatoryColumn({
               patient={patient}
               variant="calendar"
               privacyMode={privacyMode}
-              onClick={onSelectPatient}
+              onOpenClinical={onOpenClinical}
             />
           </div>
         );
