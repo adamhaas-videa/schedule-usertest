@@ -71,7 +71,7 @@ export default function OperatoryColumn({
             className="absolute left-2 right-2"
             style={{ top: top + 1, height }}
           >
-            <div className="h-full px-3 py-2 rounded-[10px] border border-dashed border-slate-200 text-xs text-muted-foreground">
+            <div className="h-full flex items-center justify-center rounded-[10px] border-[1.5px] border-dashed border-border bg-muted/30 text-[12px] font-medium text-muted-foreground">
               {minutesToTime(slot.startMin)} &mdash; Open
             </div>
           </div>
@@ -88,7 +88,12 @@ export default function OperatoryColumn({
           <div
             key={patient.id}
             className="absolute left-2 right-2"
-            style={{ top: top + 1, height }}
+            style={{
+              top: top + 1,
+              height,
+              contentVisibility: "auto",
+              containIntrinsicSize: `auto ${Math.max(0, height)}px`,
+            }}
           >
             <PatientCard
               patient={patient}

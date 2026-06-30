@@ -1,6 +1,10 @@
 export const START_HOUR = 7;
 export const END_HOUR = 19;
-export const PIXELS_PER_HOUR = 250;
+// 180px/hour → 90px per 30-min slot → 88px card height after CARD_GAP (=2),
+// which fits the FullCard content floor (p-2.5 padding + gap-2 + ~34px top
+// row + 22px provider chip ≈ 84–86px) with a ~2px buffer. Lowering this
+// re-introduces clipping of the provider chip on 30-min appointments.
+export const PIXELS_PER_HOUR = 180;
 export const TOTAL_HEIGHT = (END_HOUR - START_HOUR) * PIXELS_PER_HOUR;
 export const START_MINUTES = START_HOUR * 60;
 export const END_MINUTES = END_HOUR * 60;

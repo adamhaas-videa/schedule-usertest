@@ -5,6 +5,7 @@ interface OperatoryHeaderProps {
   occupied: boolean;
   activePatientName?: string;
   className?: string;
+  onClick?: () => void;
 }
 
 export default function OperatoryHeader({
@@ -12,35 +13,34 @@ export default function OperatoryHeader({
   occupied,
   activePatientName,
   className,
+  onClick,
 }: OperatoryHeaderProps) {
+  const interactive = !!onClick;
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
       className={cn(
-        "px-4 py-2.5 flex items-center justify-between",
+        "w-full h-12 px-3 flex items-center gap-4 text-left transition-colors",
+        interactive
+          ? "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          : "cursor-default",
         className
       )}
+      aria-label={interactive ? `Focus Operatory ${operatory}` : undefined}
     >
-      <span className="text-[13px] font-bold text-deep-teal tracking-wide">
+      <span className="text-[15px] font-semibold text-foreground shrink-0">
         Op {operatory}
       </span>
-      <span
-        className={cn(
-          "inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full max-w-[60%] truncate",
-          occupied
-            ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-            : "bg-white/70 text-gray-500 ring-1 ring-gray-200"
-        )}
-      >
-        <span
-          className={cn(
-            "w-1.5 h-1.5 rounded-full shrink-0",
-            occupied ? "bg-emerald-500" : "bg-gray-400"
-          )}
-        />
-        <span className="truncate">
-          {occupied && activePatientName ? activePatientName : occupied ? "Occupied" : "Available"}
+      {occupied && activePatientName && (
+        <span className="inline-flex items-center gap-1.5 h-[21px] px-2 py-1 rounded-full bg-card border border-border max-w-[60%]">
+          <span className="size-1.5 rounded-full bg-success shrink-0" />
+          <span className="text-[11px] font-medium text-foreground truncate">
+            {activePatientName}
+          </span>
         </span>
-      </span>
-    </div>
+      )}
+    </button>
   );
 }

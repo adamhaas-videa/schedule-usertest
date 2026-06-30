@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Input } from "@/components/ui/input";
 import type { Patient } from "@/data/mockPatients";
 import { mockPatients } from "@/data/mockPatients";
 
@@ -6,11 +7,7 @@ interface SearchFieldProps {
   onSelectPatient: (patient: Patient) => void;
 }
 
-const recentSearches = [
-  mockPatients[1],
-  mockPatients[4],
-  mockPatients[8],
-];
+const recentSearches = [mockPatients[1], mockPatients[4], mockPatients[8]];
 
 export default function SearchField({ onSelectPatient }: SearchFieldProps) {
   const [open, setOpen] = useState(false);
@@ -18,7 +15,10 @@ export default function SearchField({ onSelectPatient }: SearchFieldProps) {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -29,22 +29,23 @@ export default function SearchField({ onSelectPatient }: SearchFieldProps) {
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative flex-1">
-      <div className="bg-white border border-zinc-200 rounded-md flex items-center gap-2 h-10 px-3 overflow-hidden">
-        <i className="fa-regular fa-magnifying-glass text-muted-foreground text-sm shrink-0" />
-        <input
-          type="text"
-          placeholder="Search"
-          className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground min-w-0"
-          onFocus={() => setOpen(true)}
-        />
-      </div>
+    <div ref={containerRef} className="relative w-full">
+      <i
+        className="fa-regular fa-magnifying-glass text-muted-foreground text-[12px] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        aria-hidden
+      />
+      <Input
+        type="search"
+        placeholder="Search patients"
+        className="h-8 pl-8 bg-card"
+        onFocus={() => setOpen(true)}
+      />
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg bg-popover shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 zoom-in-95 duration-100">
           <div className="py-1">
             <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              Recent Searches
+              Recent searches
             </div>
             {recentSearches.map((patient) => (
               <button

@@ -4,6 +4,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Patient } from "@/data/mockPatients";
@@ -66,7 +67,7 @@ export default function PatientDetailDrawer({
                 {patient.allergies.map((allergy) => (
                   <span
                     key={allergy}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-warning-emphasis bg-warning-muted px-2 py-0.5 rounded"
                   >
                     <i className="fa-solid fa-triangle-exclamation text-[10px]" />
                     {allergy}
@@ -88,8 +89,8 @@ export default function PatientDetailDrawer({
             </div>
             <div className="mt-1">
               {patient.status === "in-chair" ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-emphasis">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success" />
                   In Chair
                 </span>
               ) : patient.status === "completed" ? (
@@ -99,6 +100,98 @@ export default function PatientDetailDrawer({
               )}
             </div>
           </div>
+
+          {patient.provider && (
+            <div className="space-y-1.5">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Provider
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Avatar
+                  size="sm"
+                  className="size-7 bg-periwinkle-300 after:border-transparent"
+                >
+                  <AvatarFallback className="bg-periwinkle-300 text-deep-teal-800 text-[11px] font-semibold">
+                    {patient.provider.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-foreground">
+                    {patient.provider.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {patient.provider.role}
+                    {patient.hygienist
+                      ? ` · w/ ${patient.hygienist.name} (${patient.hygienist.role})`
+                      : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {patient.insurance && (
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Insurance
+              </div>
+              <div className="text-sm text-foreground">
+                {patient.insurance.carrier}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                ${patient.insurance.remainingBenefit} remaining &middot;{" "}
+                <span
+                  className={cn(
+                    patient.insurance.status === "Active" &&
+                      "text-success-emphasis",
+                    patient.insurance.status === "Pending" &&
+                      "text-warning-emphasis",
+                    patient.insurance.status === "Inactive" && "text-destructive"
+                  )}
+                >
+                  {patient.insurance.status}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {patient.conditionAlert && (
+            <div className="space-y-1.5">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Condition Alert
+              </div>
+              <span
+                className={cn(
+                  "inline-flex w-fit items-center gap-1.5 h-[20px] px-2 rounded-full",
+                  patient.conditionAlert.severity === "success" &&
+                    "bg-success-muted text-success-emphasis",
+                  patient.conditionAlert.severity === "accent" &&
+                    "bg-accent-muted text-accent-emphasis",
+                  patient.conditionAlert.severity === "warning" &&
+                    "bg-warning-muted text-warning-emphasis",
+                  patient.conditionAlert.severity === "error" &&
+                    "bg-error-muted text-error-emphasis"
+                )}
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    patient.conditionAlert.severity === "success" &&
+                      "bg-success",
+                    patient.conditionAlert.severity === "accent" &&
+                      "bg-accent-muted-foreground",
+                    patient.conditionAlert.severity === "warning" &&
+                      "bg-warning",
+                    patient.conditionAlert.severity === "error" &&
+                      "bg-destructive"
+                  )}
+                />
+                <span className="text-[11px] font-medium">
+                  {patient.conditionAlert.label}
+                </span>
+              </span>
+            </div>
+          )}
 
           {patient.aiFindings && patient.aiFindings.length > 0 && (
             <div className="space-y-1.5">
@@ -124,7 +217,7 @@ export default function PatientDetailDrawer({
               Quick Actions
             </div>
             <Button variant="outline" className="w-full justify-start gap-2 h-9">
-              <i className="fa-regular fa-image text-sm" />
+              <i className="fa-regular fa-images text-sm" />
               Images
             </Button>
             <Button variant="outline" className="w-full justify-start gap-2 h-9">

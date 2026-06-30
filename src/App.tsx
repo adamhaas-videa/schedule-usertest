@@ -1,29 +1,41 @@
-import { useMemo, useState, useRef } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import AppShell from "@/components/layout/AppShell";
 import OperatoryGrid from "@/components/OperatoryGrid";
-import RightNowView from "@/components/RightNowView";
+import PatientListView from "@/components/PatientListView";
 import PatientDetailDrawer from "@/components/PatientDetailDrawer";
 import { mockPatients, applySimulatedTime } from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
 import {
-  getCurrentHour,
   getSimulatedNowMinutes,
   READY_FOR_CHAIR_WINDOW_MIN,
 } from "@/lib/timeline";
 
+export type OperatoryFilter = "all" | number;
+export type ScheduleView = "list" | "calendar";
+
+export interface ScheduleFilters {
+  provider: string;
+  operatory: OperatoryFilter;
+}
+
+const INITIAL_FILTERS: ScheduleFilters = {
+  provider: "all",
+  operatory: "all",
+};
+
 export default function App() {
-  const [viewMode, setViewMode] = useState<"rightnow" | "fullday">("rightnow");
-  const [windowHour, setWindowHour] = useState(() => getCurrentHour());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [privacyMode, setPrivacyMode] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState<ScheduleFilters>(INITIAL_FILTERS);
+  const [viewMode, setViewMode] = useState<ScheduleView>("list");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectPatient = (patient: Patient) => {
+  const handleSelectPatient = useCallback((patient: Patient) => {
     setSelectedPatient(patient);
     setDrawerOpen(true);
-  };
+  }, []);
 
   const patients = useMemo(() => {
     const now = getSimulatedNowMinutes();
@@ -32,29 +44,49 @@ export default function App() {
     );
   }, []);
 
+  const filteredPatients = useMemo(() => {
+    return patients.filter((p) => {
+      if (
+        filters.provider !== "all" &&
+        p.provider?.id !== filters.provider &&
+        p.hygienist?.id !== filters.provider
+      ) {
+        return false;
+      }
+      if (filters.operatory !== "all" && p.operatory !== filters.operatory) {
+        return false;
+      }
+      return true;
+    });
+  }, [patients, filters]);
+
   return (
     <AppShell
       selectedDate={selectedDate}
       onDateChange={setSelectedDate}
-      viewMode={viewMode}
-      onViewModeChange={setViewMode}
       privacyMode={privacyMode}
       onPrivacyToggle={setPrivacyMode}
+      filters={filters}
+      onFiltersChange={setFilters}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
       onSelectPatient={handleSelectPatient}
     >
-      {viewMode === "rightnow" ? (
-        <RightNowView
-          patients={patients}
-          windowHour={windowHour}
-          onWindowHourChange={setWindowHour}
+      {viewMode === "list" ? (
+        <PatientListView
+          patients={filteredPatients}
           privacyMode={privacyMode}
           onSelectPatient={handleSelectPatient}
         />
       ) : (
         <OperatoryGrid
           scrollRef={scrollRef}
-          patients={patients}
+          patients={filteredPatients}
           privacyMode={privacyMode}
+          operatoryFilter={filters.operatory}
+          onOperatoryFilterChange={(op) =>
+            setFilters((prev) => ({ ...prev, operatory: op }))
+          }
           onSelectPatient={handleSelectPatient}
         />
       )}

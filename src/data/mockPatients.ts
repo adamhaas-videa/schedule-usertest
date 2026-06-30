@@ -1,3 +1,25 @@
+export type ProviderRole = "DDS" | "DMD" | "RDH";
+
+export interface Provider {
+  id: string;
+  initials: string;
+  name: string;
+  role: ProviderRole;
+}
+
+export interface Insurance {
+  carrier: string;
+  remainingBenefit: number;
+  status: "Active" | "Pending" | "Inactive";
+}
+
+export type ConditionAlertSeverity = "success" | "accent" | "warning" | "error";
+
+export interface ConditionAlert {
+  label: string;
+  severity: ConditionAlertSeverity;
+}
+
 export interface Patient {
   id: string;
   name: string;
@@ -12,6 +34,10 @@ export interface Patient {
   appointmentDate: string;
   durationMinutes: number;
   readyForChair?: boolean;
+  provider?: Provider;
+  hygienist?: Provider;
+  insurance?: Insurance;
+  conditionAlert?: ConditionAlert;
 }
 
 export function timeToMinutes(time: string): number {
@@ -55,14 +81,137 @@ export function deriveReadyForChair(
   return delta > 0 && delta <= windowMinutes;
 }
 
+function hashStringToSeed(input: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pick<T>(rand: () => number, pool: readonly T[]): T {
+  return pool[Math.floor(rand() * pool.length)];
+}
+
+export const DENTISTS: readonly Provider[] = [
+  { id: "mg", initials: "MG", name: "Dr. Mira Gupta", role: "DDS" },
+  { id: "jr", initials: "JR", name: "Dr. Jonas Reyes", role: "DMD" },
+  { id: "at", initials: "AT", name: "Dr. Aisha Tan", role: "DDS" },
+  { id: "ek", initials: "EK", name: "Dr. Elias Kovac", role: "DMD" },
+];
+
+export const HYGIENISTS: readonly Provider[] = [
+  { id: "lc", initials: "LC", name: "Lina Castillo", role: "RDH" },
+  { id: "bp", initials: "BP", name: "Beth Park", role: "RDH" },
+  { id: "ng", initials: "NG", name: "Noah Greene", role: "RDH" },
+];
+
+const INSURANCE_CARRIERS = [
+  "Delta Dental",
+  "MetLife",
+  "Cigna",
+  "Aetna",
+  "Guardian",
+  "UnitedHealthcare",
+  "BlueCross",
+] as const;
+
+const INSURANCE_STATUS: readonly Insurance["status"][] = [
+  "Active",
+  "Active",
+  "Active",
+  "Active",
+  "Pending",
+  "Inactive",
+];
+
+const CONDITION_ALERTS: readonly ConditionAlert[] = [
+  { label: "Healthy Gums", severity: "success" },
+  { label: "Stage 1 Perio", severity: "accent" },
+  { label: "Stage 2 Perio", severity: "warning" },
+  { label: "Stage 3 Perio", severity: "error" },
+];
+
+const HYGIENE_PROCEDURE_PATTERNS = [
+  /prophylaxis/i,
+  /periodontal maintenance/i,
+  /scaling/i,
+  /root planing/i,
+  /\bsrp\b/i,
+  /fluoride/i,
+  /sealants/i,
+  /deep cleaning/i,
+  /periodontal assessment/i,
+];
+
+function isHygieneProcedure(procedure: string): boolean {
+  return HYGIENE_PROCEDURE_PATTERNS.some((re) => re.test(procedure));
+}
+
+function buildInsurance(rand: () => number): Insurance {
+  return {
+    carrier: pick(rand, INSURANCE_CARRIERS),
+    remainingBenefit: Math.floor(rand() * 76) * 20,
+    status: pick(rand, INSURANCE_STATUS),
+  };
+}
+
+export function enrichPatient(patient: Patient): Patient {
+  if (
+    patient.provider &&
+    patient.insurance &&
+    "conditionAlert" in patient &&
+    "hygienist" in patient
+  ) {
+    return patient;
+  }
+
+  const rand = mulberry32(hashStringToSeed(patient.id));
+
+  const hygieneLed = isHygieneProcedure(patient.procedure);
+  const dentist = pick(rand, DENTISTS);
+  const hygienist = pick(rand, HYGIENISTS);
+
+  const provider: Provider = hygieneLed ? hygienist : dentist;
+  const secondaryHygienist: Provider | undefined = hygieneLed
+    ? undefined
+    : rand() < 0.55
+      ? hygienist
+      : undefined;
+
+  const insurance = patient.insurance ?? buildInsurance(rand);
+  const alert = pick(rand, CONDITION_ALERTS);
+
+  return {
+    ...patient,
+    provider: patient.provider ?? provider,
+    hygienist: patient.hygienist ?? secondaryHygienist,
+    insurance,
+    conditionAlert: patient.conditionAlert ?? alert,
+  };
+}
+
 export function applySimulatedTime(
   patient: Patient,
   nowMinutes: number,
   readyWindowMinutes: number
 ): Patient {
   const status = derivePatientStatus(patient, nowMinutes);
+  const enriched = enrichPatient(patient);
   return {
-    ...patient,
+    ...enriched,
     status,
     readyForChair:
       status === "upcoming"
@@ -161,7 +310,7 @@ export const mockPatients: Patient[] = [
   // ─── Operatory 2 ───────────────────────────────────────────
   // 8:00–8:30 OPEN                 | 8:30–9:00 Robert Johnson
   // 9:00–9:30 OPEN                 | 9:30–10:30 Emily Thompson
-  // 10:30–11:00 Angela Kim         | 11:00–12:00 Michael Brown
+  // 10:30–11:00 OPEN                | 11:00–12:00 Michael Brown
   // 12:00–1:00 Gregory Hall        | 1:00–2:00 Susan Taylor
   // 2:00–3:00  Lisa Park           | 3:00–3:30 OPEN
   // 3:30–4:30  Mark Anderson       | 4:30–5:00 Nicole White
@@ -190,19 +339,6 @@ export const mockPatients: Patient[] = [
     aiFindings: ["Candidate for perio treatment", "Bone loss detected"],
     appointmentDate: "2026-03-12",
     durationMinutes: 60,
-  },
-  {
-    id: "p17",
-    name: "Angela Kim",
-    dob: "06/14/2003",
-    procedure: "Fluoride Treatment",
-    appointmentTime: "10:30 AM",
-    operatory: 2,
-    status: "upcoming",
-    visitTags: ["fluoride tx"],
-    aiFindings: ["Early decalcification noted"],
-    appointmentDate: "2026-03-12",
-    durationMinutes: 30,
   },
   {
     id: "p6",
@@ -285,7 +421,7 @@ export const mockPatients: Patient[] = [
 
   // ─── Operatory 3 ───────────────────────────────────────────
   // 8:00–9:00  Frank Robinson      | 9:00–10:00 David Martinez
-  // 10:00–10:30 OPEN               | 10:30–11:30 Amanda Wright
+  // 10:00–11:00 Amanda Wright      | 11:00–11:30 OPEN
   // 11:30–12:30 Catherine Young    | 12:30–1:30 Joseph Harris
   // 1:30–2:00  Kevin Nguyen        | 2:00–3:00 Rachel Morgan
   // 3:00–3:30 OPEN                 | 3:30–4:30 Daniel Cooper
@@ -322,7 +458,7 @@ export const mockPatients: Patient[] = [
     dob: "04/28/1975",
     allergies: ["Sulfa drugs"],
     procedure: "Implant Consultation",
-    appointmentTime: "10:30 AM",
+    appointmentTime: "10:00 AM",
     operatory: 3,
     status: "upcoming",
     visitTags: ["implant consult"],
@@ -411,8 +547,7 @@ export const mockPatients: Patient[] = [
 
   // ─── Operatory 4 ───────────────────────────────────────────
   // 8:00–8:30  Patricia Davis      | 8:30–9:00 OPEN
-  // 9:00–10:00 Christopher Lee     | 10:00–10:30 OPEN
-  // 10:30–11:30 Brian Murphy
+  // 9:00–10:00 Christopher Lee     | 10:00–11:00 Brian Murphy
   // 11:30–12:00 Jennifer Reed      | 12:00–1:00 William Carter
   // 1:00–1:30 OPEN                 | 1:30–2:30 Stephanie Brooks
   // 2:30–3:30  Andrew Torres       | 3:30–4:00 OPEN
@@ -448,7 +583,7 @@ export const mockPatients: Patient[] = [
     name: "Brian Murphy",
     dob: "07/21/1992",
     procedure: "Composite Filling",
-    appointmentTime: "10:30 AM",
+    appointmentTime: "10:00 AM",
     operatory: 4,
     status: "upcoming",
     visitTags: ["#3 & 4 fillings"],

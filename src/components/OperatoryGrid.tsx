@@ -12,22 +12,28 @@ import {
   formatHour,
   getSimulatedNowMinutes,
 } from "@/lib/timeline";
+import type { OperatoryFilter } from "@/App";
+import { cn } from "@/lib/utils";
 
 interface OperatoryGridProps {
   patients: Patient[];
   privacyMode: boolean;
+  operatoryFilter: OperatoryFilter;
+  onOperatoryFilterChange: (op: OperatoryFilter) => void;
   onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const OPERATORIES = [1, 2, 3, 4];
+const ALL_OPERATORIES = [1, 2, 3, 4];
 const HALF_HOURS = HOURS.slice(0, -1);
-const GUTTER = 52;
+const GUTTER = 64;
 const TOP_PAD = 24;
 
 export default function OperatoryGrid({
   patients,
   privacyMode,
+  operatoryFilter,
+  onOperatoryFilterChange,
   onSelectPatient,
   scrollRef,
 }: OperatoryGridProps) {
@@ -42,32 +48,59 @@ export default function OperatoryGrid({
   }, []);
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
+  const focused = operatoryFilter !== "all";
+  const operatories = focused ? [operatoryFilter as number] : ALL_OPERATORIES;
 
   useEffect(() => {
     if (!scrollRef.current) return;
     const scrollTarget = isWithinHours ? nowMinutes : START_MINUTES;
     const y = minutesToY(scrollTarget);
     const halfHeight = scrollRef.current.clientHeight / 2;
-    scrollRef.current.scrollTo({ top: Math.max(0, y - halfHeight), behavior: "instant" });
+    scrollRef.current.scrollTo({
+      top: Math.max(0, y - halfHeight),
+      behavior: "instant",
+    });
   }, []);
 
   return (
     <div className="h-full flex flex-col">
+      {/* Focused-op banner */}
+      {focused && (
+        <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-info-muted border-b border-info-muted-border">
+          <button
+            onClick={() => onOperatoryFilterChange("all")}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-info-emphasis hover:text-primary transition-colors"
+          >
+            <i className="fa-regular fa-chevron-left text-[10px]" aria-hidden />
+            Back to all operatories
+          </button>
+          <span className="text-[12px] text-info-muted-foreground">
+            Focused on <span className="font-semibold">Op {operatoryFilter}</span>
+          </span>
+        </div>
+      )}
+
       {/* Fixed header row — outside scroll, never moves */}
-      <div className="shrink-0 flex border-b border-slate-200 bg-white">
+      <div className="shrink-0 flex border-b border-border bg-card">
         <div className="shrink-0" style={{ width: GUTTER }} />
-        {OPERATORIES.map((op, i) => {
+        {operatories.map((op, i) => {
           const opPatients = patients.filter((p) => p.operatory === op);
           const inChairPatient = opPatients.find((p) => p.status === "in-chair");
           return (
             <div
               key={op}
-              className={`flex-1 min-w-0 ${i > 0 ? "border-l border-slate-200" : ""}`}
+              className={cn(
+                "flex-1 min-w-0",
+                i > 0 ? "border-l border-border" : ""
+              )}
             >
               <OperatoryHeader
                 operatory={op}
                 occupied={!!inChairPatient}
                 activePatientName={inChairPatient?.name}
+                onClick={
+                  focused ? undefined : () => onOperatoryFilterChange(op)
+                }
               />
             </div>
           );
@@ -88,13 +121,16 @@ export default function OperatoryGrid({
                 className="absolute top-1/2 -translate-y-1/2 flex items-center justify-end pr-1.5 opacity-0 group-hover/now:opacity-100 transition-opacity duration-150"
                 style={{ left: 0, width: GUTTER }}
               >
-                <span className="text-[9px] font-semibold text-[#2552EB] bg-[#EEF4FF] px-1 py-px rounded-full whitespace-nowrap border border-[#BFD6FE]/60 leading-tight">
+                <span className="text-[9px] font-semibold text-primary bg-info-muted px-1 py-px rounded-full whitespace-nowrap border border-info-muted-border leading-tight">
                   {minutesToTime(nowMinutes)}
                 </span>
               </div>
-              <div className="flex items-center" style={{ marginLeft: GUTTER - 4 }}>
-                <div className="w-2 h-2 rounded-full bg-[#6098FA] shrink-0" />
-                <div className="flex-1 border-t-2 border-[#6098FA]" />
+              <div
+                className="flex items-center"
+                style={{ marginLeft: GUTTER - 4 }}
+              >
+                <div className="w-2 h-2 rounded-full bg-deep-teal-400 shrink-0" />
+                <div className="flex-1 border-t-2 border-deep-teal-400" />
               </div>
             </div>
           )}
@@ -103,7 +139,7 @@ export default function OperatoryGrid({
             {HOURS.map((hour) => (
               <span
                 key={hour}
-                className="absolute right-2 text-[11px] font-medium text-gray-400 leading-none whitespace-nowrap -translate-y-1/2"
+                className="absolute right-2 text-[11px] font-medium text-muted-foreground/60 leading-none whitespace-nowrap -translate-y-1/2"
                 style={{ top: TOP_PAD + minutesToY(hour * 60) }}
               >
                 {formatHour(hour)}
@@ -112,25 +148,31 @@ export default function OperatoryGrid({
           </div>
 
           {/* Operatory columns — bg flush to header, content offset by TOP_PAD */}
-          {OPERATORIES.map((op, i) => {
+          {operatories.map((op, i) => {
             const opPatients = patients.filter((p) => p.operatory === op);
             return (
               <div
                 key={op}
-                className={`flex-1 min-w-0 bg-white ${i > 0 ? "border-l border-slate-200" : ""}`}
+                className={cn(
+                  "flex-1 min-w-0 bg-card",
+                  i > 0 ? "border-l border-border" : ""
+                )}
               >
-                <div className="relative" style={{ marginTop: TOP_PAD, height: TOTAL_HEIGHT }}>
+                <div
+                  className="relative"
+                  style={{ marginTop: TOP_PAD, height: TOTAL_HEIGHT }}
+                >
                   {HOURS.map((hour) => (
                     <div
                       key={`h-${hour}`}
-                      className="absolute left-0 right-0 border-t border-gray-100"
+                      className="absolute left-0 right-0 border-t border-border/50"
                       style={{ top: minutesToY(hour * 60) }}
                     />
                   ))}
                   {HALF_HOURS.map((hour) => (
                     <div
                       key={`hh-${hour}`}
-                      className="absolute left-0 right-0 border-t border-dashed border-gray-50"
+                      className="absolute left-0 right-0 border-t border-dashed border-border/30"
                       style={{ top: minutesToY(hour * 60 + 30) }}
                     />
                   ))}
