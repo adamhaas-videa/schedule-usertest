@@ -75,18 +75,18 @@ export default function L2Header({
       {/* View-mode segmented control (far left) */}
       <div className="flex w-fit items-center rounded-md shadow-xs shrink-0">
         <ViewModeButton
-          active={viewMode === "list"}
-          onClick={() => onViewModeChange("list")}
-          icon="fa-regular fa-list"
-          text="List"
-          label="List view"
-        />
-        <ViewModeButton
           active={viewMode === "calendar"}
           onClick={() => onViewModeChange("calendar")}
           icon="fa-regular fa-calendar-days"
           text="Calendar"
           label="Calendar view"
+        />
+        <ViewModeButton
+          active={viewMode === "list"}
+          onClick={() => onViewModeChange("list")}
+          icon="fa-regular fa-list"
+          text="List"
+          label="List view"
         />
       </div>
 

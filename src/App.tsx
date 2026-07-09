@@ -37,7 +37,7 @@ export default function App() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<ScheduleFilters>(INITIAL_FILTERS);
-  const [viewMode, setViewMode] = useState<ScheduleView>("list");
+  const [viewMode, setViewMode] = useState<ScheduleView>("calendar");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [view, setView] = useState<AppView>({ kind: "schedule" });
   const scrollRef = useRef<HTMLDivElement>(null);
