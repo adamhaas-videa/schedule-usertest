@@ -2,28 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
-/* Font Awesome is loaded via the Pro Kit script tag in index.html
- * (kit `f165c6ea78`, SVG+JS). Do not also import a local Free CSS bundle
- * – the kit auto-replaces `<i class="fa-...">` with inline SVG and would
- * conflict with a webfont-based stylesheet, plus the Free bundle lacks the
- * Pro-only icon names this project uses (e.g. fa-shield-check, fa-chart-mixed). */
-
-/* Normalize FA SVG+JS (nest mode): centre the nested <svg> inside the <i>
- * wrapper via flex, overriding FA's `vertical-align: -0.125em` which
- * otherwise pushes icons ~2px below optical centre in flex/grid containers.
- * Note: do NOT set width/height on the SVG – let it inherit its intrinsic
- * 1em sizing, and let the wrapper's Tailwind size utilities (w-4, h-5, etc.)
- * constrain layout. */
-i[data-fa-i2svg] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
-}
-
-i[data-fa-i2svg] > svg.svg-inline--fa {
-  vertical-align: middle;
-}
+/* Font Awesome Pro 7.2.0 — self-hosted Web Font (no CDN, no SVG+JS).
+ * Core class/glyph mappings + the two families this project uses
+ * (fa-regular 400, fa-solid 900). Vite bundles + hashes the woff2 files
+ * referenced by the @font-face rules in regular/solid. Web Font mode renders
+ * each `<i class="fa-...">` via a ::before glyph with no DOM mutation, so it
+ * doesn't fight React (no blinking / missing-icon races). To add another
+ * family (light/thin/duotone/…), drop its `*.min.css` + matching woff2 into
+ * this folder and add an @import here. */
+@import "./assets/fontawesome/css/fontawesome.min.css";
+@import "./assets/fontawesome/css/regular.min.css";
+@import "./assets/fontawesome/css/solid.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
