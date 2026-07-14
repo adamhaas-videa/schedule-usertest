@@ -12,15 +12,16 @@ import {
   formatHour,
   getSimulatedNowMinutes,
 } from "@/lib/timeline";
-import type { ClinicalTab, OperatoryFilter } from "@/App";
+import type { ClinicalTab } from "@/App";
 import { cn } from "@/lib/utils";
 
 interface OperatoryGridProps {
   patients: Patient[];
   privacyMode: boolean;
-  operatoryFilter: OperatoryFilter;
-  onOperatoryFilterChange: (op: OperatoryFilter) => void;
+  operatories: number[];
+  onOperatoriesChange: (ops: number[]) => void;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
+  onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -32,9 +33,10 @@ const TOP_PAD = 24;
 export default function OperatoryGrid({
   patients,
   privacyMode,
-  operatoryFilter,
-  onOperatoryFilterChange,
+  operatories: selectedOps,
+  onOperatoriesChange,
   onOpenClinical,
+  onSelectPatient,
   scrollRef,
 }: OperatoryGridProps) {
   const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
@@ -60,8 +62,10 @@ export default function OperatoryGrid({
   }, []);
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
-  const focused = operatoryFilter !== "all";
-  const operatories = focused ? [operatoryFilter as number] : ALL_OPERATORIES;
+  const focused = selectedOps.length > 0;
+  const operatories = focused
+    ? [...selectedOps].sort((a, b) => a - b)
+    : ALL_OPERATORIES;
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -80,14 +84,15 @@ export default function OperatoryGrid({
       {focused && (
         <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-info-muted border-b border-info-muted-border">
           <button
-            onClick={() => onOperatoryFilterChange("all")}
+            onClick={() => onOperatoriesChange([])}
             className="flex items-center gap-1.5 text-[12px] font-medium text-info-emphasis hover:text-primary transition-colors"
           >
             <i className="fa-regular fa-chevron-left text-[10px]" aria-hidden />
             Back to all operatories
           </button>
           <span className="text-[12px] text-info-muted-foreground">
-            Focused on <span className="font-semibold">Op {operatoryFilter}</span>
+            Showing{" "}
+            <span className="font-semibold">Op {operatories.join(", ")}</span>
           </span>
         </div>
       )}
@@ -111,7 +116,7 @@ export default function OperatoryGrid({
                 occupied={!!inChairPatient}
                 activePatientName={inChairPatient?.name}
                 onClick={
-                  focused ? undefined : () => onOperatoryFilterChange(op)
+                  focused ? undefined : () => onOperatoriesChange([op])
                 }
                 onPatientNameClick={
                   inChairPatient
@@ -199,6 +204,7 @@ export default function OperatoryGrid({
                     patients={opPatients}
                     privacyMode={privacyMode}
                     onOpenClinical={onOpenClinical}
+                    onSelectPatient={onSelectPatient}
                   />
                 </div>
               </div>

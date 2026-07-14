@@ -5,26 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Videa</title>
-    <script>
-      // SVG+JS rendering options. These keep the kit's runtime DOM rewriting as
-      // React-friendly as possible (see notes below). They are harmlessly
-      // ignored when the kit's Technology is set to "Web Font" in the dashboard,
-      // which is the recommended, conflict-free mode for React – see
-      // .font-awesome.md.
-      window.FontAwesomeConfig = {
-        // Keep the original <i> and nest the <svg> inside it, so React still
-        // owns the element it rendered instead of having it replaced.
-        autoReplaceSvg: "nest",
-        // Needed so icons added/changed by React after first paint get rendered.
-        observeMutations: true,
-        // Render synchronously instead of deferring to requestAnimationFrame.
-        // The default ("async") causes the empty-then-pop flash / blinking.
-        mutateApproach: "sync",
-        // Don't leave the original <i> as an HTML comment – less DOM churn.
-        keepOriginalSource: false,
-      };
-    </script>
-    <script src="https://kit.fontawesome.com/f165c6ea78.js" crossorigin="anonymous"></script>
+    <!-- Font Awesome Pro is self-hosted as a Web Font, imported from
+         src/index.css. No CDN kit script — see .font-awesome.md. -->
   </head>
   <body>
     <div id="root"></div>

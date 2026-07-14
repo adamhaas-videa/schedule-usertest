@@ -7,6 +7,7 @@ import type {
 import { computeAge, timeToMinutes } from "@/data/mockPatients";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ClinicalTab } from "@/App";
+import { getProviderColor } from "@/lib/providerColors";
 import { cn } from "@/lib/utils";
 
 interface PatientListViewProps {
@@ -173,21 +174,29 @@ const PatientRow = memo(function PatientRow({
         <span className="text-sm text-foreground tabular-nums">
           {formatTimeShort(patient.appointmentTime)}
         </span>
-        {patient.provider && (
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Avatar
-              size="sm"
-              className="size-[22px] bg-periwinkle-100 after:border-transparent shrink-0"
-            >
-              <AvatarFallback className="bg-periwinkle-100 text-deep-teal-600 text-[10px] font-semibold">
-                {patient.provider.initials}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
-              Op {patient.operatory}
-            </span>
-          </div>
-        )}
+        {patient.provider &&
+          (() => {
+            const color = getProviderColor(patient.provider.id);
+            return (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Avatar
+                  size="sm"
+                  className="size-[22px] after:border-transparent shrink-0"
+                  style={{ backgroundColor: color.bg }}
+                >
+                  <AvatarFallback
+                    className="text-[10px] font-semibold"
+                    style={{ backgroundColor: color.bg, color: color.fg }}
+                  >
+                    {patient.provider.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
+                  Op {patient.operatory}
+                </span>
+              </div>
+            );
+          })()}
       </div>
 
       {/* Patient */}

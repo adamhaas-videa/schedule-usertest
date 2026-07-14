@@ -14,6 +14,7 @@ interface OperatoryColumnProps {
   patients: Patient[];
   privacyMode: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
+  onSelectPatient: (patient: Patient) => void;
 }
 
 const CARD_GAP = 2;
@@ -57,6 +58,7 @@ export default function OperatoryColumn({
   patients,
   privacyMode,
   onOpenClinical,
+  onSelectPatient,
 }: OperatoryColumnProps) {
   const sorted = [...patients].sort(
     (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
@@ -149,6 +151,7 @@ export default function OperatoryColumn({
               variant="calendar"
               privacyMode={privacyMode}
               onOpenClinical={onOpenClinical}
+              onSelectPatient={onSelectPatient}
             />
           </div>
         );

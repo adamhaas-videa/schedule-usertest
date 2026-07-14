@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
 import type { ClinicalTab } from "@/App";
+import { getProviderColor } from "@/lib/providerColors";
 import { cn } from "@/lib/utils";
 
 interface PatientCardProps {
@@ -12,6 +13,7 @@ interface PatientCardProps {
   isPeek?: boolean;
   privacyMode?: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
+  onSelectPatient?: (patient: Patient) => void;
 }
 
 function PerioIcon({ className }: { className?: string }) {
@@ -74,18 +76,23 @@ function StatusBadge({ kind }: { kind: StatusKind }) {
 function ProviderChip({ patient }: { patient: Patient }) {
   const provider = patient.provider;
   if (!provider) return <div className="h-[22px]" />;
+  const color = getProviderColor(provider.id);
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <Avatar
         size="sm"
-        className="size-[22px] bg-periwinkle-100 after:border-transparent shrink-0"
+        className="size-[22px] after:border-transparent shrink-0"
+        style={{ backgroundColor: color.bg }}
       >
-        <AvatarFallback className="bg-periwinkle-100 text-deep-teal-600 text-[10px] font-semibold">
+        <AvatarFallback
+          className="text-[10px] font-semibold"
+          style={{ backgroundColor: color.bg, color: color.fg }}
+        >
           {provider.initials}
         </AvatarFallback>
       </Avatar>
-      <span className="text-[11px] font-medium text-muted-foreground shrink-0">
-        {provider.role}
+      <span className="text-[11px] font-medium text-muted-foreground truncate">
+        {provider.name}
       </span>
     </div>
   );
@@ -143,6 +150,7 @@ interface CardChromeProps {
   patient: Patient;
   privacyMode: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
+  onSelectPatient?: (patient: Patient) => void;
   className?: string;
 }
 
@@ -150,6 +158,7 @@ function FullCard({
   patient,
   privacyMode,
   onOpenClinical,
+  onSelectPatient,
   className,
 }: CardChromeProps) {
   const status = deriveStatus(patient);
@@ -175,14 +184,16 @@ function FullCard({
         )}
       >
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-          <span
+          <button
+            type="button"
+            onClick={() => onSelectPatient?.(patient)}
             className={cn(
-              "text-sm font-semibold text-foreground truncate leading-tight",
+              "text-left text-sm font-semibold text-foreground truncate leading-tight hover:underline focus-visible:underline outline-none cursor-pointer",
               nameClass
             )}
           >
             {patient.name}
-          </span>
+          </button>
           <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
             {patient.appointmentTime} <span className="px-1">·</span> Age {age}
           </span>
@@ -212,6 +223,7 @@ function PatientCard({
   isPeek = false,
   privacyMode = false,
   onOpenClinical,
+  onSelectPatient,
 }: PatientCardProps) {
   if (variant === "compact") {
     const status = deriveStatus(patient);
@@ -257,6 +269,7 @@ function PatientCard({
       patient={patient}
       privacyMode={privacyMode}
       onOpenClinical={onOpenClinical}
+      onSelectPatient={onSelectPatient}
       className={variant === "calendar" ? "h-full" : ""}
     />
   );

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
+import { getProviderColor } from "@/lib/providerColors";
 import { cn } from "@/lib/utils";
 
 function PerioIcon({ className }: { className?: string }) {
@@ -109,9 +110,18 @@ export default function PatientDetailDrawer({
               <div className="flex items-center gap-2.5">
                 <Avatar
                   size="sm"
-                  className="size-7 bg-periwinkle-300 after:border-transparent"
+                  className="size-7 after:border-transparent"
+                  style={{
+                    backgroundColor: getProviderColor(patient.provider.id).bg,
+                  }}
                 >
-                  <AvatarFallback className="bg-periwinkle-300 text-deep-teal-800 text-[11px] font-semibold">
+                  <AvatarFallback
+                    className="text-[11px] font-semibold"
+                    style={{
+                      backgroundColor: getProviderColor(patient.provider.id).bg,
+                      color: getProviderColor(patient.provider.id).fg,
+                    }}
+                  >
                     {patient.provider.initials}
                   </AvatarFallback>
                 </Avatar>

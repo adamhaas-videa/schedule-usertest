@@ -1,15 +1,11 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import SearchField from "@/components/SearchField";
 import PrivacyToggle from "@/components/PrivacyToggle";
+import ProviderMultiSelect, {
+  type ProviderOption,
+} from "@/components/ProviderMultiSelect";
+import OperatoryMultiSelect from "@/components/OperatoryMultiSelect";
 import type { Patient } from "@/data/mockPatients";
 import { DENTISTS, HYGIENISTS } from "@/data/mockPatients";
 import type { ScheduleFilters, ScheduleView } from "@/App";
@@ -55,17 +51,20 @@ export default function L2Header({
   onSelectPatient,
 }: L2HeaderProps) {
   const filtersActive =
-    filters.provider !== "all" || filters.operatory !== "all";
+    filters.providers.length > 0 || filters.operatories.length > 0;
 
-  const providerOptions = (() => {
+  const providerOptions: ProviderOption[] = (() => {
     const seen = new Set<string>();
-    const opts: Array<{ value: string; label: string }> = [
-      { value: "all", label: "All" },
-    ];
+    const opts: ProviderOption[] = [];
     for (const p of [...DENTISTS, ...HYGIENISTS]) {
       if (seen.has(p.id)) continue;
       seen.add(p.id);
-      opts.push({ value: p.id, label: p.name });
+      opts.push({
+        id: p.id,
+        name: p.name,
+        role: p.role,
+        initials: p.initials,
+      });
     }
     return opts;
   })();
@@ -134,37 +133,24 @@ export default function L2Header({
 
       {/* Filters */}
       <div className="flex items-center gap-2 shrink-0">
-        <FilterSelect
-          label="Providers"
-          value={filters.provider}
-          onChange={(v) => onFiltersChange({ ...filters, provider: v })}
-          options={providerOptions}
+        <ProviderMultiSelect
+          providers={providerOptions}
+          selected={filters.providers}
+          onChange={(ids) => onFiltersChange({ ...filters, providers: ids })}
         />
 
-        <FilterSelect
-          label="Operatory"
-          value={filters.operatory === "all" ? "all" : String(filters.operatory)}
-          onChange={(v) =>
-            onFiltersChange({
-              ...filters,
-              operatory: v === "all" ? "all" : Number(v),
-            })
-          }
-          options={[
-            { value: "all", label: "All" },
-            ...OPERATORY_OPTIONS.map((op) => ({
-              value: String(op),
-              label: `${op}`,
-            })),
-          ]}
+        <OperatoryMultiSelect
+          options={OPERATORY_OPTIONS}
+          selected={filters.operatories}
+          onChange={(ops) => onFiltersChange({ ...filters, operatories: ops })}
         />
 
         {filtersActive && (
           <button
             onClick={() =>
               onFiltersChange({
-                provider: "all",
-                operatory: "all",
+                providers: [],
+                operatories: [],
               })
             }
             className="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -225,34 +211,3 @@ function ViewModeButton({
   );
 }
 
-interface FilterSelectProps {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: Array<{ value: string; label: string }>;
-}
-
-function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
-  const current = options.find((o) => o.value === value) ?? options[0];
-  return (
-    <Select value={value} onValueChange={(v) => onChange(String(v))}>
-      <SelectTrigger className="h-8 bg-card text-sm gap-1.5">
-        <SelectValue>
-          <span className="text-muted-foreground">{label}:</span>
-          <span className="font-medium text-foreground truncate">
-            {current.label}
-          </span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
-  );
-}

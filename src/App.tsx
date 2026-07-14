@@ -13,13 +13,12 @@ import {
   READY_FOR_CHAIR_WINDOW_MIN,
 } from "@/lib/timeline";
 
-export type OperatoryFilter = "all" | number;
 export type ScheduleView = "list" | "calendar";
 export type ClinicalTab = "xray" | "voice" | "perio";
 
 export interface ScheduleFilters {
-  provider: string;
-  operatory: OperatoryFilter;
+  providers: string[];
+  operatories: number[];
 }
 
 type AppView =
@@ -27,8 +26,8 @@ type AppView =
   | { kind: "clinical"; patient: Patient; tab: ClinicalTab };
 
 const INITIAL_FILTERS: ScheduleFilters = {
-  provider: "all",
-  operatory: "all",
+  providers: [],
+  operatories: [],
 };
 
 export default function App() {
@@ -70,14 +69,16 @@ export default function App() {
 
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
-      if (
-        filters.provider !== "all" &&
-        p.provider?.id !== filters.provider &&
-        p.hygienist?.id !== filters.provider
-      ) {
-        return false;
+      if (filters.providers.length > 0) {
+        const matches =
+          (p.provider && filters.providers.includes(p.provider.id)) ||
+          (p.hygienist && filters.providers.includes(p.hygienist.id));
+        if (!matches) return false;
       }
-      if (filters.operatory !== "all" && p.operatory !== filters.operatory) {
+      if (
+        filters.operatories.length > 0 &&
+        !filters.operatories.includes(p.operatory)
+      ) {
         return false;
       }
       return true;
@@ -120,11 +121,12 @@ export default function App() {
                 scrollRef={scrollRef}
                 patients={filteredPatients}
                 privacyMode={privacyMode}
-                operatoryFilter={filters.operatory}
-                onOperatoryFilterChange={(op) =>
-                  setFilters((prev) => ({ ...prev, operatory: op }))
+                operatories={filters.operatories}
+                onOperatoriesChange={(ops) =>
+                  setFilters((prev) => ({ ...prev, operatories: ops }))
                 }
                 onOpenClinical={handleOpenClinical}
+                onSelectPatient={handleSelectPatient}
               />
             )}
           </main>

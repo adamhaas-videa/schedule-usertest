@@ -1,3 +1,4 @@
+import { ChevronDownIcon } from "lucide-react";
 import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
 import type { ClinicalTab } from "@/App";
@@ -139,7 +140,10 @@ export default function ClinicalHeader({
         >
           <span className="text-muted-foreground">Appt:</span>
           <span className="font-medium">{appointmentLabel}</span>
-          <i className="fa-regular fa-chevron-down text-xs text-muted-foreground" aria-hidden />
+          <ChevronDownIcon
+            className="size-4 opacity-50 shrink-0 pointer-events-none"
+            aria-hidden
+          />
         </button>
       </div>
     </div>
