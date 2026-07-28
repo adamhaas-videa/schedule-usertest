@@ -18,8 +18,23 @@ interface PatientListViewProps {
 
 // Figma columns (in order): Time | Patient | Clinical Summary | Buttons
 // Header has no label for the Buttons column. Min row height matches Figma 96px.
-const GRID_TEMPLATE =
-  "grid-cols-[96px_minmax(220px,260px)_minmax(0,1fr)_auto]";
+//
+// Responsive strategy (iPad is the minimum target — no mobile layout):
+//   • Every column is a FIXED width — the columns stay pinned at all sizes.
+//   • The row grid uses `justify-between`, so the free space left over after the
+//     fixed tracks is distributed EQUALLY into the gaps between columns. As the
+//     viewport widens every gap grows by the same amount; as it narrows they
+//     shrink equally down to the `gap-3` floor (columns pinned, gaps collapsed).
+//   • Because the surplus is spread across all gaps, there's no single large
+//     void between Clinical Summary and the action buttons on wide screens.
+//   • Fixed tracks are container-relative and identical for the header and every
+//     row, so columns stay perfectly aligned regardless of content.
+//   • Only the Actions column changes across breakpoints: it widens at xl+ where
+//     the buttons gain text labels (icons-only below that).
+const GRID_TEMPLATE = cn(
+  "grid-cols-[72px_172px_240px_136px]",
+  "xl:grid-cols-[72px_172px_240px_320px]"
+);
 
 // Pill palette per Figma node 3093:11790:
 //   Stage 3 Perio → bg #fae3e2 / text #c63e38 / red dot
@@ -109,9 +124,12 @@ interface RowActionsProps {
 }
 
 function RowActions({ onAction }: RowActionsProps) {
+  // Icon-only square through the iPad range; grows into a labeled pill at xl+
+  // (desktop / non-iPad) where there's horizontal room for text.
   const base =
-    "flex items-center justify-center size-10 rounded-md transition-colors";
+    "flex items-center justify-center gap-2 h-10 w-10 rounded-md transition-colors xl:w-auto xl:px-3.5";
   const tone = "bg-primary text-primary-foreground hover:bg-primary-hover";
+  const label = "hidden xl:inline text-[13px] font-medium leading-none";
   return (
     <div className="flex items-center gap-2 shrink-0">
       <button
@@ -122,15 +140,17 @@ function RowActions({ onAction }: RowActionsProps) {
         className={cn(base, tone)}
       >
         <i className="fa-regular fa-images w-5 h-5" aria-hidden />
+        <span className={label}>Images</span>
       </button>
       <button
         type="button"
         onClick={() => onAction("voice")}
-        aria-label="Voice note"
-        title="Voice note"
+        aria-label="Notes"
+        title="Notes"
         className={cn(base, tone)}
       >
         <i className="fa-regular fa-microphone w-5 h-5" aria-hidden />
+        <span className={label}>Notes</span>
       </button>
       <button
         type="button"
@@ -140,6 +160,7 @@ function RowActions({ onAction }: RowActionsProps) {
         className={cn(base, tone)}
       >
         <PerioIcon className="w-5 h-5" />
+        <span className={label}>Perio</span>
       </button>
     </div>
   );
@@ -164,7 +185,7 @@ const PatientRow = memo(function PatientRow({
     <div
       role="row"
       className={cn(
-        "grid items-center gap-3 px-4 py-3 border-b border-border bg-card transition-colors min-h-[96px]",
+        "grid justify-between items-center gap-3 px-4 py-3 border-b border-border bg-card transition-colors min-h-[96px]",
         "[content-visibility:auto] [contain-intrinsic-size:auto_96px]",
         GRID_TEMPLATE
       )}
@@ -219,7 +240,7 @@ const PatientRow = memo(function PatientRow({
         <div className="flex flex-col items-start gap-1.5 min-w-0">
           {patient.conditionAlert && <AlertChip alert={patient.conditionAlert} />}
           {summary && (
-            <span className="text-[13px] leading-[18px] text-muted-foreground truncate min-w-0 max-w-full">
+            <span className="text-[13px] leading-[18px] text-muted-foreground line-clamp-2 min-w-0 max-w-full">
               {summary}
             </span>
           )}
@@ -251,51 +272,55 @@ export default function PatientListView({
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Count header — matches Figma "11 total appointments" */}
-      <div className="shrink-0 px-6 pt-4 pb-4">
+      <div className="shrink-0 px-4 lg:px-6 pt-4 pb-4">
         <h2 className="text-sm font-medium text-foreground">
           {sortedPatients.length} total appointments
         </h2>
       </div>
 
-      {/* Bordered data table */}
-      <div className="flex-1 min-h-0 px-6 pb-6 overflow-hidden">
+      {/* Bordered data table — spans the full container width with equal padding */}
+      <div className="flex-1 min-h-0 px-4 pb-4 lg:px-6 lg:pb-6 overflow-hidden">
         <div className="h-full rounded-md border border-border bg-card overflow-hidden flex flex-col">
-          {/* Sticky header — Time | Patient | Clinical Summary | (blank) */}
-          <div
-            role="row"
-            className={cn(
-              "grid items-center gap-3 px-4 h-12 border-b border-border bg-card shrink-0",
-              GRID_TEMPLATE
-            )}
-          >
-            <span role="columnheader" className="text-sm font-medium text-muted-foreground">
-              Time
-            </span>
-            <span role="columnheader" className="text-sm font-medium text-muted-foreground">
-              Patient
-            </span>
-            <span role="columnheader" className="text-sm font-medium text-muted-foreground">
-              Clinical Summary
-            </span>
-            <span role="columnheader" aria-hidden className="" />
-          </div>
+          {/* Single scroll context so the sticky header and the rows share the
+              exact same content width (incl. scrollbar gutter) and stay aligned. */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {/* Sticky header — Time | Patient | Clinical Summary | (blank) */}
+            <div
+              role="row"
+              className={cn(
+                "sticky top-0 z-10 grid justify-between items-center gap-3 px-4 h-12 border-b border-border bg-card",
+                GRID_TEMPLATE
+              )}
+            >
+              <span role="columnheader" className="text-sm font-medium text-muted-foreground">
+                Time
+              </span>
+              <span role="columnheader" className="text-sm font-medium text-muted-foreground">
+                Patient
+              </span>
+              <span role="columnheader" className="text-sm font-medium text-muted-foreground">
+                Clinical Summary
+              </span>
+              <span role="columnheader" aria-hidden className="" />
+            </div>
 
-          {/* Body */}
-          <div role="rowgroup" className="flex-1 min-h-0 overflow-y-auto">
-            {sortedPatients.length === 0 ? (
-              <div className="flex items-center justify-center h-full p-8 text-sm text-muted-foreground">
-                No appointments match the current filters.
-              </div>
-            ) : (
-              sortedPatients.map((patient) => (
-                <PatientRow
-                  key={patient.id}
-                  patient={patient}
-                  privacyMode={privacyMode}
-                  onOpenClinical={onOpenClinical}
-                />
-              ))
-            )}
+            {/* Body */}
+            <div role="rowgroup">
+              {sortedPatients.length === 0 ? (
+                <div className="flex items-center justify-center p-16 text-sm text-muted-foreground">
+                  No appointments match the current filters.
+                </div>
+              ) : (
+                sortedPatients.map((patient) => (
+                  <PatientRow
+                    key={patient.id}
+                    patient={patient}
+                    privacyMode={privacyMode}
+                    onOpenClinical={onOpenClinical}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
