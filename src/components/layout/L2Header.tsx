@@ -37,7 +37,7 @@ function shiftDate(date: Date, days: number): Date {
   return result;
 }
 
-const OPERATORY_OPTIONS = [1, 2, 3, 4];
+const OPERATORY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export default function L2Header({
   selectedDate,

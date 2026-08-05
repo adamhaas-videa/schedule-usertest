@@ -13,6 +13,7 @@ import {
   getSimulatedNowMinutes,
 } from "@/lib/timeline";
 import type { ClinicalTab } from "@/App";
+import type { CardVersion } from "@/lib/cardVersions";
 import { cn } from "@/lib/utils";
 
 interface OperatoryGridProps {
@@ -23,9 +24,10 @@ interface OperatoryGridProps {
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
+  cardVersion: CardVersion;
 }
 
-const ALL_OPERATORIES = [1, 2, 3, 4];
+const ALL_OPERATORIES = [1, 2, 3, 4, 5, 6, 7, 8];
 const HALF_HOURS = HOURS.slice(0, -1);
 const GUTTER = 64;
 const TOP_PAD = 24;
@@ -38,6 +40,7 @@ export default function OperatoryGrid({
   onOpenClinical,
   onSelectPatient,
   scrollRef,
+  cardVersion,
 }: OperatoryGridProps) {
   const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
 
@@ -205,6 +208,7 @@ export default function OperatoryGrid({
                     privacyMode={privacyMode}
                     onOpenClinical={onOpenClinical}
                     onSelectPatient={onSelectPatient}
+                    cardVersion={cardVersion}
                   />
                 </div>
               </div>

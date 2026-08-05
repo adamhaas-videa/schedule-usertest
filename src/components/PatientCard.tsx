@@ -5,6 +5,7 @@ import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
 import type { ClinicalTab } from "@/App";
 import { getProviderColor } from "@/lib/providerColors";
+import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
 import { cn } from "@/lib/utils";
 
 interface PatientCardProps {
@@ -14,6 +15,7 @@ interface PatientCardProps {
   privacyMode?: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient?: (patient: Patient) => void;
+  cardVersion?: CardVersion;
 }
 
 function PerioIcon({ className }: { className?: string }) {
@@ -99,14 +101,16 @@ function ProviderChip({ patient }: { patient: Patient }) {
 }
 
 // CTA order per Figma: 1) Images, 2) Microphone, 3) Perio.
-// Buttons are static (always visible) on every card and muted on past /
-// completed appointments.
+// Visibility depends on the demo card version: always-on (V1) or reveal on
+// hover/focus (V2). Muted on past / completed appointments.
 function CardActions({
   onAction,
   muted = false,
+  hoverOnly = false,
 }: {
   onAction: (e: React.MouseEvent, tab: ClinicalTab) => void;
   muted?: boolean;
+  hoverOnly?: boolean;
 }) {
   const mutedClass = muted
     ? "bg-muted text-muted-foreground hover:bg-muted-hover hover:text-foreground"
@@ -115,7 +119,9 @@ function CardActions({
     <div
       className={cn(
         "absolute inset-x-0 bottom-0 flex items-center justify-end gap-1.5 px-2.5 pt-3 pb-2.5",
-        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent"
+        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent",
+        hoverOnly &&
+          "opacity-0 pointer-events-none transition-opacity duration-150 group-hover/card:opacity-100 group-hover/card:pointer-events-auto group-focus-within/card:opacity-100 group-focus-within/card:pointer-events-auto"
       )}
     >
       <Button
@@ -151,6 +157,7 @@ interface CardChromeProps {
   privacyMode: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient?: (patient: Patient) => void;
+  cardVersion: CardVersion;
   className?: string;
 }
 
@@ -159,22 +166,59 @@ function FullCard({
   privacyMode,
   onOpenClinical,
   onSelectPatient,
+  cardVersion,
   className,
 }: CardChromeProps) {
   const status = deriveStatus(patient);
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
+
+  // Per-version interaction model (demo switcher):
+  //   V1: buttons always visible; name → summary drawer
+  //   V2: buttons revealed on hover/focus; name → summary drawer
+  //   V3: no buttons; whole card → Images tab (name is not separately clickable)
+  //   V4: no buttons; whole card → Images tab; name → summary drawer
+  const showActions = cardVersion === 1 || cardVersion === 2;
+  // V1 keeps actions always-on only for the patient currently in the chair;
+  // every other card (upcoming, ready, completed, etc.) reveals them on hover.
+  // V2 is always hover-reveal.
+  const hoverActions =
+    cardVersion === 2 || (cardVersion === 1 && status !== "in-chair");
+  const cardOpensImages = cardVersion === 3 || cardVersion === 4;
+  const nameOpensSummary =
+    cardVersion === 1 || cardVersion === 2 || cardVersion === 4;
+
   const handleAction = (e: React.MouseEvent, tab: ClinicalTab) => {
     e.stopPropagation();
     onOpenClinical(patient, tab);
   };
 
+  const handleCardActivate = () => {
+    if (cardOpensImages) onOpenClinical(patient, "xray");
+  };
+
   return (
     <div
       className={cn(
-        "relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] border-border bg-card p-2.5 overflow-hidden",
+        "group/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] border-border bg-card p-2.5 overflow-hidden",
+        cardOpensImages &&
+          "cursor-pointer transition-shadow hover:border-primary/50 hover:ring-2 hover:ring-primary/30 focus-visible:outline-none focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/40",
         className
       )}
+      {...(cardOpensImages
+        ? {
+            role: "button" as const,
+            tabIndex: 0,
+            "aria-label": `Open ${patient.name} images`,
+            onClick: handleCardActivate,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleCardActivate();
+              }
+            },
+          }
+        : {})}
     >
       {/* Top — patient + optional status */}
       <div
@@ -184,16 +228,30 @@ function FullCard({
         )}
       >
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => onSelectPatient?.(patient)}
-            className={cn(
-              "text-left text-sm font-semibold text-foreground truncate leading-tight hover:underline focus-visible:underline outline-none cursor-pointer",
-              nameClass
-            )}
-          >
-            {patient.name}
-          </button>
+          {nameOpensSummary ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectPatient?.(patient);
+              }}
+              className={cn(
+                "text-left text-sm font-semibold text-foreground truncate leading-tight hover:underline focus-visible:underline outline-none cursor-pointer",
+                nameClass
+              )}
+            >
+              {patient.name}
+            </button>
+          ) : (
+            <span
+              className={cn(
+                "text-sm font-semibold text-foreground truncate leading-tight",
+                nameClass
+              )}
+            >
+              {patient.name}
+            </span>
+          )}
           <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
             {patient.appointmentTime} <span className="px-1">·</span> Age {age}
           </span>
@@ -211,8 +269,14 @@ function FullCard({
         <ProviderChip patient={patient} />
       </div>
 
-      {/* Action strip — static on every card, muted on completed */}
-      <CardActions onAction={handleAction} muted={status === "completed"} />
+      {/* Action strip — visibility controlled by the demo card version */}
+      {showActions && (
+        <CardActions
+          onAction={handleAction}
+          muted={status === "completed"}
+          hoverOnly={hoverActions}
+        />
+      )}
     </div>
   );
 }
@@ -224,6 +288,7 @@ function PatientCard({
   privacyMode = false,
   onOpenClinical,
   onSelectPatient,
+  cardVersion = DEFAULT_CARD_VERSION,
 }: PatientCardProps) {
   if (variant === "compact") {
     const status = deriveStatus(patient);
@@ -270,6 +335,7 @@ function PatientCard({
       privacyMode={privacyMode}
       onOpenClinical={onOpenClinical}
       onSelectPatient={onSelectPatient}
+      cardVersion={cardVersion}
       className={variant === "calendar" ? "h-full" : ""}
     />
   );

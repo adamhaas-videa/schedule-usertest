@@ -2,6 +2,7 @@ import type { Patient, ScheduleBlock } from "@/data/mockPatients";
 import { timeToMinutes, minutesToTime, mockBlocks } from "@/data/mockPatients";
 import PatientCard from "./PatientCard";
 import type { ClinicalTab } from "@/App";
+import type { CardVersion } from "@/lib/cardVersions";
 import {
   minutesToY,
   durationToHeight,
@@ -15,6 +16,7 @@ interface OperatoryColumnProps {
   privacyMode: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient: (patient: Patient) => void;
+  cardVersion: CardVersion;
 }
 
 const CARD_GAP = 2;
@@ -59,6 +61,7 @@ export default function OperatoryColumn({
   privacyMode,
   onOpenClinical,
   onSelectPatient,
+  cardVersion,
 }: OperatoryColumnProps) {
   const sorted = [...patients].sort(
     (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
@@ -152,6 +155,7 @@ export default function OperatoryColumn({
               privacyMode={privacyMode}
               onOpenClinical={onOpenClinical}
               onSelectPatient={onSelectPatient}
+              cardVersion={cardVersion}
             />
           </div>
         );

@@ -12,6 +12,7 @@ import {
   getSimulatedNowMinutes,
   READY_FOR_CHAIR_WINDOW_MIN,
 } from "@/lib/timeline";
+import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
 
 export type ScheduleView = "list" | "calendar";
 export type ClinicalTab = "xray" | "voice" | "perio";
@@ -38,6 +39,9 @@ export default function App() {
   const [filters, setFilters] = useState<ScheduleFilters>(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState<ScheduleView>("calendar");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [cardVersion, setCardVersion] = useState<CardVersion>(
+    DEFAULT_CARD_VERSION
+  );
   const [view, setView] = useState<AppView>({ kind: "schedule" });
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +101,10 @@ export default function App() {
     >
       {view.kind === "schedule" ? (
         <>
-          <L1Header />
+          <L1Header
+            cardVersion={cardVersion}
+            onCardVersionChange={setCardVersion}
+          />
           <L2Header
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
@@ -127,6 +134,7 @@ export default function App() {
                 }
                 onOpenClinical={handleOpenClinical}
                 onSelectPatient={handleSelectPatient}
+                cardVersion={cardVersion}
               />
             )}
           </main>

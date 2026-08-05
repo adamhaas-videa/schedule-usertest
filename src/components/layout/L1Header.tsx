@@ -1,4 +1,15 @@
-export default function L1Header() {
+import CardVersionMenu from "@/components/CardVersionMenu";
+import type { CardVersion } from "@/lib/cardVersions";
+
+interface L1HeaderProps {
+  cardVersion: CardVersion;
+  onCardVersionChange: (version: CardVersion) => void;
+}
+
+export default function L1Header({
+  cardVersion,
+  onCardVersionChange,
+}: L1HeaderProps) {
   return (
     <header className="h-14 shrink-0 bg-card border-b border-border flex items-center gap-4 px-4 overflow-hidden">
       <h1 className="text-xl font-semibold text-foreground whitespace-nowrap">
@@ -6,6 +17,8 @@ export default function L1Header() {
       </h1>
 
       <div className="flex-1 min-w-0" />
+
+      <CardVersionMenu value={cardVersion} onChange={onCardVersionChange} />
 
       <button
         type="button"
