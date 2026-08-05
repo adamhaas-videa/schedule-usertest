@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
-import type { Patient } from "@/data/mockPatients";
-import { minutesToTime, timeToMinutes } from "@/data/mockPatients";
+import { useEffect, useMemo, useState } from "react";
+import type { Patient, Provider, ScheduleBlock } from "@/data/mockPatients";
+import { minutesToTime, timeToMinutes, mockBlocks } from "@/data/mockPatients";
 import OperatoryColumn from "./OperatoryColumn";
 import OperatoryHeader from "./OperatoryHeader";
+import ColumnModeMenu, { type ColumnMode } from "./ColumnModeMenu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getProviderColor } from "@/lib/providerColors";
 import {
   TOTAL_HEIGHT,
   HOURS,
@@ -32,6 +35,74 @@ const HALF_HOURS = HOURS.slice(0, -1);
 const GUTTER = 64;
 const TOP_PAD = 24;
 
+// A single timeline column — either an operatory (with its lunch blocks) or a
+// provider (aggregating that provider's appointments across operatories).
+interface GridColumn {
+  key: string;
+  operatory?: number;
+  provider?: Provider;
+  patients: Patient[];
+  blocks: ScheduleBlock[];
+}
+
+// In-chair pill shown in a provider column header, mirroring OperatoryHeader.
+function ProviderColumnHeader({
+  provider,
+  activePatientName,
+  onPatientNameClick,
+}: {
+  provider: Provider;
+  activePatientName?: string;
+  onPatientNameClick?: () => void;
+}) {
+  const color = getProviderColor(provider.id);
+  return (
+    <div className="w-full h-12 px-3 flex items-center gap-2 text-left">
+      <Avatar
+        size="sm"
+        className="size-[22px] after:border-transparent shrink-0"
+        style={{ backgroundColor: color.bg }}
+      >
+        <AvatarFallback
+          className="text-[10px] font-semibold"
+          style={{ backgroundColor: color.bg, color: color.fg }}
+        >
+          {provider.initials}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col min-w-0">
+        <span className="text-[13px] font-semibold text-foreground leading-tight truncate">
+          {provider.name}
+        </span>
+        <span className="text-[10px] font-medium text-muted-foreground leading-tight">
+          {provider.role}
+        </span>
+      </div>
+      {activePatientName && (
+        <button
+          type="button"
+          onClick={onPatientNameClick}
+          disabled={!onPatientNameClick}
+          aria-label={
+            onPatientNameClick ? `Scroll to ${activePatientName}` : undefined
+          }
+          className={cn(
+            "ml-auto inline-flex items-center gap-1.5 h-[21px] px-2 py-1 rounded-full bg-card border border-border max-w-[50%] transition-colors",
+            onPatientNameClick
+              ? "cursor-pointer hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              : "cursor-default"
+          )}
+        >
+          <span className="size-1.5 rounded-full bg-success shrink-0" />
+          <span className="text-[11px] font-medium text-foreground truncate">
+            {activePatientName}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function OperatoryGrid({
   patients,
   privacyMode,
@@ -43,9 +114,10 @@ export default function OperatoryGrid({
   cardVersion,
 }: OperatoryGridProps) {
   const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
+  const [columnMode, setColumnMode] = useState<ColumnMode>("operatory");
 
   // Scroll the timeline so the given patient's card is centered. Used by the
-  // operatory header shortcut (click the in-chair patient name).
+  // column header shortcut (click the in-chair patient name).
   const scrollToPatient = (patient: Patient) => {
     if (!scrollRef.current) return;
     const y = TOP_PAD + minutesToY(timeToMinutes(patient.appointmentTime));
@@ -65,10 +137,57 @@ export default function OperatoryGrid({
   }, []);
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
-  const focused = selectedOps.length > 0;
+  const focused = columnMode === "operatory" && selectedOps.length > 0;
   const operatories = focused
     ? [...selectedOps].sort((a, b) => a - b)
     : ALL_OPERATORIES;
+
+  const columns: GridColumn[] = useMemo(() => {
+    if (columnMode === "provider") {
+      const byProvider = new Map<
+        string,
+        { provider: Provider; patients: Patient[] }
+      >();
+      for (const p of patients) {
+        if (!p.provider) continue;
+        const entry = byProvider.get(p.provider.id) ?? {
+          provider: p.provider,
+          patients: [],
+        };
+        entry.patients.push(p);
+        byProvider.set(p.provider.id, entry);
+      }
+      return [...byProvider.values()]
+        .sort((a, b) => a.provider.name.localeCompare(b.provider.name))
+        .map((e) => ({
+          key: `prov-${e.provider.id}`,
+          provider: e.provider,
+          patients: e.patients,
+          blocks: [],
+        }));
+    }
+    return operatories.map((op) => ({
+      key: `op-${op}`,
+      operatory: op,
+      patients: patients.filter((p) => p.operatory === op),
+      blocks: mockBlocks.filter((b) => b.operatory === op),
+    }));
+  }, [columnMode, patients, operatories]);
+
+  // Don't let a small set of columns stretch across the whole container (cards
+  // get too wide). This applies in the focused operatory view AND the provider
+  // view: pin each column to (container - gutter) / max(2, N) based on the
+  // actual rendered columns, so 1 column → ~half the width, 2 → half each, 3+
+  // scale down further. The non-focused operatory view keeps filling via flex.
+  const constrainColumns = focused || columnMode === "provider";
+  const columnWidthDivisor = Math.max(2, columns.length);
+  const columnStyle: React.CSSProperties | undefined = constrainColumns
+    ? {
+        flex: "0 0 auto",
+        width: `calc((100% - ${GUTTER}px) / ${columnWidthDivisor})`,
+      }
+    : undefined;
+  const columnGrowClass = constrainColumns ? "min-w-0" : "flex-1 min-w-0";
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -83,7 +202,7 @@ export default function OperatoryGrid({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Focused-op banner */}
+      {/* Focused-op banner (operatory mode only) */}
       {focused && (
         <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-info-muted border-b border-info-muted-border">
           <button
@@ -102,31 +221,52 @@ export default function OperatoryGrid({
 
       {/* Fixed header row — outside scroll, never moves */}
       <div className="shrink-0 flex border-b border-border bg-card">
-        <div className="shrink-0" style={{ width: GUTTER }} />
-        {operatories.map((op, i) => {
-          const opPatients = patients.filter((p) => p.operatory === op);
-          const inChairPatient = opPatients.find((p) => p.status === "in-chair");
+        <div
+          className="shrink-0 flex items-center justify-center"
+          style={{ width: GUTTER }}
+        >
+          <ColumnModeMenu value={columnMode} onChange={setColumnMode} />
+        </div>
+        {columns.map((col, i) => {
+          const inChairPatient = col.patients.find(
+            (p) => p.status === "in-chair"
+          );
           return (
             <div
-              key={op}
+              key={col.key}
               className={cn(
-                "flex-1 min-w-0",
+                columnGrowClass,
                 i > 0 ? "border-l border-border" : ""
               )}
+              style={columnStyle}
             >
-              <OperatoryHeader
-                operatory={op}
-                occupied={!!inChairPatient}
-                activePatientName={inChairPatient?.name}
-                onClick={
-                  focused ? undefined : () => onOperatoriesChange([op])
-                }
-                onPatientNameClick={
-                  inChairPatient
-                    ? () => scrollToPatient(inChairPatient)
-                    : undefined
-                }
-              />
+              {col.operatory !== undefined ? (
+                <OperatoryHeader
+                  operatory={col.operatory}
+                  occupied={!!inChairPatient}
+                  activePatientName={inChairPatient?.name}
+                  onClick={
+                    focused
+                      ? undefined
+                      : () => onOperatoriesChange([col.operatory!])
+                  }
+                  onPatientNameClick={
+                    inChairPatient
+                      ? () => scrollToPatient(inChairPatient)
+                      : undefined
+                  }
+                />
+              ) : (
+                <ProviderColumnHeader
+                  provider={col.provider!}
+                  activePatientName={inChairPatient?.name}
+                  onPatientNameClick={
+                    inChairPatient
+                      ? () => scrollToPatient(inChairPatient)
+                      : undefined
+                  }
+                />
+              )}
             </div>
           );
         })}
@@ -172,48 +312,47 @@ export default function OperatoryGrid({
             ))}
           </div>
 
-          {/* Operatory columns — bg flush to header, content offset by TOP_PAD */}
-          {operatories.map((op, i) => {
-            const opPatients = patients.filter((p) => p.operatory === op);
-            return (
+          {/* Columns — bg flush to header, content offset by TOP_PAD */}
+          {columns.map((col, i) => (
+            <div
+              key={col.key}
+              className={cn(
+                columnGrowClass,
+                "bg-card",
+                i > 0 ? "border-l border-border" : ""
+              )}
+              style={columnStyle}
+            >
               <div
-                key={op}
-                className={cn(
-                  "flex-1 min-w-0 bg-card",
-                  i > 0 ? "border-l border-border" : ""
-                )}
+                className="relative"
+                style={{ marginTop: TOP_PAD, height: TOTAL_HEIGHT }}
               >
-                <div
-                  className="relative"
-                  style={{ marginTop: TOP_PAD, height: TOTAL_HEIGHT }}
-                >
-                  {HOURS.map((hour) => (
-                    <div
-                      key={`h-${hour}`}
-                      className="absolute left-0 right-0 border-t border-border/50"
-                      style={{ top: minutesToY(hour * 60) }}
-                    />
-                  ))}
-                  {HALF_HOURS.map((hour) => (
-                    <div
-                      key={`hh-${hour}`}
-                      className="absolute left-0 right-0 border-t border-dashed border-border/30"
-                      style={{ top: minutesToY(hour * 60 + 30) }}
-                    />
-                  ))}
-
-                  <OperatoryColumn
-                    operatory={op}
-                    patients={opPatients}
-                    privacyMode={privacyMode}
-                    onOpenClinical={onOpenClinical}
-                    onSelectPatient={onSelectPatient}
-                    cardVersion={cardVersion}
+                {HOURS.map((hour) => (
+                  <div
+                    key={`h-${hour}`}
+                    className="absolute left-0 right-0 border-t border-border/50"
+                    style={{ top: minutesToY(hour * 60) }}
                   />
-                </div>
+                ))}
+                {HALF_HOURS.map((hour) => (
+                  <div
+                    key={`hh-${hour}`}
+                    className="absolute left-0 right-0 border-t border-dashed border-border/30"
+                    style={{ top: minutesToY(hour * 60 + 30) }}
+                  />
+                ))}
+
+                <OperatoryColumn
+                  patients={col.patients}
+                  blocks={col.blocks}
+                  privacyMode={privacyMode}
+                  onOpenClinical={onOpenClinical}
+                  onSelectPatient={onSelectPatient}
+                  cardVersion={cardVersion}
+                />
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </div>

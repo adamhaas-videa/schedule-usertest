@@ -1,5 +1,5 @@
 import type { Patient, ScheduleBlock } from "@/data/mockPatients";
-import { timeToMinutes, minutesToTime, mockBlocks } from "@/data/mockPatients";
+import { timeToMinutes, minutesToTime } from "@/data/mockPatients";
 import PatientCard from "./PatientCard";
 import type { ClinicalTab } from "@/App";
 import type { CardVersion } from "@/lib/cardVersions";
@@ -8,11 +8,14 @@ import {
   durationToHeight,
   START_HOUR,
   END_HOUR,
+  MIN_CARD_MINUTES,
 } from "@/lib/timeline";
 
 interface OperatoryColumnProps {
-  operatory: number;
   patients: Patient[];
+  // Non-appointment blocks (e.g. lunch) for this column. Operatory columns pass
+  // their per-op blocks; provider columns pass none.
+  blocks?: ScheduleBlock[];
   privacyMode: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient: (patient: Patient) => void;
@@ -56,8 +59,8 @@ function getOpenSlots(occupied: Occupied[]): OpenSlot[] {
 }
 
 export default function OperatoryColumn({
-  operatory,
   patients,
+  blocks = [],
   privacyMode,
   onOpenClinical,
   onSelectPatient,
@@ -65,10 +68,6 @@ export default function OperatoryColumn({
 }: OperatoryColumnProps) {
   const sorted = [...patients].sort(
     (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
-  );
-
-  const blocks: ScheduleBlock[] = mockBlocks.filter(
-    (b) => b.operatory === operatory
   );
 
   const occupied: Occupied[] = [
@@ -134,7 +133,11 @@ export default function OperatoryColumn({
       {sorted.map((patient) => {
         const startMin = timeToMinutes(patient.appointmentTime);
         const top = minutesToY(startMin);
-        const height = durationToHeight(patient.durationMinutes) - CARD_GAP;
+        // Floor the VISUAL height to a 30-min slot; top position and open-slot
+        // math above still use the real durationMinutes.
+        const height =
+          durationToHeight(Math.max(patient.durationMinutes, MIN_CARD_MINUTES)) -
+          CARD_GAP;
 
         return (
           <div

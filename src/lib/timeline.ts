@@ -1,5 +1,9 @@
 export const START_HOUR = 7;
 export const END_HOUR = 19;
+// Prototype's minimum card size: no appointment is shorter than 30 minutes, so
+// any card renders at least a 30-min slot's height. Only clamps VISUAL height —
+// schedule geometry (top position, open-slot/occupied math) uses real durations.
+export const MIN_CARD_MINUTES = 30;
 // 180px/hour → 90px per 30-min slot → 88px card height after CARD_GAP (=2),
 // which fits the FullCard content floor (p-2.5 padding + gap-2 + ~34px top
 // row + 22px provider chip ≈ 84–86px) with a ~2px buffer. Lowering this

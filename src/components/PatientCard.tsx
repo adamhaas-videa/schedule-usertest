@@ -173,6 +173,15 @@ function FullCard({
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
 
+  // A 30-min appointment renders at ~88px (durationToHeight(30) - CARD_GAP),
+  // which is only just tall enough for the top row + provider chip — the
+  // bottom-pinned action strip lands directly on top of the provider row. At
+  // 45 min (~133px) there is room for both, so those cards behave like tall
+  // ones. Threshold is duration-based so the layout is identical in every view
+  // (operatory or provider grouping, focused or not) — the grid computes card
+  // height purely from durationMinutes.
+  const isSmall = patient.durationMinutes <= 30;
+
   // Per-version interaction model (demo switcher):
   //   V1: buttons always visible; name → summary drawer
   //   V2: buttons revealed on hover/focus; name → summary drawer
@@ -197,14 +206,31 @@ function FullCard({
     if (cardOpensImages) onOpenClinical(patient, "xray");
   };
 
+  // Active (in-chair) and future cards borrow their provider's avatar tone as a
+  // subtle outline — a splash of color to differentiate columns in the grid.
+  // Completed cards keep the neutral border.
+  const isCompleted = status === "completed";
+  const providerTone =
+    patient.provider && !isCompleted
+      ? getProviderColor(patient.provider.id).bg
+      : undefined;
+
   return (
     <div
       className={cn(
-        "group/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] border-border bg-card p-2.5 overflow-hidden",
+        "group/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] bg-card p-2.5 overflow-hidden",
+        providerTone ? "border-transparent" : "border-border",
         cardOpensImages &&
-          "cursor-pointer transition-shadow hover:border-primary/50 hover:ring-2 hover:ring-primary/30 focus-visible:outline-none focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/40",
+          // Inset rings (not outer): the card wrapper in OperatoryColumn sets
+          // content-visibility:auto, whose paint containment clips descendant
+          // painting to the wrapper's square box. An outer ring (box-shadow
+          // drawn outside the border-box) gets chopped square at the rounded
+          // corners; an inset ring stays inside the border-box, follows the
+          // 10px radius, and is clipped cleanly by overflow-hidden.
+          "cursor-pointer hover:inset-ring-2 hover:inset-ring-primary/25 focus-visible:outline-none focus-visible:inset-ring-2 focus-visible:inset-ring-primary/40",
         className
       )}
+      style={providerTone ? { borderColor: providerTone } : undefined}
       {...(cardOpensImages
         ? {
             role: "button" as const,
@@ -259,11 +285,21 @@ function FullCard({
         <StatusBadge kind={status} />
       </div>
 
-      {/* Provider chip — always visible, sits directly beneath the top row */}
+      {/* Provider chip — sits directly beneath the top row. On a small card the
+          action strip occupies this same row, so the chip yields to the actions:
+          it fades out while the actions are revealed (hover/focus) and is hidden
+          outright when the actions are always-on (V1 in-chair). Tall cards keep
+          the chip permanently visible. */}
       <div
         className={cn(
           "min-w-0",
-          status === "completed" && "opacity-60"
+          status === "completed" && "opacity-60",
+          isSmall && showActions && "transition-opacity duration-150",
+          isSmall && showActions && !hoverActions && "opacity-0",
+          isSmall &&
+            showActions &&
+            hoverActions &&
+            "group-hover/card:opacity-0 group-focus-within/card:opacity-0"
         )}
       >
         <ProviderChip patient={patient} />
@@ -277,6 +313,14 @@ function FullCard({
           hoverOnly={hoverActions}
         />
       )}
+
+      {/* Full-card hover tint. Sits above the action-strip gradient so the
+          affordance covers the entire card instead of being clipped at the
+          bottom; pointer-events-none keeps the buttons underneath clickable. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-10 rounded-[8.5px] opacity-0 transition-opacity duration-150 bg-foreground/[0.04] dark:bg-foreground/[0.07] group-hover/card:opacity-100"
+      />
     </div>
   );
 }
