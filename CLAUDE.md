@@ -11,6 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 There is no test runner or test suite in this project.
 
+## Git workflow
+
+This is a solo repo. Default to committing and pushing changes straight to `main` on `origin`. Do not open pull requests by default. Only create a branch + pull request when a Vercel branch preview deployment is specifically wanted. Follow the repo's existing concise commit-message style; never force-push to `main` or rewrite pushed history.
+
 ## What this is
 
 A front-end-only demo of **Videa**, a dental practice scheduling + clinical UI. There is **no backend, no API, and no persistence** — all data is hard-coded mock data in `src/data/mockPatients.ts`, and "current time" is a fixed simulated clock. State lives entirely in React and resets on reload. Keep this in mind: features are wired against the mock model, not a data layer.

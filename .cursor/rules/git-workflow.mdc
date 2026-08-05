@@ -1,0 +1,15 @@
+---
+description: Git workflow default for this solo repo
+alwaysApply: true
+---
+
+# Git Workflow
+
+This is a solo repo. Default to shipping straight to `main`.
+
+- **Default**: commit and push changes directly to `main` on `origin`.
+- **Do not** open pull requests by default.
+- **Exception**: only create a branch + pull request when a Vercel branch preview deployment is specifically wanted.
+- Follow the repo's existing concise commit-message style.
+
+Safety still applies: never force-push to `main`, and never rewrite shared/pushed history.
