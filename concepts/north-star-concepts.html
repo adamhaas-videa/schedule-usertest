@@ -1,0 +1,1206 @@
+<title>Four Ways to Build the Next Screen</title>
+<style>
+  /* ============================================================
+     PAGE CHROME TOKENS  (the spec sheet the specimens sit on)
+     Same chrome vocabulary as patient-card-concepts.html so the
+     two documents read as siblings.
+     ============================================================ */
+  :root {
+    --pg-ground:      #EFECE8;
+    --pg-ground-alt:  #E7E3DE;
+    --pg-ink:         #1B1A18;
+    --pg-ink-2:       #55514B;
+    --pg-ink-3:       #6E6960;
+    --pg-rule:        #D6D1CA;
+    --pg-rule-soft:   #E2DED8;
+    --pg-mark:        #124555;
+    --pg-mark-soft:   #A3CCD5;
+    --pg-caliper:     #8A6A18;
+
+    /* ---- ENAMEL SEMANTIC TOKENS (light) &mdash; verbatim from schedule/src/index.css ---- */
+    --e-background:   #FCFBFA;
+    --e-foreground:   #18181B;
+    --e-card:         #FFFFFF;
+    --e-muted:        #F4F2F0;
+    --e-muted-hover:  #E6E3E0;
+    --e-muted-fg:     #52525B;
+    --e-muted-fg-2:   #71717A;
+    --e-border:       #E6E3E0;
+    --e-primary:      #124555;
+    --e-primary-fg:   #FFFFFF;
+    --e-primary-hover:#165768;
+
+    --e-success-muted:     #EFF6F0;
+    --e-success-muted-bd:  #D4EAD7;
+    --e-success-muted-fg:  #1C5027;
+    --e-warning-muted:     #FDF8EE;
+    --e-warning-muted-bd:  #FAEFD4;
+    --e-warning-muted-fg:  #7C5712;
+    --e-error-muted:       #FDF2F1;
+    --e-error-muted-bd:    #FADBD8;
+    --e-error-muted-fg:    #832824;
+    --e-info-muted:        #EDF5F7;
+    --e-info-muted-bd:     #A3CCD5;
+    --e-info-muted-fg:     #124555;
+    --e-accent-muted:      #F0F4FC;
+    --e-accent-muted-bd:   #BDCEF4;
+    --e-accent-muted-fg:   #2D4F98;
+
+    --e-btn-outline-bg: #FFFFFF;
+
+    /* Row tint for the wayfinding specimen &mdash; the -muted family at low alpha */
+    --e-row-flag:     #FDF2F1;
+    --e-row-warn:     #FDF8EE;
+
+    /* Imaging surround. Constant across themes: .imaging-surface in
+       src/index.css hard-sets these regardless of the app theme. */
+    --e-img-bg:       #0a0a0a;
+    --e-img-card:     #101214;
+    --e-img-border:   #27272a;
+    --e-img-fg:       #FAFAFA;
+    --e-img-fg-2:     #A1A1AA;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --pg-ground:      #131315;
+      --pg-ground-alt:  #1B1B1E;
+      --pg-ink:         #F2F0ED;
+      --pg-ink-2:       #ADA8A2;
+      --pg-ink-3:       #948F88;
+      --pg-rule:        #2E2E32;
+      --pg-rule-soft:   #26262A;
+      --pg-mark:        #6AABB9;
+      --pg-mark-soft:   #0E3644;
+      --pg-caliper:     #DBA63C;
+
+      --e-background:   #18181B;
+      --e-foreground:   #FAFAFA;
+      --e-card:         #27272A;
+      --e-muted:        #27272A;
+      --e-muted-hover:  #3F3F46;
+      --e-muted-fg:     #A1A1AA;
+      --e-muted-fg-2:   #A1A1AA;
+      --e-border:       #3F3F46;
+      --e-primary:      #1F6D7E;
+      --e-primary-fg:   #FFFFFF;
+      --e-primary-hover:#165768;
+
+      --e-success-muted:     #153D1E;
+      --e-success-muted-bd:  #0F2C16;
+      --e-success-muted-fg:  #A9D5AF;
+      --e-warning-muted:     #43300C;
+      --e-warning-muted-bd:  #43300C;
+      --e-warning-muted-fg:  #F4DCA4;
+      --e-error-muted:       #481716;
+      --e-error-muted-bd:    #481716;
+      --e-error-muted-fg:    #F3B2AE;
+      --e-info-muted:        #0E3644;
+      --e-info-muted-bd:     #0E3644;
+      --e-info-muted-fg:     #A3CCD5;
+      --e-accent-muted:      #223C78;
+      --e-accent-muted-bd:   #223C78;
+      --e-accent-muted-fg:   #BDCEF4;
+
+      --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+
+      --e-row-flag:     #2E0F0E;
+      --e-row-warn:     #2C2008;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --pg-ground:      #131315;
+    --pg-ground-alt:  #1B1B1E;
+    --pg-ink:         #F2F0ED;
+    --pg-ink-2:       #ADA8A2;
+    --pg-ink-3:       #948F88;
+    --pg-rule:        #2E2E32;
+    --pg-rule-soft:   #26262A;
+    --pg-mark:        #6AABB9;
+    --pg-mark-soft:   #0E3644;
+    --pg-caliper:     #DBA63C;
+
+    --e-background:   #18181B;
+    --e-foreground:   #FAFAFA;
+    --e-card:         #27272A;
+    --e-muted:        #27272A;
+    --e-muted-hover:  #3F3F46;
+    --e-muted-fg:     #A1A1AA;
+    --e-muted-fg-2:   #A1A1AA;
+    --e-border:       #3F3F46;
+    --e-primary:      #1F6D7E;
+    --e-primary-fg:   #FFFFFF;
+    --e-primary-hover:#165768;
+
+    --e-success-muted:     #153D1E;
+    --e-success-muted-bd:  #0F2C16;
+    --e-success-muted-fg:  #A9D5AF;
+    --e-warning-muted:     #43300C;
+    --e-warning-muted-bd:  #43300C;
+    --e-warning-muted-fg:  #F4DCA4;
+    --e-error-muted:       #481716;
+    --e-error-muted-bd:    #481716;
+    --e-error-muted-fg:    #F3B2AE;
+    --e-info-muted:        #0E3644;
+    --e-info-muted-bd:     #0E3644;
+    --e-info-muted-fg:     #A3CCD5;
+    --e-accent-muted:      #223C78;
+    --e-accent-muted-bd:   #223C78;
+    --e-accent-muted-fg:   #BDCEF4;
+
+    --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+
+    --e-row-flag:     #2E0F0E;
+    --e-row-warn:     #2C2008;
+  }
+
+  /* ============================================================
+     PAGE
+     ============================================================ */
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--pg-ground);
+    color: var(--pg-ink);
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection { background: var(--pg-mark-soft); color: var(--pg-ink); }
+
+  :focus-visible {
+    outline: 2px solid var(--pg-mark);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  * { scrollbar-color: var(--pg-rule) transparent; scrollbar-width: thin; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 112px;
+    display: flex;
+    flex-direction: column;
+    gap: 68px;
+  }
+
+  .sans {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  }
+
+  /* --- masthead --- */
+  .mast { display: flex; flex-direction: column; gap: 20px; }
+
+  h1 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: clamp(30px, 4.4vw, 46px);
+    line-height: 1.04;
+    letter-spacing: -0.032em;
+    font-weight: 640;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+
+  .mast-lede {
+    max-width: 64ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mast-lede p { margin: 0; }
+  .mast-lede strong { color: var(--pg-ink); font-weight: 600; }
+
+  .constraint {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid color-mix(in srgb, var(--pg-caliper) 40%, var(--pg-rule));
+    background: var(--pg-ground-alt);
+    max-width: 680px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+  }
+  .constraint b { color: var(--pg-ink); font-weight: 600; }
+  .constraint svg { flex: none; width: 15px; height: 15px; margin-top: 2px; color: var(--pg-caliper); }
+
+  /* --- the three open questions --- */
+  .qs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .q {
+    background: var(--pg-ground);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .q-t { font-size: 12px; font-weight: 600; color: var(--pg-ink); }
+  .q-b { font-size: 11.5px; line-height: 1.55; color: var(--pg-ink-2); }
+
+  /* --- section scaffolding --- */
+  section { display: flex; flex-direction: column; gap: 26px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 12px; }
+
+  /* The rule-label IS the heading here (no eyebrow-plus-heading stack). */
+  h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 25px;
+    line-height: 1.15;
+    letter-spacing: -0.022em;
+    font-weight: 620;
+    text-wrap: balance;
+  }
+  h2::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--pg-rule);
+  }
+  h2 .tag {
+    flex: none;
+    align-self: center;
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--pg-ground);
+    background: var(--pg-mark);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  h3 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.2;
+    letter-spacing: -0.014em;
+    font-weight: 620;
+  }
+
+  .thesis {
+    max-width: 68ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.62;
+    color: var(--pg-ink-2);
+  }
+  .thesis b { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- "settles forever" rule list --- */
+  .settles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--pg-rule);
+    background: var(--pg-ground-alt);
+    max-width: 680px;
+  }
+  .settles-h {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--pg-rule);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pg-ink-2);
+  }
+  .settle {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+  .settle + .settle { border-top: 1px solid var(--pg-rule-soft); }
+  .settle-q { color: var(--pg-ink-2); }
+  .settle-arrow { color: var(--pg-ink-3); }
+  .settle-a { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- specimen field --- */
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 32px 28px;
+    background: var(--e-background);
+    border: 1px solid var(--pg-rule);
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--pg-rule) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--pg-rule) 45%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+    overflow-x: auto;
+  }
+  .field.dark-field { background-color: var(--e-img-bg); }
+
+  .caption {
+    font-size: 11px;
+    color: var(--pg-ink-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .caption::before {
+    content: "";
+    width: 18px;
+    height: 1px;
+    background: var(--pg-rule);
+    flex: none;
+  }
+
+  /* ============================================================
+     SPECIMENS &mdash; app-side. Everything below renders in the
+     product's own type stack at the product's own metrics.
+     ============================================================ */
+  .app {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    color: var(--e-foreground);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .panel {
+    width: 620px;
+    max-width: 100%;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--e-foreground);
+    margin-bottom: 2px;
+  }
+  .panel-sub {
+    font-size: 11px;
+    color: var(--e-muted-fg-2);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 14px;
+  }
+
+  /* avatar chip shared by every specimen */
+  .av {
+    flex: none;
+    width: 22px; height: 22px;
+    border-radius: 999px;
+    display: grid; place-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .av.sm { width: 18px; height: 18px; font-size: 9px; }
+
+  /* status pill &mdash; the -muted tonal family, h18/px8/full round */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 18px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pill svg { width: 9px; height: 9px; flex: none; }
+  .pill.ok   { background: var(--e-success-muted); border-color: var(--e-success-muted-bd); color: var(--e-success-muted-fg); }
+  .pill.warn { background: var(--e-warning-muted); border-color: var(--e-warning-muted-bd); color: var(--e-warning-muted-fg); }
+  .pill.bad  { background: var(--e-error-muted);   border-color: var(--e-error-muted-bd);   color: var(--e-error-muted-fg); }
+  .pill.wait { background: var(--e-muted);         border-color: var(--e-border);           color: var(--e-muted-fg); }
+
+  .money { font-variant-numeric: tabular-nums; }
+
+  /* ---------- A. quiet ---------- */
+  .a-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--e-card);
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    transition: background-color 150ms ease;
+  }
+  .a-list { display: flex; flex-direction: column; gap: 8px; }
+  .a-row:hover { background: color-mix(in srgb, var(--e-foreground) 4%, var(--e-card)); }
+  .a-name { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; }
+  .a-meta { font-size: 11px; color: var(--e-muted-fg-2); font-variant-numeric: tabular-nums; }
+  .a-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .a-right { display: flex; align-items: center; gap: 10px; flex: none; }
+
+  /* ---------- B. wayfinding ---------- */
+  .b-list { display: flex; flex-direction: column; gap: 8px; }
+  .b-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--e-card);
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    transition: background-color 150ms ease;
+  }
+  .b-row.flag { background: var(--e-row-flag); border-color: var(--e-error-muted-bd); }
+  .b-row.warn { background: var(--e-row-warn); border-color: var(--e-warning-muted-bd); }
+  .b-row:hover { filter: brightness(0.985); }
+  .b-name { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; }
+  .b-meta { font-size: 11px; color: var(--e-muted-fg-2); font-variant-numeric: tabular-nums; }
+  .b-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .b-right { display: flex; align-items: center; gap: 10px; flex: none; }
+  .b-carrier {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ---------- C. light to work / dark to look ---------- */
+  .c-split { display: flex; gap: 0; align-items: stretch; flex-wrap: wrap; }
+  .c-task {
+    width: 340px; flex: none;
+    background: var(--e-background);
+    padding: 16px;
+    border: 1px solid var(--e-border);
+    border-radius: 10px 0 0 10px;
+  }
+  .c-evidence {
+    width: 340px; flex: none;
+    background: var(--e-img-bg);
+    padding: 16px;
+    border: 1px solid var(--e-img-border);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    color: var(--e-img-fg);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .c-mini {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    background: var(--e-card);
+    font-size: 13px;
+  }
+  .c-mini + .c-mini { margin-top: 6px; }
+  .c-mini.active { border-color: var(--e-info-muted-bd); background: var(--e-info-muted); }
+  .c-eyebrowless { font-size: 12px; font-weight: 600; color: var(--e-img-fg); }
+  .c-doc {
+    background: var(--e-img-card);
+    border: 1px solid var(--e-img-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .c-doc-line { height: 6px; border-radius: 2px; background: #2a2d31; }
+  .c-doc-line.short { width: 55%; }
+  .c-doc-line.mid { width: 78%; }
+  .c-doc-hi { background: #3f5f68; }
+  .c-note { font-size: 11px; color: var(--e-img-fg-2); line-height: 1.5; }
+
+  /* ---------- D. density ---------- */
+  .d-table { width: 100%; border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .d-wrap {
+    background: var(--e-card);
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .d-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--e-muted-fg-2);
+    padding: 7px 10px;
+    background: var(--e-muted);
+    border-bottom: 1px solid var(--e-border);
+    white-space: nowrap;
+  }
+  .d-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--e-border) 60%, transparent);
+    white-space: nowrap;
+  }
+  .d-table tr:last-child td { border-bottom: none; }
+  .d-table tbody tr { transition: background-color 100ms ease; }
+  .d-table tbody tr:hover { background: var(--e-muted); }
+  .d-name { font-weight: 600; }
+  .d-num { text-align: right; }
+  .d-dot { display: inline-block; width: 6px; height: 6px; border-radius: 999px; vertical-align: middle; }
+  .d-dot.ok { background: #2E7D3A; }
+  .d-dot.warn { background: #C08B1E; }
+  .d-dot.bad { background: #C63E38; }
+  .d-dot.wait { background: var(--e-muted-fg-2); }
+
+  /* ---------- comparison strip ---------- */
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .strip-cell {
+    background: var(--e-background);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  .strip-cell.dark { background: var(--e-img-bg); }
+  .strip-label {
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--e-muted-fg);
+  }
+  .strip-cell.dark .strip-label { color: var(--e-img-fg-2); }
+
+  /* ---------- stack matrix ---------- */
+  .matrix {
+    border: 1px solid var(--pg-rule);
+    background: var(--pg-ground-alt);
+    display: flex;
+    flex-direction: column;
+  }
+  .matrix-row {
+    display: flex;
+    gap: 14px;
+    padding: 13px 16px;
+    align-items: flex-start;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .matrix-row + .matrix-row { border-top: 1px solid var(--pg-rule); }
+  .matrix-k {
+    flex: none;
+    width: 132px;
+    font-weight: 700;
+    color: var(--pg-ink);
+  }
+  .matrix-v { color: var(--pg-ink-2); }
+  .matrix-v b { color: var(--pg-ink); font-weight: 600; }
+
+  .verdict {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--pg-mark);
+    background: color-mix(in srgb, var(--pg-mark) 7%, var(--pg-ground));
+    max-width: 760px;
+    font-size: 13px;
+    line-height: 1.62;
+    color: var(--pg-ink);
+  }
+  .verdict svg { flex: none; width: 16px; height: 16px; margin-top: 3px; color: var(--pg-mark); }
+  .verdict b { font-weight: 700; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 40px 18px 80px; gap: 52px; }
+    .settle { grid-template-columns: 1fr; gap: 2px; }
+    .settle-arrow { display: none; }
+    .matrix-row { flex-direction: column; gap: 4px; }
+    .matrix-k { width: auto; }
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 16 16">
+      <path d="M3.2 8.4l3.1 3.1 6.5-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 16 16">
+      <path d="M8 2.4L14.4 13.4H1.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M8 6.6v3.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="8" cy="11.5" r="0.85" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M8 4.6V8l2.3 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M8 7.2v4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="8" cy="4.8" r="0.85" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 16 16">
+      <path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .74 4.3L8 11.6l-3.84 2-.74-4.3-3.1-3 4.3-.6z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header class="mast">
+    <h1>Four ways to build the next screen</h1>
+    <div class="mast-lede">
+      <p>
+        The design tokens are already settled. <strong>#124555</strong> is the primary, the radius
+        is <strong>10px</strong>, the status families are the <strong>-muted</strong> tonal sets.
+        None of that is in question, and none of it changes based on what you pick here.
+      </p>
+      <p>
+        What isn&rsquo;t settled is <strong>how to decide the things tokens are silent on</strong>.
+        Every new screen hits those calls within the first ten minutes, and if they get answered
+        differently each time, the app drifts into four dialects. Below are the same six rows of
+        real work, built four ways &mdash; each one a different answer to the same three questions.
+      </p>
+    </div>
+    <div class="constraint">
+      <svg aria-hidden="true"><use href="#i-info"/></svg>
+      <div>
+        <b>Same data, same task, true size.</b> Every specimen shows the identical six patients
+        and the identical job, rendered at the app&rsquo;s real metrics using the Enamel tokens
+        verbatim. Nothing here is scaled or stylised for the page &mdash; what you see is what the
+        screen would measure.
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>The test case</h2>
+      <p class="thesis">
+        <b>AutoVerify</b> &mdash; a real route in the sidebar with nothing behind it yet. Its job:
+        show the front desk which of today&rsquo;s patients have insurance problems, before the
+        patient is in the chair. It is the perfect test because it doesn&rsquo;t exist, so nothing
+        about it is settled by precedent, and because it exercises every axis at once.
+      </p>
+    </div>
+    <div class="qs">
+      <div class="q">
+        <div class="q-t">Border or shadow?</div>
+        <div class="q-b">
+          Does a panel sit flat on the page with a stroke around it, or lift off the ground with a
+          drop shadow? The app currently has 8 shadow usages in total &mdash; but that&rsquo;s a
+          pattern, not a rule, and patterns erode.
+        </div>
+      </div>
+      <div class="q">
+        <div class="q-t">How loud is a problem?</div>
+        <div class="q-b">
+          A failed verification could be a red dot, a muted rose pill, a tinted row, or a bright
+          badge. All four are defensible. Only one of them can be the house answer.
+        </div>
+      </div>
+      <div class="q">
+        <div class="q-t">Denser or airier?</div>
+        <div class="q-b">
+          Given spare vertical space, does the screen fit more rows or give the existing rows more
+          room? This one compounds &mdash; it decides every list, table, and panel you ever build.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ A ============================ -->
+  <section>
+    <div class="sec-head">
+      <h2><span class="tag">A</span> Never raise your voice</h2>
+      <p class="thesis">
+        In a tie, take the <b>quieter</b> option. A border rather than a shadow. A tonal fill rather
+        than a saturated one. A 4% tint rather than a colour shift. Problems are stated plainly and
+        once &mdash; the screen trusts you to read it rather than shouting to make sure you did.
+        This is closest to what the code already does today.
+      </p>
+    </div>
+
+    <div class="settles">
+      <div class="settles-h">What this settles, permanently</div>
+      <div class="settle"><span class="settle-q">Border or shadow?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Border. 1.5px. Always.</span></div>
+      <div class="settle"><span class="settle-q">How loud is a problem?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">A muted pill, same weight as &ldquo;verified&rdquo;</span></div>
+      <div class="settle"><span class="settle-q">Denser or airier?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Neither &mdash; whatever reads calmest</span></div>
+    </div>
+
+    <div class="field">
+      <div class="app panel">
+        <div class="panel-title">Insurance verification</div>
+        <div class="panel-sub">Thursday 14 August &middot; 6 of 23 appointments need review</div>
+        <div class="a-list">
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#DCE5F9;color:#2D4F98">MG</span>
+            <span class="a-main">
+              <span class="a-name">Marisol Herrera</span>
+              <span class="a-meta">Delta Dental &middot; 9:00 AM &middot; Op 2</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">$1,240 left</span>
+              <span class="pill ok"><svg aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+            </span>
+          </div>
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#DEE9DC;color:#3C6B45">LC</span>
+            <span class="a-main">
+              <span class="a-name">Anthony Boyd</span>
+              <span class="a-meta">MetLife &middot; 9:30 AM &middot; Op 5</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">$890 left</span>
+              <span class="pill ok"><svg aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+            </span>
+          </div>
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#D0E6EB;color:#124555">JR</span>
+            <span class="a-main">
+              <span class="a-name">Priya Raghavan</span>
+              <span class="a-meta">Cigna &middot; 10:15 AM &middot; Op 1</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">&mdash;</span>
+              <span class="pill bad"><svg aria-hidden="true"><use href="#i-alert"/></svg>Plan ended</span>
+            </span>
+          </div>
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#E3E1EC;color:#4A4763">BP</span>
+            <span class="a-main">
+              <span class="a-name">Doug Whitfield</span>
+              <span class="a-meta">Aetna &middot; 11:00 AM &middot; Op 7</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">$2,100 left</span>
+              <span class="pill ok"><svg aria-hidden="true"><use href="#i-check"/></svg>Verified</span>
+            </span>
+          </div>
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#D6E8E5;color:#285B54">AT</span>
+            <span class="a-main">
+              <span class="a-name">Chen Wei</span>
+              <span class="a-meta">Guardian &middot; 11:30 AM &middot; Op 3</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">$340 left</span>
+              <span class="pill warn"><svg aria-hidden="true"><use href="#i-alert"/></svg>Low benefit</span>
+            </span>
+          </div>
+
+          <div class="a-row" tabindex="0">
+            <span class="av" style="background:#F1E6CC;color:#7C5712">NG</span>
+            <span class="a-main">
+              <span class="a-name">Rosalind Ncube</span>
+              <span class="a-meta">UnitedHealthcare &middot; 1:00 PM &middot; Op 4</span>
+            </span>
+            <span class="a-right">
+              <span class="a-meta money">&mdash;</span>
+              <span class="pill wait"><svg aria-hidden="true"><use href="#i-clock"/></svg>Awaiting reply</span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="app" style="max-width:230px">
+        <p class="caption">Hover a row. The response is a 4% tint of the foreground &mdash; nothing lifts, nothing glows, nothing changes colour.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ B ============================ -->
+  <section>
+    <div class="sec-head">
+      <h2><span class="tag">B</span> Colour is wayfinding, never decoration</h2>
+      <p class="thesis">
+        In a tie, add colour <b>only if it helps someone find something</b> &mdash; their column,
+        their patient, the one row that needs work. Colour is a search tool, so a problem row is
+        tinted end-to-end and the carrier gets its own tone. Anything decorative stays grey. New
+        colours come from the existing eight provider tones, never from a fresh hue.
+      </p>
+    </div>
+
+    <div class="settles">
+      <div class="settles-h">What this settles, permanently</div>
+      <div class="settle"><span class="settle-q">Border or shadow?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Border &mdash; but tinted to mean something</span></div>
+      <div class="settle"><span class="settle-q">How loud is a problem?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Loud enough to spot in 40 rows</span></div>
+      <div class="settle"><span class="settle-q">Denser or airier?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Whatever keeps the colour readable</span></div>
+    </div>
+
+    <div class="field">
+      <div class="app panel">
+        <div class="panel-title">Insurance verification</div>
+        <div class="panel-sub">Thursday 14 August &middot; 6 of 23 appointments need review</div>
+        <div class="b-list">
+
+          <div class="b-row" tabindex="0">
+            <span class="av" style="background:#DCE5F9;color:#2D4F98">MG</span>
+            <span class="b-main">
+              <span class="b-name">Marisol Herrera</span>
+              <span class="b-meta">9:00 AM &middot; Op 2</span>
+            </span>
+            <span class="b-right">
+              <span class="b-carrier" style="background:#F0F4FC;color:#2D4F98">Delta Dental</span>
+              <span class="b-meta money">$1,240</span>
+            </span>
+          </div>
+
+          <div class="b-row" tabindex="0">
+            <span class="av" style="background:#DEE9DC;color:#3C6B45">LC</span>
+            <span class="b-main">
+              <span class="b-name">Anthony Boyd</span>
+              <span class="b-meta">9:30 AM &middot; Op 5</span>
+            </span>
+            <span class="b-right">
+              <span class="b-carrier" style="background:#EDF5F7;color:#124555">MetLife</span>
+              <span class="b-meta money">$890</span>
+            </span>
+          </div>
+
+          <div class="b-row flag" tabindex="0">
+            <span class="av" style="background:#D0E6EB;color:#124555">JR</span>
+            <span class="b-main">
+              <span class="b-name">Priya Raghavan</span>
+              <span class="b-meta">10:15 AM &middot; Op 1 &middot; Plan ended 31 Jul</span>
+            </span>
+            <span class="b-right">
+              <span class="pill bad"><svg aria-hidden="true"><use href="#i-alert"/></svg>Plan ended</span>
+            </span>
+          </div>
+
+          <div class="b-row" tabindex="0">
+            <span class="av" style="background:#E3E1EC;color:#4A4763">BP</span>
+            <span class="b-main">
+              <span class="b-name">Doug Whitfield</span>
+              <span class="b-meta">11:00 AM &middot; Op 7</span>
+            </span>
+            <span class="b-right">
+              <span class="b-carrier" style="background:#F4F2F0;color:#52525B">Aetna</span>
+              <span class="b-meta money">$2,100</span>
+            </span>
+          </div>
+
+          <div class="b-row warn" tabindex="0">
+            <span class="av" style="background:#D6E8E5;color:#285B54">AT</span>
+            <span class="b-main">
+              <span class="b-name">Chen Wei</span>
+              <span class="b-meta">11:30 AM &middot; Op 3 &middot; Guardian</span>
+            </span>
+            <span class="b-right">
+              <span class="pill warn"><svg aria-hidden="true"><use href="#i-alert"/></svg>$340 left</span>
+            </span>
+          </div>
+
+          <div class="b-row" tabindex="0">
+            <span class="av" style="background:#F1E6CC;color:#7C5712">NG</span>
+            <span class="b-main">
+              <span class="b-name">Rosalind Ncube</span>
+              <span class="b-meta">1:00 PM &middot; Op 4</span>
+            </span>
+            <span class="b-right">
+              <span class="b-carrier" style="background:#F4F2F0;color:#52525B">UnitedHealthcare</span>
+              <span class="pill wait"><svg aria-hidden="true"><use href="#i-clock"/></svg>Waiting</span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="app" style="max-width:230px">
+        <p class="caption">Two rows are tinted. You found them before you read a single name &mdash; that is the entire argument for this one.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ C ============================ -->
+  <section>
+    <div class="sec-head">
+      <h2><span class="tag">C</span> Light to work in, dark to look in</h2>
+      <p class="thesis">
+        In a tie, ask whether the surface is for <b>doing</b> or for <b>looking</b>. Task surfaces
+        stay on warm paper. The moment the clinician studies an image &mdash; a radiograph, a scanned
+        EOB, a referral letter &mdash; the room lights go down and the evidence is the only bright
+        thing on screen. The FMX viewer already does exactly this; this doctrine makes it the law
+        rather than a one-off.
+      </p>
+    </div>
+
+    <div class="settles">
+      <div class="settles-h">What this settles, permanently</div>
+      <div class="settle"><span class="settle-q">Border or shadow?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Border on light, nothing at all on dark</span></div>
+      <div class="settle"><span class="settle-q">How loud is a problem?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Quiet on task, absent on evidence</span></div>
+      <div class="settle"><span class="settle-q">Denser or airier?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Dense to work, spacious to look</span></div>
+    </div>
+
+    <div class="field">
+      <div class="app c-split">
+        <div class="c-task">
+          <div class="panel-title" style="font-size:13px">Needs review</div>
+          <div class="panel-sub" style="margin-bottom:10px">3 of 23 today</div>
+          <div class="c-mini active">
+            <span class="av sm" style="background:#D0E6EB;color:#124555">JR</span>
+            <span style="flex:1;min-width:0;font-weight:600">Priya Raghavan</span>
+            <span class="pill bad"><svg aria-hidden="true"><use href="#i-alert"/></svg>EOB</span>
+          </div>
+          <div class="c-mini">
+            <span class="av sm" style="background:#D6E8E5;color:#285B54">AT</span>
+            <span style="flex:1;min-width:0;font-weight:600">Chen Wei</span>
+            <span class="pill warn">$340</span>
+          </div>
+          <div class="c-mini">
+            <span class="av sm" style="background:#F1E6CC;color:#7C5712">NG</span>
+            <span style="flex:1;min-width:0;font-weight:600">Rosalind Ncube</span>
+            <span class="pill wait">Waiting</span>
+          </div>
+        </div>
+        <div class="c-evidence">
+          <div class="c-eyebrowless">Explanation of benefits &middot; Cigna</div>
+          <div class="c-doc">
+            <div class="c-doc-line mid"></div>
+            <div class="c-doc-line"></div>
+            <div class="c-doc-line short"></div>
+            <div class="c-doc-line c-doc-hi mid"></div>
+            <div class="c-doc-line"></div>
+            <div class="c-doc-line short"></div>
+          </div>
+          <p class="c-note">
+            Coverage terminated 31&nbsp;Jul. Highlighted line is the termination clause the parser
+            matched.
+          </p>
+        </div>
+      </div>
+      <div class="app" style="max-width:230px">
+        <p class="caption">The split is the point. One surface is for triage, the next is for reading a document closely, and they do not look alike.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ D ============================ -->
+  <section>
+    <div class="sec-head">
+      <h2><span class="tag">D</span> Everything visible, nothing wasted</h2>
+      <p class="thesis">
+        In a tie, choose <b>density</b>. More on screen, smaller type, tighter rows. Whitespace has
+        to justify itself. The argument: this is software someone stares at for nine hours, and
+        scrolling to find a patient is a worse cost than small type. The eight-column operatory grid
+        already makes this trade &mdash; this extends it to everything.
+      </p>
+    </div>
+
+    <div class="settles">
+      <div class="settles-h">What this settles, permanently</div>
+      <div class="settle"><span class="settle-q">Border or shadow?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Neither &mdash; a 1px rule between rows</span></div>
+      <div class="settle"><span class="settle-q">How loud is a problem?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">A 6px dot. It costs one column.</span></div>
+      <div class="settle"><span class="settle-q">Denser or airier?</span><span class="settle-arrow">&rarr;</span><span class="settle-a">Denser. Every time. That is the rule.</span></div>
+    </div>
+
+    <div class="field">
+      <div class="app panel">
+        <div class="panel-title">Insurance verification</div>
+        <div class="panel-sub">Thursday 14 August &middot; 23 appointments &middot; 6 flagged</div>
+        <div class="d-wrap">
+          <table class="d-table">
+            <thead>
+              <tr>
+                <th style="width:14px"></th>
+                <th>Patient</th>
+                <th>Carrier</th>
+                <th>Prov</th>
+                <th>Op</th>
+                <th>Time</th>
+                <th class="d-num">Remaining</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Marisol Herrera</td><td>Delta Dental</td><td>MG</td><td>2</td><td>9:00 AM</td><td class="d-num">$1,240</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Anthony Boyd</td><td>MetLife</td><td>LC</td><td>5</td><td>9:30 AM</td><td class="d-num">$890</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot bad"></span></td><td class="d-name">Priya Raghavan</td><td>Cigna</td><td>JR</td><td>1</td><td>10:15 AM</td><td class="d-num">&mdash;</td><td>Plan ended</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Doug Whitfield</td><td>Aetna</td><td>BP</td><td>7</td><td>11:00 AM</td><td class="d-num">$2,100</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot warn"></span></td><td class="d-name">Chen Wei</td><td>Guardian</td><td>AT</td><td>3</td><td>11:30 AM</td><td class="d-num">$340</td><td>Low benefit</td></tr>
+              <tr><td><span class="d-dot wait"></span></td><td class="d-name">Rosalind Ncube</td><td>UnitedHealthcare</td><td>NG</td><td>4</td><td>1:00 PM</td><td class="d-num">&mdash;</td><td>Awaiting reply</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Samuel Okonjo</td><td>BlueCross</td><td>MG</td><td>2</td><td>1:30 PM</td><td class="d-num">$1,675</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Hana Yoshida</td><td>Delta Dental</td><td>EK</td><td>6</td><td>2:00 PM</td><td class="d-num">$720</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot warn"></span></td><td class="d-name">Terrence Fowler</td><td>Guardian</td><td>BP</td><td>8</td><td>2:30 PM</td><td class="d-num">$180</td><td>Low benefit</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Ingrid Halvorsen</td><td>Aetna</td><td>AT</td><td>3</td><td>3:00 PM</td><td class="d-num">$2,400</td><td>Verified</td></tr>
+              <tr><td><span class="d-dot wait"></span></td><td class="d-name">Marcus Delaney</td><td>Cigna</td><td>NG</td><td>4</td><td>3:30 PM</td><td class="d-num">&mdash;</td><td>Awaiting reply</td></tr>
+              <tr><td><span class="d-dot ok"></span></td><td class="d-name">Freya Lindqvist</td><td>MetLife</td><td>JR</td><td>1</td><td>4:00 PM</td><td class="d-num">$950</td><td>Verified</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="app" style="max-width:230px">
+        <p class="caption">Twelve rows in roughly the height that specimen A gave to six. Same information, half the scrolling, smaller type.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= COMPARISON ======================= -->
+  <section>
+    <div class="sec-head">
+      <h2>One row, four ways</h2>
+      <p class="thesis">
+        The same patient &mdash; <b>Priya Raghavan, Cigna, coverage terminated</b> &mdash; as each
+        doctrine would render her. This is the whole decision in one strip.
+      </p>
+    </div>
+
+    <div class="strip">
+      <div class="strip-cell app">
+        <div class="strip-label">A &middot; quiet</div>
+        <div class="a-row" tabindex="0">
+          <span class="av" style="background:#D0E6EB;color:#124555">JR</span>
+          <span class="a-main">
+            <span class="a-name">Priya Raghavan</span>
+            <span class="a-meta">Cigna &middot; 10:15 AM</span>
+          </span>
+          <span class="pill bad"><svg aria-hidden="true"><use href="#i-alert"/></svg>Plan ended</span>
+        </div>
+      </div>
+
+      <div class="strip-cell app">
+        <div class="strip-label">B &middot; wayfinding</div>
+        <div class="b-row flag" tabindex="0">
+          <span class="av" style="background:#D0E6EB;color:#124555">JR</span>
+          <span class="b-main">
+            <span class="b-name">Priya Raghavan</span>
+            <span class="b-meta">Cigna &middot; 10:15 AM</span>
+          </span>
+          <span class="pill bad"><svg aria-hidden="true"><use href="#i-alert"/></svg>Ended</span>
+        </div>
+      </div>
+
+      <div class="strip-cell dark app">
+        <div class="strip-label">C &middot; light / dark</div>
+        <div style="background:var(--e-img-card);border:1px solid var(--e-img-border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;color:var(--e-img-fg)">
+          <span class="av" style="background:#D0E6EB;color:#124555">JR</span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:14px;font-weight:600">Priya Raghavan</span>
+            <span style="font-size:11px;color:var(--e-img-fg-2);font-variant-numeric:tabular-nums">EOB &middot; Cigna &middot; page 2</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="strip-cell app">
+        <div class="strip-label">D &middot; density</div>
+        <div class="d-wrap">
+          <table class="d-table">
+            <tbody>
+              <tr><td style="width:14px"><span class="d-dot bad"></span></td><td class="d-name">Priya Raghavan</td><td>Cigna</td><td class="d-num">&mdash;</td><td>Plan ended</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= HOW THEY COMBINE ======================= -->
+  <section>
+    <div class="sec-head">
+      <h2>What stacks and what conflicts</h2>
+      <p class="thesis">
+        These aren&rsquo;t four sealed boxes. Only one can be the <b>tiebreaker</b> &mdash; the rule
+        that wins when two of them disagree &mdash; but several can coexist as ordinary house habits.
+        Here is the honest read.
+      </p>
+    </div>
+
+    <div class="matrix">
+      <div class="matrix-row">
+        <div class="matrix-k">A + C</div>
+        <div class="matrix-v">
+          <b>Stack cleanly.</b> They govern different things: A decides how loud a treatment is, C
+          decides which ground it sits on. The app already does both today &mdash; quiet light
+          task screens, near-black imaging.
+        </div>
+      </div>
+      <div class="matrix-row">
+        <div class="matrix-k">A + B</div>
+        <div class="matrix-v">
+          <b>Tension, resolvable.</b> A says use the quieter treatment; B says make problems findable.
+          They collide exactly at &ldquo;how loud is an error&rdquo;. Workable if you rank them:
+          quiet by default, colour when scanning is the actual task.
+        </div>
+      </div>
+      <div class="matrix-row">
+        <div class="matrix-k">A + D</div>
+        <div class="matrix-v">
+          <b>Tension, real.</b> Calm usually wants air; density removes it. You can have a screen
+          that is quiet <em>and</em> dense &mdash; the operatory grid is &mdash; but it takes work
+          every time, and whichever you name as tiebreaker is the one that wins on tired days.
+        </div>
+      </div>
+      <div class="matrix-row">
+        <div class="matrix-k">B + D</div>
+        <div class="matrix-v">
+          <b>Stack well.</b> Dense screens need colour more, not less, because there is less room
+          for words. The 12-row table above becomes far more usable with B&rsquo;s tinting applied.
+        </div>
+      </div>
+      <div class="matrix-row">
+        <div class="matrix-k">C alone</div>
+        <div class="matrix-v">
+          <b>Doesn&rsquo;t settle enough.</b> C is genuinely true of this product, but it only fires
+          on screens that show images. It cannot be the sole tiebreaker, because most screens never
+          hit it. It belongs in the system either way &mdash; as a rule, not as the North Star.
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <svg aria-hidden="true"><use href="#i-star"/></svg>
+      <div>
+        <b>What I&rsquo;d recommend, and why.</b> Name <b>A</b> the tiebreaker and carry <b>C</b>
+        as a standing rule beneath it. A is the doctrine your code has already been following
+        without writing it down &mdash; 8 shadows in the whole app, tonal status families, hover as a
+        4% tint &mdash; so adopting it costs nothing and stops the drift. C is too true of this
+        product to leave out, but too narrow to lead. B is worth adding later as a scoped rule for
+        scanning surfaces. D I would <em>not</em> name: the density is already there where it&rsquo;s
+        needed, and as a stated doctrine it gives every future screen permission to shrink.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>How to answer</h2>
+      <p class="thesis">
+        Pick the letter that should win ties &mdash; or tell me the recommendation is right and
+        I&rsquo;ll take it from there. You can also name a stack (&ldquo;A leads, C stands, B for
+        lists&rdquo;), which is what I&rsquo;d write if you don&rsquo;t override it. Whatever you
+        choose goes into DESIGN.md as the Creative North Star, and every named rule in the file
+        argues from it.
+      </p>
+    </div>
+  </section>
+
+</div>

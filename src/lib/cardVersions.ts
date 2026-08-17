@@ -16,7 +16,7 @@ export const CARD_VERSIONS: CardVersionMeta[] = [
     label: "V1",
     title: "Always-on actions",
     description:
-      "Images / Note / Perio buttons are always visible only on the in-chair patient; every other card reveals them on hover. Name opens the summary drawer.",
+      "Review / Voice / Perio. Review is the primary CTA (right); Voice and Perio are tertiary icon buttons. Always visible only on the in-chair patient; every other card reveals them on hover. Name opens the summary drawer.",
   },
   {
     id: 2,

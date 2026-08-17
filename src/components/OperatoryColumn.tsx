@@ -1,7 +1,7 @@
 import type { Patient, ScheduleBlock } from "@/data/mockPatients";
 import { timeToMinutes, minutesToTime } from "@/data/mockPatients";
 import PatientCard from "./PatientCard";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import type { CardVersion } from "@/lib/cardVersions";
 import {
   minutesToY,

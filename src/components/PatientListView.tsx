@@ -6,7 +6,7 @@ import type {
 } from "@/data/mockPatients";
 import { computeAge, timeToMinutes } from "@/data/mockPatients";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import { getProviderColor } from "@/lib/providerColors";
 import { cn } from "@/lib/utils";
 

@@ -8,7 +8,7 @@ import ProviderMultiSelect, {
 import OperatoryMultiSelect from "@/components/OperatoryMultiSelect";
 import type { Patient } from "@/data/mockPatients";
 import { DENTISTS, HYGIENISTS } from "@/data/mockPatients";
-import type { ScheduleFilters, ScheduleView } from "@/App";
+import type { ScheduleFilters, ScheduleView } from "@/types/clinical";
 import { cn } from "@/lib/utils";
 
 interface L2HeaderProps {

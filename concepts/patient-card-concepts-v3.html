@@ -1,0 +1,1950 @@
+<title>Patient Card Concepts v3</title>
+<style>
+  /* ============================================================
+     PAGE CHROME TOKENS  (the spec sheet the specimens sit on)
+     ============================================================ */
+  :root {
+    --pg-ground:      #EFECE8;
+    --pg-ground-alt:  #E7E3DE;
+    --pg-ink:         #1B1A18;
+    --pg-ink-2:       #5C5852;
+    --pg-ink-3:       #6E6A63;
+    --pg-rule:        #D6D1CA;
+    --pg-rule-soft:   #E2DED8;
+    --pg-mark:        #124555;
+    --pg-mark-soft:   #A3CCD5;
+    --pg-caliper:     #B08A2E;
+    --pg-caliper-ink: #7A5C10;
+    --pg-sel:         #CFE1E6;
+
+    /* ---- ENAMEL SEMANTIC TOKENS (light) &mdash; verbatim from schedule/src/index.css ---- */
+    --e-background:   #FCFBFA;
+    --e-foreground:   #18181B;
+    --e-card:         #FFFFFF;
+    --e-muted:        #F4F2F0;
+    --e-muted-fg:     #52525B;
+    --e-muted-fg-2:   #71717A;
+    --e-border:       #E6E3E0;
+    --e-primary:      #124555;
+    --e-primary-fg:   #FFFFFF;
+    --e-link:         #124555;
+
+    --e-success:      #2E7D3A;
+    --e-warning:      #C08B1E;
+    --e-error:        #C63E38;
+
+    --e-success-muted:     #EFF6F0;
+    --e-success-muted-bd:  #D4EAD7;
+    --e-success-muted-fg:  #1C5027;
+    --e-warning-muted:     #FDF8EE;
+    --e-warning-muted-bd:  #FAEFD4;
+    --e-warning-muted-fg:  #7C5712;
+    --e-error-muted:       #FDF2F1;
+    --e-error-muted-bd:    #FADBD8;
+    --e-error-muted-fg:    #832824;
+    --e-info-muted:        #EDF5F7;
+    --e-info-muted-bd:     #A3CCD5;
+    --e-info-muted-fg:     #124555;
+    --e-accent-muted:      #F0F4FC;
+    --e-accent-muted-bd:   #BDCEF4;
+    --e-accent-muted-fg:   #2D4F98;
+
+    --e-btn-outline-bg: #FFFFFF;
+    --e-avatar-bg:      #DCE5F9;
+    --e-avatar-fg:      #223C78;
+
+    /* v2: appointment-banner grounds, weight-matched across the two tracks */
+    --e-band-dr:      #EDF5F7;
+    --e-band-dr-bd:   #A3CCD5;
+    --e-band-hy:      #F0F4FC;
+    --e-band-hy-bd:   #BDCEF4;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --pg-ground:      #131315;
+      --pg-ground-alt:  #1B1B1E;
+      --pg-ink:         #F2F0ED;
+      --pg-ink-2:       #A5A09A;
+      --pg-ink-3:       #8B8680;
+      --pg-rule:        #2E2E32;
+      --pg-rule-soft:   #26262A;
+      --pg-mark:        #6AABB9;
+      --pg-mark-soft:   #0E3644;
+      --pg-caliper:     #DBA63C;
+      --pg-caliper-ink: #DBA63C;
+      --pg-sel:         #1C4C5B;
+
+      --e-background:   #18181B;
+      --e-foreground:   #FAFAFA;
+      --e-card:         #27272A;
+      --e-muted:        #27272A;
+      --e-muted-fg:     #A1A1AA;
+      --e-muted-fg-2:   #A1A1AA;
+      --e-border:       #3F3F46;
+      --e-primary:      #1F6D7E;
+      --e-primary-fg:   #FFFFFF;
+      --e-link:         #6AABB9;
+
+      --e-success:      #4A9956;
+      --e-warning:      #DBA63C;
+      --e-error:        #DB5A54;
+
+      --e-success-muted:     #153D1E;
+      --e-success-muted-bd:  #0F2C16;
+      --e-success-muted-fg:  #A9D5AF;
+      --e-warning-muted:     #43300C;
+      --e-warning-muted-bd:  #43300C;
+      --e-warning-muted-fg:  #F4DCA4;
+      --e-error-muted:       #481716;
+      --e-error-muted-bd:    #481716;
+      --e-error-muted-fg:    #F3B2AE;
+      --e-info-muted:        #0E3644;
+      --e-info-muted-bd:     #0E3644;
+      --e-info-muted-fg:     #A3CCD5;
+      --e-accent-muted:      #223C78;
+      --e-accent-muted-bd:   #223C78;
+      --e-accent-muted-fg:   #BDCEF4;
+
+      --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+      --e-avatar-bg:      #223C78;
+      --e-avatar-fg:      #DCE5F9;
+
+      --e-band-dr:      #0E3644;
+      --e-band-dr-bd:   #1B5567;
+      --e-band-hy:      #1B2A4E;
+      --e-band-hy-bd:   #2E4479;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --pg-ground:      #131315;
+    --pg-ground-alt:  #1B1B1E;
+    --pg-ink:         #F2F0ED;
+    --pg-ink-2:       #A5A09A;
+    --pg-ink-3:       #8B8680;
+    --pg-rule:        #2E2E32;
+    --pg-rule-soft:   #26262A;
+    --pg-mark:        #6AABB9;
+    --pg-mark-soft:   #0E3644;
+    --pg-caliper:     #DBA63C;
+    --pg-caliper-ink: #DBA63C;
+    --pg-sel:         #1C4C5B;
+
+    --e-background:   #18181B;
+    --e-foreground:   #FAFAFA;
+    --e-card:         #27272A;
+    --e-muted:        #27272A;
+    --e-muted-fg:     #A1A1AA;
+    --e-muted-fg-2:   #A1A1AA;
+    --e-border:       #3F3F46;
+    --e-primary:      #1F6D7E;
+    --e-primary-fg:   #FFFFFF;
+    --e-link:         #6AABB9;
+
+    --e-success:      #4A9956;
+    --e-warning:      #DBA63C;
+    --e-error:        #DB5A54;
+
+    --e-success-muted:     #153D1E;
+    --e-success-muted-bd:  #0F2C16;
+    --e-success-muted-fg:  #A9D5AF;
+    --e-warning-muted:     #43300C;
+    --e-warning-muted-bd:  #43300C;
+    --e-warning-muted-fg:  #F4DCA4;
+    --e-error-muted:       #481716;
+    --e-error-muted-bd:    #481716;
+    --e-error-muted-fg:    #F3B2AE;
+    --e-info-muted:        #0E3644;
+    --e-info-muted-bd:     #0E3644;
+    --e-info-muted-fg:     #A3CCD5;
+    --e-accent-muted:      #223C78;
+    --e-accent-muted-bd:   #223C78;
+    --e-accent-muted-fg:   #BDCEF4;
+
+    --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+    --e-avatar-bg:      #223C78;
+    --e-avatar-fg:      #DCE5F9;
+
+    --e-band-dr:      #0E3644;
+    --e-band-dr-bd:   #1B5567;
+    --e-band-hy:      #1B2A4E;
+    --e-band-hy-bd:   #2E4479;
+  }
+
+  /* ============================================================
+     PAGE
+     ============================================================ */
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--pg-ground);
+    color: var(--pg-ink);
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--pg-sel); color: var(--pg-ink); }
+
+  * { scrollbar-color: var(--pg-rule) transparent; scrollbar-width: thin; }
+  ::-webkit-scrollbar { height: 10px; width: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--pg-rule);
+    border: 3px solid var(--pg-ground);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pg-ink-3); }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+
+  /* --- masthead --- */
+  .mast { display: flex; flex-direction: column; gap: 20px; }
+
+  .mast-nav {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+  }
+  .mast-nav a { color: var(--pg-mark); text-decoration: none; border-bottom: 1px solid var(--pg-mark-soft); }
+  .mast-nav a:hover { border-bottom-color: var(--pg-mark); }
+  .mast-nav .ver {
+    color: var(--pg-ground);
+    background: var(--pg-mark);
+    padding: 2px 7px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: clamp(30px, 4.4vw, 46px);
+    line-height: 1.04;
+    letter-spacing: -0.032em;
+    font-weight: 640;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+
+  .mast-lede {
+    max-width: 68ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--pg-ink-2);
+  }
+  .mast-lede strong { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- callout box (no thick rules; the ground carries it) --- */
+  .callout {
+    padding: 15px 17px;
+    border: 1px solid var(--pg-rule);
+    background: var(--pg-ground-alt);
+    max-width: 680px;
+    font-size: 12px;
+    line-height: 1.62;
+    color: var(--pg-ink-2);
+  }
+  .callout b { color: var(--pg-ink); font-weight: 600; }
+  .callout .co-h {
+    display: block;
+    font-size: 9.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--pg-caliper-ink);
+    margin-bottom: 6px;
+  }
+  .callout code {
+    font-size: 11px;
+    background: var(--pg-ground);
+    border: 1px solid var(--pg-rule);
+    padding: 0 4px;
+  }
+
+  /* --- the five today-needs, as a numbered legend --- */
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .legend-item {
+    background: var(--pg-ground);
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .legend-n {
+    flex: none;
+    width: 22px; height: 18px;
+    background: var(--pg-mark);
+    color: var(--pg-ground);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: grid;
+    place-items: center;
+    margin-top: 2px;
+  }
+  .legend-t { font-size: 11.5px; line-height: 1.5; color: var(--pg-ink-2); }
+  .legend-t b { display: block; color: var(--pg-ink); font-weight: 600; font-size: 12px; }
+
+  /* --- section scaffolding --- */
+  section { display: flex; flex-direction: column; gap: 24px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 10px; }
+
+  .sec-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-mark);
+  }
+  .sec-rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--pg-rule);
+  }
+
+  h2 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 25px;
+    line-height: 1.15;
+    letter-spacing: -0.022em;
+    font-weight: 620;
+  }
+
+  .thesis {
+    max-width: 68ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.62;
+    color: var(--pg-ink-2);
+  }
+  .thesis b { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- specimen field --- */
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px 44px;
+    padding: 32px 28px;
+    background: var(--e-background);
+    border: 1px solid var(--pg-rule);
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--pg-rule) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--pg-rule) 55%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .unit { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+
+  .unit-label {
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .unit-label .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .dot-dr { background: var(--e-primary); }
+  .dot-hy { background: var(--e-accent-muted-fg); }
+
+  /* dimension caliper under each specimen */
+  .caliper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    color: var(--pg-caliper-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .caliper .bar {
+    flex: 1;
+    height: 5px;
+    border-left: 1px solid var(--pg-caliper);
+    border-right: 1px solid var(--pg-caliper);
+    position: relative;
+  }
+  .caliper .bar::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 2px;
+    border-top: 1px dashed var(--pg-caliper);
+  }
+
+  /* coverage chips (which of the five today-needs this card carries) */
+  .cover { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .cover-lab {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    margin-right: 3px;
+  }
+  .cv {
+    min-width: 21px; height: 17px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .cv-on  { background: var(--pg-mark); color: var(--pg-ground); }
+  .cv-part{ background: transparent; color: var(--pg-mark); border: 1px solid var(--pg-mark); }
+  .cv-off { background: transparent; color: var(--pg-ink-3); border: 1px dashed var(--pg-rule); }
+
+  .trade {
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--pg-ink-2);
+    border-top: 1px solid var(--pg-rule-soft);
+    padding-top: 8px;
+  }
+  .trade b { color: var(--pg-ink); font-weight: 600; }
+
+  /* ============================================================
+     THE CARD &mdash; Enamel primitives, 280 x 228
+     ============================================================ */
+  .card {
+    width: 280px;
+    height: 228px;
+    flex: none;
+    background: var(--e-card);
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    color: var(--e-foreground);
+    overflow: hidden;
+    position: relative;
+  }
+  .card.h88  { height: 88px; }
+  .card.h133 { height: 133px; }
+  .card.wide { width: 474px; height: 236px; padding: 0; flex-direction: row; }
+  .card.wide .c-div { margin: 4px 0; }
+
+  /* the two tracks. Set once on the card, read by every child. */
+  .tr-dr {
+    --track:        var(--e-primary);
+    --track-fg:     var(--e-info-muted-fg);
+    --track-bg:     var(--e-band-dr);
+    --track-bd:     var(--e-band-dr-bd);
+  }
+  .tr-hy {
+    --track:        var(--e-accent-muted-fg);
+    --track-fg:     var(--e-accent-muted-fg);
+    --track-bg:     var(--e-band-hy);
+    --track-bd:     var(--e-band-hy-bd);
+  }
+
+  .c-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .c-top > div { min-width: 0; }
+  .c-name {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.006em;
+    color: var(--e-foreground);
+  }
+  .c-meta {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--e-muted-fg);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* status pill */
+  .pill {
+    flex: none;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pill svg { width: 9px; height: 9px; }
+  .pill-chair  { background: var(--e-success-muted); border-color: var(--e-success-muted-bd); color: var(--e-success-muted-fg); }
+  .pill-done   { background: var(--e-muted); border-color: var(--e-border); color: var(--e-muted-fg); }
+  .pill-up     { background: var(--e-info-muted); border-color: var(--e-info-muted-bd); color: var(--e-info-muted-fg); }
+  .pill-ready  { background: var(--e-warning-muted); border-color: var(--e-warning-muted-bd); color: var(--e-warning-muted-fg); }
+
+  .c-div { height: 1px; background: var(--e-border); margin: 6px 0; }
+
+  /* flex:1 + min-height:0 + overflow:hidden means the body is what gives when
+     content runs long &mdash; the footer never gets pushed out of the 228px box. */
+  .c-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+  .c-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .prov { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .av {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--e-avatar-bg);
+    color: var(--e-avatar-fg);
+    font-size: 10px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .av.sm { width: 15px; height: 15px; font-size: 7.5px; }
+  .prov-role { font-size: 11px; font-weight: 500; color: var(--e-muted-fg); }
+
+  .acts { display: flex; align-items: center; gap: 6px; }
+  .ibtn {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--e-border);
+    background: var(--e-btn-outline-bg);
+    color: var(--e-muted-fg);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .ibtn svg { width: 15px; height: 15px; }
+  .pbtn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: none;
+    background: var(--e-primary);
+    color: var(--e-primary-fg);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pbtn svg { width: 13px; height: 13px; }
+  .ibtn.solid { background: var(--e-primary); border-color: var(--e-primary); color: var(--e-primary-fg); }
+
+  /* ============================================================
+     SHARED v2 PARTS
+     ============================================================ */
+
+  /* --- the worklist: what we're doing, in order --- */
+  .wl { display: flex; flex-direction: column; gap: 1px; }
+  .wl-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11.5px;
+    line-height: 1.42;
+    min-width: 0;
+  }
+  .wl-m {
+    flex: none;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    align-self: flex-start;
+    margin-top: 3px;
+  }
+  .wl-m svg { width: 10px; height: 10px; }
+  .wl-row.done .wl-m { color: var(--e-success); }
+  .wl-row.done .t { color: var(--e-muted-fg); }
+  .wl-row.now .wl-m {
+    background: var(--track);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--track) 20%, transparent);
+    animation: chairPulse 2.6s ease-in-out infinite;
+  }
+  .wl-row.now .t { color: var(--e-foreground); font-weight: 600; }
+  .wl-row.todo .wl-m { border: 1.3px solid var(--e-border); }
+  .wl-row.todo .t { color: var(--e-foreground); }
+  .wl-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wl-row .t .q { color: var(--e-muted-fg); font-weight: 400; }
+
+  @keyframes chairPulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--track) 20%, transparent); }
+    50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--track) 8%, transparent); }
+  }
+
+  /* --- the exit strip: what cannot leave the room --- */
+  .exit {
+    margin-top: auto;
+    padding-top: 5px;
+    border-top: 1px dashed var(--e-border);
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 11px;
+    line-height: 1.4;
+    min-width: 0;
+  }
+  .exit-tag {
+    flex: none;
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--e-warning-muted-fg);
+    background: var(--e-warning-muted);
+    border: 1px solid var(--e-warning-muted-bd);
+    padding: 1px 4px;
+    align-self: flex-start;
+    margin-top: 1px;
+  }
+  .exit-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--e-foreground); }
+  .exit-t .q { color: var(--e-muted-fg); }
+
+  /* --- eyebrow band (used to label the two halves of E) --- */
+  .band {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--e-muted-fg);
+    margin-bottom: 4px;
+  }
+  .band::after { content: ""; flex: 1; height: 1px; background: var(--e-border); }
+  .band.today { color: var(--track-fg); }
+  .band.leave { color: var(--e-warning-muted-fg); }
+
+  /* --- chips --- */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .chip svg { width: 9px; height: 9px; }
+  .chip-warn { background: var(--e-warning-muted); border-color: var(--e-warning-muted-bd); color: var(--e-warning-muted-fg); }
+  .chip-neut { background: var(--e-muted);         border-color: var(--e-border);           color: var(--e-muted-fg); }
+  .chip-neut b { color: var(--e-foreground); font-weight: 600; }
+
+  /* --- prereq line: what clears before we start --- */
+  .pre {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--e-muted-fg);
+    min-width: 0;
+  }
+  .pre .ok  { color: var(--e-success-muted-fg); font-weight: 600; }
+  .pre .bad { color: var(--e-error-muted-fg); font-weight: 600; }
+  .pre .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pre svg { width: 10px; height: 10px; flex: none; transform: translateY(1.5px); }
+
+  /* ============================================================
+     CONCEPT D &mdash; the banner
+     ============================================================ */
+  .card.d { padding: 0; }
+  .d-banner {
+    flex: none;
+    height: 28px;
+    padding: 0 11px;
+    background: var(--track-bg);
+    border-bottom: 1px solid var(--track-bd);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--track-fg);
+  }
+  .d-banner svg { width: 13px; height: 13px; flex: none; }
+  .d-type {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .d-site {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--e-foreground);
+  }
+  .d-dur {
+    margin-left: auto;
+    flex: none;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
+  }
+  .d-inner { flex: 1; min-height: 0; padding: 9px 12px 10px; display: flex; flex-direction: column; }
+
+  /* ============================================================
+     CONCEPT E &mdash; the appointment is the headline
+     ============================================================ */
+  .e-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .e-type {
+    font-size: 15px;
+    font-weight: 640;
+    line-height: 1.15;
+    letter-spacing: -0.014em;
+    color: var(--e-foreground);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+  }
+  .e-type svg { width: 13px; height: 13px; flex: none; color: var(--track-fg); transform: translateY(1px); }
+  .e-type .site { color: var(--track-fg); }
+  .e-who {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--e-muted-fg);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .e-who b { color: var(--e-foreground); font-weight: 600; }
+
+  /* ============================================================
+     CONCEPT F &mdash; before / in chair / exit as a spine
+     ============================================================ */
+  .arc { display: flex; flex-direction: column; }
+  .arc-row {
+    display: grid;
+    grid-template-columns: 12px 1fr;
+    column-gap: 9px;
+    position: relative;
+  }
+  .arc-row + .arc-row { margin-top: 7px; }
+  .arc-row.inline + .arc-row.inline { margin-top: 5px; }
+  .arc-node {
+    grid-column: 1;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin: 3px 0 0 1px;
+    border: 1.3px solid var(--e-border);
+    background: var(--e-card);
+    display: grid;
+    place-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .arc-node svg { width: 9px; height: 9px; }
+  /* the spine: a hairline dropped from each node to the next */
+  .arc-row:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 5.5px;
+    top: 12px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--e-border);
+  }
+  .arc-row.cleared .arc-node { border-color: var(--e-success); color: var(--e-success); background: var(--e-success-muted); }
+  .arc-row.cleared:not(:last-child)::before { background: var(--e-success-muted-bd); }
+  .arc-row.active .arc-node {
+    border-color: var(--track);
+    background: var(--track);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--track) 18%, transparent);
+    animation: chairPulse 2.6s ease-in-out infinite;
+  }
+  .arc-row.active.gate-exit .arc-node {
+    border-color: var(--e-warning);
+    background: var(--e-warning);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--e-warning) 20%, transparent);
+    animation: none;
+  }
+  .arc-k {
+    font-size: 8.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--e-muted-fg-2);
+    line-height: 1.3;
+  }
+  .arc-row.active .arc-k { color: var(--track-fg); }
+  .arc-row.gate-exit .arc-k { color: var(--e-warning-muted-fg); }
+  .arc-v {
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--e-foreground);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .arc-v.wrap { white-space: normal; }
+  /* 133px rule: the gate label folds onto the value's baseline rather than above it */
+  .arc-row.inline { grid-template-columns: 12px 52px 1fr; align-items: baseline; column-gap: 8px; }
+  .arc-row.inline .arc-node { align-self: start; margin-top: 2px; }
+  .arc-row.inline .arc-k { white-space: nowrap; }
+  .arc-v .q { color: var(--e-muted-fg); }
+  .arc-row.cleared .arc-v { color: var(--e-muted-fg); }
+  .arc-sub {
+    margin-top: 1px;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: var(--e-muted-fg);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+  .arc-sub svg { width: 10px; height: 10px; flex: none; color: var(--e-muted-fg-2); }
+  .arc-sub .nm { color: var(--e-foreground); font-weight: 500; }
+
+  /* ---- wide (474) enhanced variant ---- */
+  .wide-rail {
+    width: 182px;
+    flex: none;
+    background: var(--e-muted);
+    border-right: 1px solid var(--e-border);
+    border-radius: 8.5px 0 0 8.5px;
+    padding: 11px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .wide-main { flex: 1; min-width: 0; padding: 10px 12px 9px; display: flex; flex-direction: column; }
+  .rail-h {
+    font-size: 8.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--e-muted-fg);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .rail-h .cnt { color: var(--track-fg); font-variant-numeric: tabular-nums; }
+  .rail-link {
+    margin-top: auto;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--e-link);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+  }
+  .rail-link svg { width: 10px; height: 10px; }
+  .rail-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ---- comparison table ---- */
+  .tbl-scroll { overflow-x: auto; border: 1px solid var(--pg-rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 11.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--pg-rule-soft); vertical-align: top; line-height: 1.5; }
+  thead th {
+    background: var(--pg-ground-alt);
+    font-size: 9.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--pg-ink-2);
+    font-weight: 600;
+    border-bottom: 1px solid var(--pg-rule);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.k { color: var(--pg-ink); font-weight: 600; white-space: nowrap; }
+  td .rank { color: var(--pg-ink-2); }
+  td .rank b { color: var(--pg-ink); font-weight: 600; }
+  .th-dr, .th-hy { display: inline-flex; align-items: center; gap: 6px; }
+  .th-dr::before, .th-hy::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .th-dr::before { background: var(--e-primary); }
+  .th-hy::before { background: var(--e-accent-muted-fg); }
+
+  /* ---- recommendation ---- */
+  .rec {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .rec-cell { background: var(--pg-ground); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .rec-cell h3 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 15px;
+    font-weight: 620;
+    letter-spacing: -0.012em;
+  }
+  .rec-cell p { margin: 0; font-size: 11.5px; line-height: 1.62; color: var(--pg-ink-2); }
+  .rec-tag {
+    align-self: flex-start;
+    font-size: 9.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 3px 8px;
+    border: 1px solid var(--pg-mark);
+    color: var(--pg-mark);
+  }
+  .rec-tag.alt { border-color: var(--pg-rule); color: var(--pg-ink-3); }
+
+  .note {
+    font-size: 11.5px;
+    line-height: 1.68;
+    color: var(--pg-ink-2);
+    max-width: 74ch;
+  }
+  .note b { color: var(--pg-ink); font-weight: 600; }
+  .note code {
+    font-size: 11px;
+    background: var(--pg-ground-alt);
+    border: 1px solid var(--pg-rule);
+    padding: 0 4px;
+  }
+
+  /* preview switch &mdash; fixed so it is reachable from anywhere down the sheet */
+  .theme {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 20;
+    display: flex;
+    background: var(--pg-ground-alt);
+    border: 1px solid var(--pg-rule);
+    box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.35);
+  }
+  .theme button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    padding: 6px 11px;
+    cursor: pointer;
+    transition: color 120ms ease, background 120ms ease;
+  }
+  .theme button + button { border-left: 1px solid var(--pg-rule); }
+  .theme button:hover { color: var(--pg-ink); }
+  .theme button[aria-pressed="true"] { background: var(--pg-mark); color: var(--pg-ground); }
+
+  :where(button):focus-visible,
+  :where(a):focus-visible { outline: 2px solid var(--pg-mark); outline-offset: 2px; }
+
+  /* Desktop-first sheet. Below this the 474 specimen cannot shrink without
+     misreporting its footprint, so its field scrolls rather than the page body. */
+  @media (max-width: 640px) {
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    .field { overflow-x: auto; overflow-y: hidden; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("videa-concepts-theme"); } catch (e) {}
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+
+<div class="theme" role="group" aria-label="Preview theme">
+  <button type="button" data-theme-set="light">Light</button>
+  <button type="button" data-theme-set="dark">Dark</button>
+  <button type="button" data-theme-set="auto">Auto</button>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M13.5 4.5 6.5 12 2.5 8.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check-sm" viewBox="0 0 16 16"><path d="M13 5 6.4 11.6 3 8.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 16 16"><path d="M8 1.9 15 14H1L8 1.9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.2v3.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.7" r="0.9" fill="currentColor"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.6h13M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-cal-x" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.6h13M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="m6.2 9.2 3.6 3.6M9.8 9.2l-3.6 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 16 16"><rect x="5.6" y="1.3" width="4.8" height="8.2" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.2 7.6a4.8 4.8 0 0 0 9.6 0M8 12.4v2.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-img" viewBox="0 0 16 16"><rect x="1.4" y="2.6" width="13.2" height="10.8" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.4" cy="6.3" r="1.2" fill="currentColor"/><path d="m2.2 12 3.6-3.6 2.6 2.6 2.3-2.3 3.1 3.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2.6 8h10.2M9 4.2 12.8 8 9 11.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 16 16"><path d="M6.2 2.5H2.5v11h11V9.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9.4 2.5h4.1v4.1M13.5 2.5 7.4 8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <!-- v2 additions -->
+    <symbol id="i-tooth" viewBox="0 0 16 16"><path d="M11.1 1.9c-.8 0-2 .5-3.1.5s-2.3-.5-3.1-.5C3.4 1.9 2.3 3.1 2.3 4.8c0 1.6.5 2.6.9 4 .3 1.2.5 3.3.9 4.3.3.8 1.4.9 1.7 0 .4-.9.6-3.1.9-4 .2-.6 1.4-.6 1.6 0 .3.9.5 3.1.9 4 .3.9 1.4.8 1.7 0 .4-1 .6-3.1.9-4.3.4-1.4.9-2.4.9-4 0-1.7-1.1-2.9-2.6-2.9Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+    <symbol id="i-case" viewBox="0 0 16 16"><path d="M8 1.8 14 4.9v6.2L8 14.2 2 11.1V4.9L8 1.8Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 4.9 8 8l6-3.1M8 8v6.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+    <symbol id="i-exam" viewBox="0 0 16 16"><circle cx="6.2" cy="4.6" r="2.7" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.6 13.6c0-2.5 2.1-4.3 4.6-4.3.8 0 1.5.1 2.2.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="m9.6 12.2 1.7 1.8 3.1-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-money" viewBox="0 0 16 16"><path d="M8 1.6v12.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M11 4.4H6.6a2.1 2.1 0 0 0 0 4.2h2.8a2.1 2.1 0 0 1 0 4.2H4.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.3V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <!-- Videa perio glyph, from schedule/src/components/PatientCard.tsx -->
+    <symbol id="i-perio" viewBox="0 0 20 20">
+      <path d="M13.2009 11.4583V17.6705C13.2009 18.0588 12.8723 18.3873 12.4841 18.3873C12.0958 18.3873 11.7673 18.0588 11.7673 17.6705V11.4583C11.7673 11.07 12.0958 10.7415 12.4841 10.7415C12.8723 10.7415 13.2009 11.07 13.2009 11.4583ZM15.5902 12.414V16.7148C15.5902 17.1031 15.2617 17.4316 14.8734 17.4316C14.4851 17.4316 14.1566 17.1031 14.1566 16.7148V12.414C14.1566 12.0257 14.4851 11.6972 14.8734 11.6972C15.2617 11.6972 15.5902 12.0257 15.5902 12.414ZM10.8115 12.8919V16.2369C10.8115 16.6252 10.483 16.9537 10.0947 16.9537C9.70646 16.9537 9.37793 16.6252 9.37793 16.2369V12.8919C9.37793 12.5036 9.70646 12.1751 10.0947 12.1751C10.483 12.1751 10.8115 12.5036 10.8115 12.8919ZM17.9795 13.8476V15.2812C17.9795 15.6695 17.651 15.998 17.2627 15.998C16.8745 15.998 16.5459 15.6695 16.5459 15.2812V13.8476C16.5459 13.4593 16.8745 13.1308 17.2627 13.1308C17.651 13.1308 17.9795 13.4593 17.9795 13.8476Z" fill="currentColor"/>
+      <path d="M11.7666 3C13.7675 3.00011 15.3797 4.61241 15.3799 6.61328V8.79395C15.3799 9.25833 15.3098 9.73566 15.1641 10.1904C14.8589 10.3374 14.2119 10.4671 13.8018 9.70801C13.8944 9.41403 13.9463 9.10429 13.9463 8.79395V6.61328C13.9461 5.41881 12.9611 4.4337 11.7666 4.43359C11.4383 4.43359 11.0798 4.52269 10.7812 4.67188L9.01855 5.56836C8.80952 5.6579 8.57035 5.65794 8.36133 5.56836L6.59961 4.67188C6.30106 4.5226 5.97249 4.43366 5.61426 4.43359C4.41968 4.43359 3.43375 5.41874 3.43359 6.61328V8.79395C3.43361 9.27177 3.55267 9.74987 3.76172 10.168L4.47852 11.6016C4.7174 12.1092 4.86701 12.6465 4.92676 13.2139L5.22559 16.3799C5.25545 16.6487 5.49487 16.8574 5.76367 16.8574C6.00245 16.8572 6.24066 16.6782 6.27051 16.4395L7.13672 12.4072C7.15117 12.335 7.17175 12.2652 7.19531 12.1973C7.54125 12.0297 8.34446 12.1311 8.53809 12.6855L7.6748 16.7383C7.49563 17.6341 6.68934 18.2908 5.76367 18.291C4.7482 18.291 3.91187 17.5145 3.82227 16.499L3.49316 13.334C3.4633 12.9457 3.37354 12.5869 3.19434 12.2285L2.47754 10.8252C2.14902 10.198 2.00002 9.48084 2 8.79395V6.61328C2.00015 4.61234 3.61328 3 5.61426 3C6.18151 3.00005 6.719 3.11903 7.22656 3.3877L8.69043 4.10449L10.1533 3.3877C10.6611 3.1189 11.1991 3 11.7666 3Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <!-- ================== MASTHEAD ================== -->
+  <header class="mast">
+    <div class="mast-nav">
+      <span class="ver">v3</span>
+      <span>Enamel &middot; Schedule &middot; Patient card</span>
+      <a href="./patient-card-concepts.html">&larr; v1</a>
+      <a href="./patient-card-concepts-v2.html">&larr; v2</a>
+    </div>
+    <h1>What are they here for?</h1>
+    <p class="mast-lede">
+      Every concept in v1 answered <strong>what happened last time</strong>. None of them answered the
+      question a clinician actually walks up to the screen with: <strong>what is this appointment, and
+      what has to get done in this chair before the patient stands up.</strong> v2 puts today on the card
+      and demotes history to the one fact that changes today's work. Three concepts, each rendered for
+      both tracks, at the card's real footprint.
+    </p>
+    <div class="callout">
+      <span class="co-h">What v1 got wrong</span>
+      The six needs were all retrospective &mdash; last visit, deferred treatment, the patient's quote.
+      Useful in the huddle, but a card on an <b>operatory timeline</b> is read mid-day, between chairs.
+      At that moment the appointment type is the field being scanned for, and it was nowhere on the card.
+      The dimensions are unchanged: <b>280 &times; 228</b> in the list, <b>88 / 133 / 178px</b> by duration
+      in the grid.
+    </div>
+  </header>
+
+  <!-- ================== THE FIVE ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">The brief, restated</div>
+      <h2>Five things today needs</h2>
+      <p class="thesis">
+        These replace v1's six as the card's job. v1's six do not disappear &mdash; five of them collapse
+        into <b>T5</b>, and the rest move to the drawer where a huddle can read them properly. Each
+        specimen carries a coverage row: <b>filled</b> = on the card, <b>outlined</b> = present but
+        truncated, <b>dashed</b> = pushed to the drawer.
+      </p>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-n">T1</span><span class="legend-t"><b>What it is</b>Appointment type, site &mdash; tooth, quadrant, arch &mdash; and booked duration.</span></div>
+      <div class="legend-item"><span class="legend-n">T2</span><span class="legend-t"><b>What we're doing</b>The planned procedures in sequence, and how far through them we are.</span></div>
+      <div class="legend-item"><span class="legend-n">T3</span><span class="legend-t"><b>What clears first</b>Prerequisites that gate the start: pre-med, lab case, INR, anesthesia plan.</span></div>
+      <div class="legend-item"><span class="legend-n">T4</span><span class="legend-t"><b>What can't leave the room</b>Book the recall, re-present the deferred item, schedule the next step.</span></div>
+      <div class="legend-item"><span class="legend-n">T5</span><span class="legend-t"><b>What changes today's work</b>The one carried-over fact that alters the plan. Everything else is drawer.</span></div>
+    </div>
+    <div class="callout">
+      <span class="co-h">How the split is decided</span>
+      There is no separate visit-type field, and there should not be one. The track is a function of the
+      procedure string &mdash; the app already does this in <code>isHygieneProcedure()</code>, matching
+      <code>prophylaxis</code>, <code>periodontal maintenance</code>, <code>scaling</code>,
+      <code>root planing</code>, <code>srp</code>, <code>fluoride</code>, <code>sealants</code>,
+      <code>deep cleaning</code>, <code>periodontal assessment</code>. Everything else is the doctor
+      track. <b>One component, one derived flag, two content configurations</b> &mdash; the markup never
+      branches.
+    </div>
+  </section>
+
+  <!-- ================== CONCEPT D ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept D</div>
+      <h2>Banner &amp; Worklist</h2>
+      <p class="thesis">
+        The appointment type is lifted out of the card body entirely and becomes a <b>full-bleed strip
+        across the top</b>, tinted by track. Down a column of eight operatories it is the only thing you
+        read at speed. Underneath, the body is the visit as a worklist &mdash; done, doing, to&nbsp;do &mdash;
+        with the one action that cannot leave the room pinned to the floor. This is the loudest answer
+        to &ldquo;what are they here for,&rdquo; and the card that is most useful <i>during</i> the appointment.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- D &middot; doctor -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Crown seat</div>
+        <div class="card d tr-dr">
+          <div class="d-banner">
+            <svg><use href="#i-tooth"/></svg>
+            <span class="d-type">Crown seat <span class="d-site">#14</span></span>
+            <span class="d-dur">60 min</span>
+          </div>
+          <div class="d-inner">
+            <div class="c-top">
+              <div>
+                <div class="c-name">Sarah Cohen</div>
+                <div class="c-meta">10:30 AM &middot; Op 3 &middot; 18 min in</div>
+              </div>
+              <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>In chair</span>
+            </div>
+            <div class="c-div"></div>
+            <div class="c-body">
+              <div class="wl">
+                <div class="wl-row done"><span class="wl-m"><svg><use href="#i-check-sm"/></svg></span><span class="t">Temp off, margins clean</span></div>
+                <div class="wl-row now"><span class="wl-m"></span><span class="t">Try-in <span class="q">&middot; contacts, shade</span></span></div>
+                <div class="wl-row todo"><span class="wl-m"></span><span class="t">Occlusion, cement, cleanup</span></div>
+                <div class="wl-row todo"><span class="wl-m"></span><span class="t">MOD #19 <span class="q">&middot; added today</span></span></div>
+              </div>
+              <div class="exit">
+                <span class="exit-tag">Exit</span>
+                <span class="exit-t">Book recall <span class="q">&middot; 6 mo overdue</span></span>
+              </div>
+            </div>
+            <div class="c-foot">
+              <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+              <div class="acts">
+                <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+                <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+                <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">T1</span><span class="cv cv-on">T2</span><span class="cv cv-off">T3</span>
+          <span class="cv cv-part">T4</span><span class="cv cv-part">T5</span>
+        </div>
+        <div class="trade"><b>Trade:</b> prerequisites (T3) lose their slot once the patient is in the chair &mdash; they have already cleared. Before the appointment the top worklist row is the prereq instead.</div>
+      </div>
+
+      <!-- D &middot; hygiene -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; SRP</div>
+        <div class="card d tr-hy">
+          <div class="d-banner">
+            <svg><use href="#i-perio"/></svg>
+            <span class="d-type">SRP <span class="d-site">UR / UL</span></span>
+            <span class="d-dur">60 min</span>
+          </div>
+          <div class="d-inner">
+            <div class="c-top">
+              <div>
+                <div class="c-name">James Lee</div>
+                <div class="c-meta">11:15 AM &middot; Op 1 &middot; starts in 30</div>
+              </div>
+              <span class="pill pill-up"><svg><use href="#i-cal"/></svg>Upcoming</span>
+            </div>
+            <div class="c-div"></div>
+            <div class="c-body">
+              <div class="wl">
+                <div class="wl-row done"><span class="wl-m"><svg><use href="#i-check-sm"/></svg></span><span class="t">INR 2.4 <span class="q">&middot; cleared 03/09</span></span></div>
+                <div class="wl-row todo"><span class="wl-m"></span><span class="t">6-pt probe, full mouth</span></div>
+                <div class="wl-row todo"><span class="wl-m"></span><span class="t">SRP UR/UL <span class="q">&middot; block, 2 carp</span></span></div>
+                <div class="wl-row todo"><span class="wl-m"></span><span class="t">4 BWX <span class="q">&middot; due, last 08/12/25</span></span></div>
+              </div>
+              <div class="exit">
+                <span class="exit-tag">Exit</span>
+                <span class="exit-t">Book LR/LL + 3-mo perio maint.</span>
+              </div>
+            </div>
+            <div class="c-foot">
+              <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+              <div class="acts">
+                <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+                <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+                <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">T1</span><span class="cv cv-on">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-off">T5</span>
+        </div>
+        <div class="trade"><b>Conditional:</b> hygiene sites are quadrants, not teeth, and the prereq is anticoagulation clearance rather than a lab case. Same four rows, different vocabulary.</div>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Why the banner is tinted rather than ruled.</b> A colored edge on the card competes with the
+      provider-color system already running on the avatars. A tinted header band reads as a
+      <i>classification</i> of the appointment rather than an alert about it, holds an icon and the
+      duration without stealing a body line, and survives at 88px where a body row does not.
+    </p>
+  </section>
+
+  <!-- ================== CONCEPT E ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept E</div>
+      <h2>The Appointment Is the Headline</h2>
+      <p class="thesis">
+        The most direct answer, and the most argumentative: <b>the procedure takes the name's slot and
+        the patient demotes to the meta line.</b> On a schedule you already know who is in Op 3 at 10:30
+        &mdash; the grid told you. What you do not know is what the next hour is. The body then splits
+        into two labelled halves: what happens today, and what has to be true before they leave.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- E &middot; doctor -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Crown seat</div>
+        <div class="card tr-dr">
+          <div class="e-head">
+            <div style="min-width:0">
+              <div class="e-type"><svg><use href="#i-tooth"/></svg>Crown seat <span class="site">#14</span></div>
+              <div class="e-who"><b>Sarah Cohen</b> &middot; 10:30 AM</div>
+            </div>
+            <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>In chair</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="band today">Today &middot; 60 min &middot; Op 3</div>
+            <div class="wl" style="margin-bottom:6px">
+              <div class="wl-row done"><span class="wl-m"><svg><use href="#i-check-sm"/></svg></span><span class="t">Temp off <span class="q">&rarr; try-in &rarr; cement</span></span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">MOD #19 composite <span class="q">&middot; added</span></span></div>
+            </div>
+            <div class="pre"><svg style="color:var(--e-success)"><use href="#i-check-sm"/></svg><span class="txt"><span class="ok">Lab case in</span> 03/10 &middot; <span class="ok">pre-med</span> 9:30 &middot; 1 carp lido</span></div>
+            <div class="band leave" style="margin-top:7px">Before they leave</div>
+            <div class="chips">
+              <span class="chip chip-warn"><svg><use href="#i-cal-x"/></svg>Recall &middot; 6 mo overdue</span>
+              <span class="chip chip-neut"><svg><use href="#i-money"/></svg><b>$640</b> left</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">T1</span><span class="cv cv-part">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-part">T5</span>
+        </div>
+        <div class="trade"><b>Trade:</b> the sequence compresses to one line to buy the prereq and exit bands. You learn the plan's shape, not its steps.</div>
+      </div>
+
+      <!-- E &middot; hygiene -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; Perio maintenance</div>
+        <div class="card tr-hy">
+          <div class="e-head">
+            <div style="min-width:0">
+              <div class="e-type"><svg><use href="#i-perio"/></svg>Perio maint. <span class="site">4&nbsp;quad</span></div>
+              <div class="e-who"><b>Christina Mendoza</b> &middot; 12:00 PM</div>
+            </div>
+            <span class="pill pill-ready"><svg><use href="#i-clock"/></svg>Ready</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="band today">Today &middot; 60 min &middot; Op 1</div>
+            <div class="wl" style="margin-bottom:6px">
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">Probe 6-pt <span class="q">&rarr; scale &rarr; fluoride</span></span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">Doc check <span class="q">&middot; Dr. Gupta, ~:45</span></span></div>
+            </div>
+            <div class="pre"><svg style="color:var(--e-warning)"><use href="#i-warn"/></svg><span class="txt"><span class="bad">FMX due</span> &middot; last 02/24 &middot; recession watch UL</span></div>
+            <div class="band leave" style="margin-top:7px">Before they leave</div>
+            <div class="chips">
+              <span class="chip chip-warn"><svg><use href="#i-cal-x"/></svg>3-mo interval</span>
+              <span class="chip chip-neut"><svg><use href="#i-money"/></svg><b>$320</b> &middot; 1 prophy</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">LC</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">T1</span><span class="cv cv-part">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-part">T5</span>
+        </div>
+        <div class="trade"><b>Conditional:</b> the hygiene plan carries a second provider. <b>Doc check</b> is a scheduled interrupt inside someone else's appointment &mdash; it belongs on both cards.</div>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>The objection, and the answer.</b> Demoting the patient name reads as wrong until you watch the
+      screen get used: the name is confirmed at the chair, from the chart, out loud. The card is read
+      from across the room to answer &ldquo;what is happening in Op 3.&rdquo; The name still sets in
+      <b>semibold at 11.5px</b> and still opens the drawer &mdash; it is demoted, not hidden. Privacy mode
+      already masks it, which is a second argument that the schedule cannot depend on it.
+    </p>
+  </section>
+
+  <!-- ================== CONCEPT F ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept F</div>
+      <h2>Chair Arc</h2>
+      <p class="thesis">
+        The quietest of the three and the only one shaped by <b>time</b>, which is what the card is
+        sitting on. A visit has three gates &mdash; what must clear <b>before</b>, what happens <b>in the
+        chair</b>, what must be true at the <b>exit</b> &mdash; and the card is that spine. The gates never
+        move, so the eye lands rather than reads, and the card's emphasis follows the appointment's
+        phase without changing its layout.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- F &middot; doctor -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Crown seat</div>
+        <div class="card tr-dr">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">Crown seat #14</b> &middot; Op 3</div>
+            </div>
+            <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>18 min in</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row cleared">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <div>
+                  <div class="arc-k">Cleared</div>
+                  <div class="arc-v">Lab case in &middot; pre-med 9:30</div>
+                </div>
+              </div>
+              <div class="arc-row active">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">In chair</div>
+                  <div class="arc-v">Try-in #14 <span class="q">&rarr; occlusion &rarr; cement</span></div>
+                  <div class="arc-sub"><svg><use href="#i-tooth"/></svg>Then MOD #19 &mdash; accepted today</div>
+                </div>
+              </div>
+              <div class="arc-row gate-exit">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Exit</div>
+                  <div class="arc-v">Book recall <span class="q">&middot; 6 mo overdue</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-part">T1</span><span class="cv cv-on">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-on">T5</span>
+        </div>
+        <div class="trade"><b>Trade:</b> the appointment type sits in the meta line, so it is present but not loud &mdash; the weakest T1 of the three, the strongest T3 and T4.</div>
+      </div>
+
+      <!-- F &middot; hygiene -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; SRP</div>
+        <div class="card tr-hy">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">James Lee</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">SRP UR/UL</b> &middot; Op 1</div>
+            </div>
+            <span class="pill pill-up"><svg><use href="#i-cal"/></svg>11:15 AM</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row cleared">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <div>
+                  <div class="arc-k">Cleared</div>
+                  <div class="arc-v">INR 2.4 &middot; warfarin, 03/09</div>
+                </div>
+              </div>
+              <div class="arc-row">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">In chair</div>
+                  <div class="arc-v">Probe 6-pt <span class="q">&rarr; SRP 2 quad &rarr; 4 BWX</span></div>
+                  <div class="arc-sub"><svg><use href="#i-exam"/></svg>Doc check <span class="nm">Dr. Gupta</span> &middot; ~:45</div>
+                </div>
+              </div>
+              <div class="arc-row gate-exit">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Exit</div>
+                  <div class="arc-v">Book LR/LL <span class="q">&middot; next plan year</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-part">T1</span><span class="cv cv-on">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-on">T5</span>
+        </div>
+        <div class="trade"><b>Conditional:</b> the exit gate is the whole point of a hygiene appointment. On the doctor track it is a reminder; here it is the deliverable.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== PHASE STATES ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Phase</div>
+      <h2>The same card at three moments</h2>
+      <p class="thesis">
+        &ldquo;What needs to be done today&rdquo; is not one answer &mdash; it moves. Concept F rendered across
+        the simulated clock: the gates hold their positions and only the emphasis travels down the spine,
+        so a card that has been watched all morning never rearranges itself.
+      </p>
+    </div>
+
+    <div class="field">
+      <div class="unit">
+        <div class="unit-label">Upcoming &mdash; the prereq is the live item</div>
+        <div class="card tr-dr">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">Crown seat #14</b> &middot; Op 3</div>
+            </div>
+            <span class="pill pill-up"><svg><use href="#i-cal"/></svg>10:30 AM</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row active">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Before</div>
+                  <div class="arc-v">Pre-med <span class="q">&middot; clindamycin, unconfirmed</span></div>
+                  <div class="arc-sub"><svg><use href="#i-case"/></svg>Lab case in &mdash; Glidewell, 03/10</div>
+                </div>
+              </div>
+              <div class="arc-row">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">In chair</div>
+                  <div class="arc-v">Temp off <span class="q">&rarr; try-in &rarr; cement</span></div>
+                </div>
+              </div>
+              <div class="arc-row gate-exit">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Exit</div>
+                  <div class="arc-v">Book recall <span class="q">&middot; 6 mo overdue</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="trade"><b>Front desk reads this one.</b> An unconfirmed pre-med at 10:00 is still fixable by phone; at 10:30 it is a cancelled hour.</div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">In chair &mdash; the plan is the live item</div>
+        <div class="card tr-dr">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">Crown seat #14</b> &middot; Op 3</div>
+            </div>
+            <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>18 min in</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row cleared">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <div>
+                  <div class="arc-k">Cleared</div>
+                  <div class="arc-v">Lab case in &middot; pre-med 9:30</div>
+                </div>
+              </div>
+              <div class="arc-row active">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">In chair</div>
+                  <div class="arc-v">Try-in #14 <span class="q">&rarr; occlusion &rarr; cement</span></div>
+                  <div class="arc-sub"><svg><use href="#i-tooth"/></svg>Then MOD #19 &mdash; accepted today</div>
+                </div>
+              </div>
+              <div class="arc-row gate-exit">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Exit</div>
+                  <div class="arc-v">Book recall <span class="q">&middot; 6 mo overdue</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn" tabindex="-1">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="trade"><b>The doctor reads this one</b> between two other operatories, and needs the next step, not the history.</div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">Completed &mdash; the exit is the live item</div>
+        <div class="card tr-dr">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">Crown seat #14</b> &middot; Op 3</div>
+            </div>
+            <span class="pill pill-done"><svg><use href="#i-check"/></svg>Completed</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row cleared">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <div>
+                  <div class="arc-k">Cleared</div>
+                  <div class="arc-v">Lab case in &middot; pre-med 9:30</div>
+                </div>
+              </div>
+              <div class="arc-row cleared">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <div>
+                  <div class="arc-k">Done</div>
+                  <div class="arc-v">#14 seated &middot; MOD #19 &middot; 2 PA</div>
+                </div>
+              </div>
+              <div class="arc-row active gate-exit">
+                <span class="arc-node"></span>
+                <div>
+                  <div class="arc-k">Exit &mdash; open</div>
+                  <div class="arc-v">Recall still not booked</div>
+                  <div class="arc-sub"><svg><use href="#i-money"/></svg>$290 left &middot; resets Jan 1</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn solid" tabindex="-1" aria-label="Images"><svg><use href="#i-img"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="trade"><b>Completed is not finished.</b> A card whose exit gate is still open is the front desk's whole worklist, and it is visible without opening anything.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== GRID DEGRADATION ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Degradation</div>
+      <h2>What survives at 88 and 133</h2>
+      <p class="thesis">
+        A 30-minute appointment gets 88px in the operatory grid; 45 minutes gets 133. The rule for v2 is
+        simple and it is the whole argument for the banner: <b>T1 never degrades.</b> The appointment type
+        is the last thing to go, not the first. Rendered at true size; the full card returns on hover.
+      </p>
+    </div>
+
+    <div class="field">
+      <div class="unit">
+        <div class="unit-label">D &middot; 88px &mdash; banner + one row</div>
+        <div class="card d tr-dr h88">
+          <div class="d-banner">
+            <svg><use href="#i-tooth"/></svg>
+            <span class="d-type">Crown seat <span class="d-site">#14</span></span>
+            <span class="d-dur">30 min</span>
+          </div>
+          <div class="d-inner" style="padding:7px 12px 8px">
+            <div class="c-top">
+              <div>
+                <div class="c-name">Sarah Cohen</div>
+                <div class="c-meta">10:30 AM &middot; Op 3</div>
+              </div>
+              <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>In chair</span>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>88</span></div>
+        <div class="trade">Banner is 28px of the 88 and it is the 28 worth spending. Nothing else fits, and nothing else needs to.</div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">E &middot; 88px &mdash; headline survives, body drops</div>
+        <div class="card tr-dr h88">
+          <div class="e-head">
+            <div style="min-width:0">
+              <div class="e-type" style="font-size:13.5px"><svg><use href="#i-tooth"/></svg>Crown seat <span class="site">#14</span></div>
+              <div class="e-who"><b>Sarah Cohen</b> &middot; 10:30 AM</div>
+            </div>
+            <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>In chair</span>
+          </div>
+          <div class="c-body" style="justify-content:flex-end">
+            <div class="pre"><svg style="color:var(--e-warning)"><use href="#i-warn"/></svg><span class="txt">Recall 6 mo overdue &middot; $640 left</span></div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>88</span></div>
+        <div class="trade">Degrades best of the three &mdash; the headline <i>is</i> the small card. One line of exit context is bonus.</div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">F &middot; 133px &mdash; labels fold onto the baseline</div>
+        <div class="card tr-dr h133">
+          <div class="c-top">
+            <div style="min-width:0">
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta"><b style="color:var(--e-foreground);font-weight:600">Crown seat #14</b> &middot; Op 3</div>
+            </div>
+            <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>18 min</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="arc">
+              <div class="arc-row cleared inline">
+                <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                <span class="arc-k">Cleared</span>
+                <span class="arc-v">Lab case &middot; pre-med</span>
+              </div>
+              <div class="arc-row active inline">
+                <span class="arc-node"></span>
+                <span class="arc-k">In chair</span>
+                <span class="arc-v">Try-in #14 <span class="q">&rarr; cement</span></span>
+              </div>
+              <div class="arc-row gate-exit inline">
+                <span class="arc-node"></span>
+                <span class="arc-k">Exit</span>
+                <span class="arc-v">Book recall <span class="q">&middot; 6 mo</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>133</span></div>
+        <div class="trade">The gate label folds onto its value's baseline and all three still fit. Below 133 the <i>cleared</i> gate collapses first; open gates never drop.</div>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>The rule, stated once.</b> Fold labels first, then drop <i>closed</i> gates &mdash; never drop by
+      rank. A card that hides the exit action because it ran out of room has hidden the only thing on it
+      that expires.
+    </p>
+  </section>
+
+  <!-- ================== WIDE VARIANT ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Enhanced view</div>
+      <h2>The 474 &times; 236 card</h2>
+      <p class="thesis">
+        The enhanced doctor and hygienist views already run a wider card with a left rail. At this width
+        the concepts stop competing: the rail takes <b>the full worklist, uncompressed</b> &mdash; every step
+        including the ones the 280 card had to elide &mdash; and the main region keeps the banner, the gates
+        and the exit. Same components, no new sizes.
+      </p>
+    </div>
+
+    <div class="field">
+      <div class="unit" style="width:474px">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; Enhanced &middot; SRP UR/UL</div>
+        <div class="card wide tr-hy">
+          <div class="wide-rail">
+            <div class="rail-h"><span>Today's plan</span><span class="cnt">1 of 6</span></div>
+            <div class="wl">
+              <div class="wl-row done"><span class="wl-m"><svg><use href="#i-check-sm"/></svg></span><span class="t">Med history, BP</span></div>
+              <div class="wl-row now"><span class="wl-m"></span><span class="t">6-pt probe, full mouth</span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">Anesthetize UR/UL</span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">SRP &mdash; 2 quadrants</span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">4 BWX <span class="q">&middot; due</span></span></div>
+              <div class="wl-row todo"><span class="wl-m"></span><span class="t">Fluoride varnish</span></div>
+            </div>
+            <a class="rail-link" href="#" tabindex="-1">Open perio chart<svg><use href="#i-ext"/></svg></a>
+          </div>
+          <div class="wide-main">
+            <div class="c-top">
+              <div style="min-width:0">
+                <div class="e-type" style="font-size:14px"><svg><use href="#i-perio"/></svg>SRP <span class="site">UR / UL</span></div>
+                <div class="e-who"><b>James Lee</b> &middot; 11:15 AM &middot; Op 1</div>
+              </div>
+              <span class="pill pill-chair"><svg><use href="#i-clock"/></svg>12 min in</span>
+            </div>
+            <div class="c-div"></div>
+            <div class="c-body">
+              <div class="arc">
+                <div class="arc-row cleared">
+                  <span class="arc-node"><svg><use href="#i-check-sm"/></svg></span>
+                  <div>
+                    <div class="arc-k">Cleared</div>
+                    <div class="arc-v">INR 2.4 &middot; warfarin &middot; consent signed</div>
+                  </div>
+                </div>
+                <div class="arc-row active">
+                  <span class="arc-node"></span>
+                  <div>
+                    <div class="arc-k">In chair</div>
+                    <div class="arc-v">Probing UR &mdash; 5&ndash;6 mm generalized, Stage 2</div>
+                    <div class="arc-sub"><svg><use href="#i-exam"/></svg>Doc check <span class="av sm">MG</span><span class="nm">Dr. Gupta</span> &middot; ~:45</div>
+                  </div>
+                </div>
+                <div class="arc-row gate-exit">
+                  <span class="arc-node"></span>
+                  <div>
+                    <div class="arc-k">Exit</div>
+                    <div class="arc-v">Book LR/LL <span class="q">&middot; next plan year, per patient</span></div>
+                    <div class="arc-sub"><svg><use href="#i-money"/></svg>$320 left &middot; 1 prophy &middot; 3-mo interval due</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="c-foot">
+              <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+              <div class="acts">
+                <button class="ibtn" tabindex="-1" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+                <button class="ibtn" tabindex="-1" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+                <button class="ibtn solid" tabindex="-1" aria-label="Images"><svg><use href="#i-img"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>474</span><span class="bar"></span><span>236</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">T1</span><span class="cv cv-on">T2</span><span class="cv cv-on">T3</span>
+          <span class="cv cv-on">T4</span><span class="cv cv-on">T5</span>
+        </div>
+        <div class="trade"><b>All five, uncompressed.</b> The rail is the only place in the system where the full sequence fits &mdash; which is the argument for opening it during the appointment, not before.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== CONDITIONAL LOGIC ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Conditional logic</div>
+      <h2>What the track actually changes</h2>
+      <p class="thesis">
+        Every slot exists on both tracks. What differs is the vocabulary that fills it, the unit the site
+        is measured in, and which gate carries the weight. Nothing here is a layout branch.
+      </p>
+    </div>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Slot</th>
+            <th><span class="th-dr">Doctor track</span></th>
+            <th><span class="th-hy">Hygiene track</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="k">T1 &middot; Type</td>
+            <td class="rank">Crown seat, crown prep, MOD composite, endo, extraction, implant placement. <b>Verb + material.</b></td>
+            <td class="rank">Prophy, perio maintenance, SRP, sealants, perio assessment. <b>Interval + scope.</b></td>
+          </tr>
+          <tr>
+            <td class="k">T1 &middot; Site</td>
+            <td class="rank"><b>Tooth number</b> &mdash; #14, #19. Occasionally a surface: MOD, DO.</td>
+            <td class="rank"><b>Quadrant or arch</b> &mdash; UR/UL, 4 quad, full mouth. Never a single tooth.</td>
+          </tr>
+          <tr>
+            <td class="k">T2 &middot; Plan</td>
+            <td class="rank">Sequential and irreversible. Order matters; you cannot cement before try-in.</td>
+            <td class="rank">Sequential with a <b>hand-off</b> &mdash; the doctor exam interrupts mid-appointment and blocks dismissal.</td>
+          </tr>
+          <tr>
+            <td class="k">T3 &middot; Clears first</td>
+            <td class="rank"><b>Lab case received</b>, pre-med taken, anesthesia plan, consent.</td>
+            <td class="rank"><b>Medical clearance</b> (INR, anticoagulant, pre-med), radiograph interval, last charting date.</td>
+          </tr>
+          <tr>
+            <td class="k">T4 &middot; Exit</td>
+            <td class="rank">Schedule the <b>next step in the sequence</b> (seat, post-op) and re-present the deferred item while they're still in the chair.</td>
+            <td class="rank"><b>Book the recall.</b> The single field the PMS is worst at and the visit's actual deliverable. Plus re-present accepted-but-unbooked treatment.</td>
+          </tr>
+          <tr>
+            <td class="k">T5 &middot; Carry-over</td>
+            <td class="rank">A declined item that is now accepted, or a finding that changes today's prep.</td>
+            <td class="rank">Perio stage change, bleeding risk, recession watch, home-care compliance.</td>
+          </tr>
+          <tr>
+            <td class="k">Actions</td>
+            <td class="rank">Voice note &middot; Perio &middot; <b>Review</b>. Post-visit: note + images.</td>
+            <td class="rank"><b>Perio first</b> &middot; Voice note &middot; Review. Post-visit: note + images.</td>
+          </tr>
+          <tr>
+            <td class="k">Never on card</td>
+            <td class="rank">Full tx plan, ledger balance, claim history, chart notes, the patient's quote.</td>
+            <td class="rank">Full probing depths, recession map, home-care notes, historical prophy dates.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================== RECOMMENDATION ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Where I'd land</div>
+      <h2>The banner is settled; the body is the argument</h2>
+      <p class="thesis">
+        These are not three competing cards. One of the three moves is a <b>fix every version should
+        take</b>, and the other two are a real choice about what the body is for. Splitting them that way
+        is the decision worth making in the review.
+      </p>
+    </div>
+
+    <div class="rec">
+      <div class="rec-cell">
+        <span class="rec-tag">Take regardless</span>
+        <h3>D's banner</h3>
+        <p>
+          Appointment type and site, tinted by track, above everything, at every size. It costs 28px,
+          it is the field being scanned for, and it is the only element that makes the doctor/hygiene
+          split legible down a column of eight operatories. Adopt it into whichever body wins.
+        </p>
+      </div>
+      <div class="rec-cell">
+        <span class="rec-tag">Build first</span>
+        <h3>F's gates, under it</h3>
+        <p>
+          <b>Before &middot; in chair &middot; exit</b> holds fixed positions, so the eye lands rather than
+          reads, and it is the only body whose emphasis tracks the appointment's phase without
+          rearranging. Critically, it is the only one that gives the exit action a permanent slot &mdash;
+          the one item on the card that expires when the patient stands up.
+        </p>
+      </div>
+      <div class="rec-cell">
+        <span class="rec-tag alt">Keep for the list</span>
+        <h3>E &mdash; headline + bands</h3>
+        <p>
+          The strongest small card and the right treatment for list view and the huddle, where rows are
+          wider and the reader is planning rather than operating. Demoting the patient name is the one
+          decision here that needs a real user in front of it before it ships.
+        </p>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>The dependency, restated from v1.</b> v1 closed by noting that the retrospective fields live in
+      chart-note prose and need extraction. v2's fields are the opposite problem: <b>T1 and T2 are
+      structured and already exist</b> &mdash; procedure, duration, operatory, tooth &mdash; but
+      <code>Patient</code> in <code>mockPatients.ts</code> carries only a flat <code>procedure</code>
+      string and a loose <code>visitTags</code> array. Today's plan, prerequisites and exit actions have
+      no home in the model yet. Before any of these can be built past a specimen, that shape needs
+      naming: <code>site</code>, <code>plan[]</code>, <code>clears[]</code>, <code>exit[]</code>. The
+      layout is downstream of that, and it is the cheap half.
+    </p>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll("[data-theme-set]");
+
+    function sync() {
+      var current = root.getAttribute("data-theme") || "auto";
+      buttons.forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.themeSet === current));
+      });
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var next = b.dataset.themeSet;
+        if (next === "auto") root.removeAttribute("data-theme");
+        else root.setAttribute("data-theme", next);
+        try { localStorage.setItem("videa-concepts-theme", next); } catch (e) {}
+        sync();
+      });
+    });
+
+    sync();
+  })();
+</script>

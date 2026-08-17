@@ -15,7 +15,7 @@ import {
   formatHour,
   getSimulatedNowMinutes,
 } from "@/lib/timeline";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import type { CardVersion } from "@/lib/cardVersions";
 import { cn } from "@/lib/utils";
 
