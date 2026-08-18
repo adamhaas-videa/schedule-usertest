@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .tmp-screenshots/
+
+# Conductor machine-local repo settings
+.conductor/settings.local.toml
