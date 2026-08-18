@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { computeAge } from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
-import type { ClinicalTab } from "@/types/clinical";
+import { CLINICAL_TAB_NAV, type ClinicalTab } from "@/types/clinical";
 import { cn } from "@/lib/utils";
 
 interface WorkflowHeaderProps {
@@ -25,16 +25,11 @@ interface WorkflowHeaderProps {
   showStudyBar?: boolean;
 }
 
-const TABS: { id: ClinicalTab; label: string; path: string }[] = [
-  { id: "xray", label: "Clinical Assist", path: "xray" },
-  { id: "voice", label: "Voice Notes", path: "voice-notes" },
-  { id: "perio", label: "Perio Chart", path: "perio" },
-  { id: "chart", label: "Patients Summary", path: "chart" },
-];
+const TABS = CLINICAL_TAB_NAV;
 
 const STUDY_LABEL: Record<ClinicalTab, string> = {
   xray: "Images from",
-  voice: "Notes from",
+  voice: "Clinical notes from",
   perio: "Chart from",
   chart: "Summary from",
 };

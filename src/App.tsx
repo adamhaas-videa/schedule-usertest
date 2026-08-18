@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AiViewProvider } from "@/context/AiViewProvider";
+import DocumentTitle from "@/components/DocumentTitle";
 import AppLayout from "@/components/navigation/AppLayout";
 import SchedulePage from "@/pages/SchedulePage";
 import ProductPlaceholderPage from "@/pages/ProductPlaceholderPage";
@@ -12,6 +13,7 @@ import ChartPage from "@/pages/ChartPage";
 export default function App() {
   return (
     <AiViewProvider>
+      <DocumentTitle />
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/schedule" replace />} />
