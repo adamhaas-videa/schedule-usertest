@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Patient, Provider, ScheduleBlock } from "@/data/mockPatients";
-import { minutesToTime, timeToMinutes, mockBlocks } from "@/data/mockPatients";
+import {
+  ALL_OPERATORIES,
+  minutesToTime,
+  timeToMinutes,
+  mockBlocks,
+} from "@/data/mockPatients";
 import OperatoryColumn from "./OperatoryColumn";
 import OperatoryHeader from "./OperatoryHeader";
 import ColumnModeMenu, { type ColumnMode } from "./ColumnModeMenu";
@@ -30,7 +35,6 @@ interface OperatoryGridProps {
   cardVersion: CardVersion;
 }
 
-const ALL_OPERATORIES = [1, 2, 3, 4, 5, 6, 7, 8];
 const HALF_HOURS = HOURS.slice(0, -1);
 const GUTTER = 64;
 const TOP_PAD = 24;

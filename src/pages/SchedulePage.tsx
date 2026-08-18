@@ -6,7 +6,7 @@ import OperatoryGrid from "@/components/OperatoryGrid";
 import PatientListView from "@/components/PatientListView";
 import PatientDetailDrawer from "@/components/PatientDetailDrawer";
 import { getEnrichedPatients } from "@/lib/patients";
-import type { Patient } from "@/data/mockPatients";
+import { ALL_OPERATORIES, type Patient } from "@/data/mockPatients";
 import {
   CLINICAL_TAB_PATH,
   type ClinicalTab,
@@ -46,7 +46,11 @@ export default function SchedulePage() {
     [navigate]
   );
 
-  const patients = useMemo(() => getEnrichedPatients(), []);
+  const patients = useMemo(
+    () =>
+      getEnrichedPatients().filter((p) => ALL_OPERATORIES.includes(p.operatory)),
+    []
+  );
 
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
@@ -110,6 +114,9 @@ export default function SchedulePage() {
         patient={selectedPatient}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
+        patients={filteredPatients}
+        onPatientChange={setSelectedPatient}
+        onOpenClinical={handleOpenClinical}
       />
     </div>
   );

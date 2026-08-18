@@ -7,7 +7,7 @@ import ProviderMultiSelect, {
 } from "@/components/ProviderMultiSelect";
 import OperatoryMultiSelect from "@/components/OperatoryMultiSelect";
 import type { Patient } from "@/data/mockPatients";
-import { DENTISTS, HYGIENISTS } from "@/data/mockPatients";
+import { ALL_OPERATORIES, DENTISTS, HYGIENISTS } from "@/data/mockPatients";
 import type { ScheduleFilters, ScheduleView } from "@/types/clinical";
 import { cn } from "@/lib/utils";
 
@@ -36,8 +36,6 @@ function shiftDate(date: Date, days: number): Date {
   result.setDate(result.getDate() + days);
   return result;
 }
-
-const OPERATORY_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export default function L2Header({
   selectedDate,
@@ -72,7 +70,7 @@ export default function L2Header({
   return (
     <div className="h-16 shrink-0 bg-card border-b border-border flex items-center gap-3 px-4 overflow-hidden">
       {/* View-mode segmented control (far left) */}
-      <div className="flex w-fit items-center rounded-md shadow-xs shrink-0">
+      <div className="flex h-8 w-fit shrink-0 items-center rounded-lg bg-zinc-200 p-1 dark:bg-zinc-800">
         <ViewModeButton
           active={viewMode === "calendar"}
           onClick={() => onViewModeChange("calendar")}
@@ -140,7 +138,7 @@ export default function L2Header({
         />
 
         <OperatoryMultiSelect
-          options={OPERATORY_OPTIONS}
+          options={ALL_OPERATORIES}
           selected={filters.operatories}
           onChange={(ops) => onFiltersChange({ ...filters, operatories: ops })}
         />
@@ -193,20 +191,15 @@ function ViewModeButton({
       aria-pressed={active}
       title={label}
       className={cn(
-        "inline-flex items-center justify-center h-8 text-sm font-medium whitespace-nowrap",
-        "border border-input shadow-xs",
-        "rounded-none first:rounded-l-md last:rounded-r-md",
-        "border-l-0 first:border-l",
-        "transition-[color,box-shadow] outline-none",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus:z-10 focus-visible:z-10",
-        "w-8 px-0 md:w-auto md:min-w-8 md:px-2.5 md:gap-1.5",
+        "inline-flex h-full cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium leading-none whitespace-nowrap outline-none transition-colors",
+        "focus-visible:ring-3 focus-visible:ring-ring/50",
         active
-          ? "bg-accent text-accent-foreground"
-          : "bg-transparent hover:bg-accent hover:text-accent-foreground"
+          ? "bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <i className={cn(icon, "w-4 h-4")} aria-hidden />
-      <span className="hidden md:inline">{text}</span>
+      <i className={cn(icon, "text-[12px] leading-none")} aria-hidden />
+      <span>{text}</span>
     </button>
   );
 }

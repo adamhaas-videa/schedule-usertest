@@ -116,22 +116,11 @@ function ActionStrip({
       className={cn(
         "absolute inset-x-0 bottom-0 z-20 flex items-center justify-end px-2.5 pt-3 pb-2.5",
         gapClass,
-        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent",
+        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent group-hover/card:from-stone-50 group-hover/card:via-stone-50",
         hoverOnly &&
           "opacity-0 pointer-events-none transition-opacity duration-150 group-hover/card:opacity-100 group-hover/card:pointer-events-auto group-focus-within/card:opacity-100 group-focus-within/card:pointer-events-auto"
       )}
     >
-      {/* The strip's gradient is opaque card color, so it repaints over the
-          card-level hover tint and would cut the affordance off at the button
-          row. This mirrors that tint on top of the gradient — same stops, so
-          where the gradient fades to transparent the tint fades with it and the
-          card-level tint shows through instead; the composite stays uniform.
-          -z-10 keeps it above the strip's own background but under the buttons,
-          so the buttons themselves are never veiled. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-150 bg-gradient-to-t from-foreground/[0.04] from-60% via-foreground/[0.04] via-80% to-transparent dark:from-foreground/[0.07] dark:via-foreground/[0.07] group-hover/card:opacity-100"
-      />
       {children}
     </div>
   );
@@ -340,7 +329,7 @@ function FullCard({
   return (
     <div
       className={cn(
-        "group/card @container/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] bg-card p-2.5 overflow-hidden",
+        "group/card @container/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] bg-card p-2.5 overflow-hidden transition-colors hover:bg-stone-50 dark:hover:bg-foreground/[0.07]",
         providerTone ? "border-transparent" : "border-border",
         cardOpensImages &&
           // Inset rings (not outer): the card wrapper in OperatoryColumn sets
@@ -349,7 +338,7 @@ function FullCard({
           // drawn outside the border-box) gets chopped square at the rounded
           // corners; an inset ring stays inside the border-box, follows the
           // 10px radius, and is clipped cleanly by overflow-hidden.
-          "cursor-pointer hover:inset-ring-2 hover:inset-ring-primary/25 focus-visible:outline-none focus-visible:inset-ring-2 focus-visible:inset-ring-primary/40",
+          "cursor-pointer hover:inset-ring-2 hover:inset-ring-stone-300 focus-visible:outline-none focus-visible:inset-ring-2 focus-visible:inset-ring-stone-400",
         className
       )}
       style={providerTone ? { borderColor: providerTone } : undefined}
@@ -427,7 +416,6 @@ function FullCard({
         <ProviderChip patient={patient} />
       </div>
 
-      {/* Action strip — visibility controlled by the demo card version */}
       {showActions &&
         (cardVersion === 1 ? (
           <V1CardActions
@@ -444,15 +432,6 @@ function FullCard({
             hoverOnly={hoverActions}
           />
         ))}
-
-      {/* Full-card hover tint. The action strip paints above this (z-20 vs
-          z-10), so the strip carries a matching tint of its own — see
-          ActionStrip — and the two read as one continuous surface.
-          pointer-events-none keeps everything underneath clickable. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-10 rounded-[8.5px] opacity-0 transition-opacity duration-150 bg-foreground/[0.04] dark:bg-foreground/[0.07] group-hover/card:opacity-100"
-      />
     </div>
   );
 }

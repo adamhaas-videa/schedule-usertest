@@ -40,6 +40,9 @@ export interface Patient {
   conditionAlert?: ConditionAlert;
 }
 
+/** Operatories shown on every card-demo schedule screen. */
+export const ALL_OPERATORIES: number[] = [1, 2, 3, 4, 5, 6];
+
 // Non-appointment time blocks (e.g. lunch) rendered on the operatory timeline.
 export interface ScheduleBlock {
   id: string;

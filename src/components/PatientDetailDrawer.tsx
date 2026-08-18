@@ -1,242 +1,433 @@
+import { useCallback, useEffect, useMemo } from "react";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
+  SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
-import { computeAge } from "@/data/mockPatients";
+import { computeAge, timeToMinutes } from "@/data/mockPatients";
+import type { ClinicalTab } from "@/types/clinical";
+import { useAiView } from "@/context/AiViewContext";
 import { getProviderColor } from "@/lib/providerColors";
+import {
+  allergyLabel,
+  FALLBACK_UNSCHEDULED,
+  ODONTOGRAM_OPPORTUNITIES,
+  patientPhone,
+  procedureTooth,
+  tasksFor,
+  unscheduledTxFor,
+} from "@/lib/patientSheet";
 import { cn } from "@/lib/utils";
-
-function PerioIcon({ className }: { className?: string }) {
-  return (
-    <svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" className={cn("shrink-0", className)}>
-      <path d="M13.2009 11.4583V17.6705C13.2009 18.0588 12.8723 18.3873 12.4841 18.3873C12.0958 18.3873 11.7673 18.0588 11.7673 17.6705V11.4583C11.7673 11.07 12.0958 10.7415 12.4841 10.7415C12.8723 10.7415 13.2009 11.07 13.2009 11.4583ZM15.5902 12.414V16.7148C15.5902 17.1031 15.2617 17.4316 14.8734 17.4316C14.4851 17.4316 14.1566 17.1031 14.1566 16.7148V12.414C14.1566 12.0257 14.4851 11.6972 14.8734 11.6972C15.2617 11.6972 15.5902 12.0257 15.5902 12.414ZM10.8115 12.8919V16.2369C10.8115 16.6252 10.483 16.9537 10.0947 16.9537C9.70646 16.9537 9.37793 16.6252 9.37793 16.2369V12.8919C9.37793 12.5036 9.70646 12.1751 10.0947 12.1751C10.483 12.1751 10.8115 12.5036 10.8115 12.8919ZM17.9795 13.8476V15.2812C17.9795 15.6695 17.651 15.998 17.2627 15.998C16.8745 15.998 16.5459 15.6695 16.5459 15.2812V13.8476C16.5459 13.4593 16.8745 13.1308 17.2627 13.1308C17.651 13.1308 17.9795 13.4593 17.9795 13.8476Z" fill="currentColor"/>
-      <path d="M11.7666 3C13.7675 3.00011 15.3797 4.61241 15.3799 6.61328V8.79395C15.3799 9.25833 15.3098 9.73566 15.1641 10.1904C14.8589 10.3374 14.2119 10.4671 13.8018 9.70801C13.8944 9.41403 13.9463 9.10429 13.9463 8.79395V6.61328C13.9461 5.41881 12.9611 4.4337 11.7666 4.43359C11.4383 4.43359 11.0798 4.52269 10.7812 4.67188L9.01855 5.56836C8.80952 5.6579 8.57035 5.65794 8.36133 5.56836L6.59961 4.67188C6.30106 4.5226 5.97249 4.43366 5.61426 4.43359C4.41968 4.43359 3.43375 5.41874 3.43359 6.61328V8.79395C3.43361 9.27177 3.55267 9.74987 3.76172 10.168L4.47852 11.6016C4.7174 12.1092 4.86701 12.6465 4.92676 13.2139L5.22559 16.3799C5.25545 16.6487 5.49487 16.8574 5.76367 16.8574C6.00245 16.8572 6.24066 16.6782 6.27051 16.4395L7.13672 12.4072C7.15117 12.335 7.17175 12.2652 7.19531 12.1973C7.54125 12.0297 8.34446 12.1311 8.53809 12.6855L7.6748 16.7383C7.49563 17.6341 6.68934 18.2908 5.76367 18.291C4.7482 18.291 3.91187 17.5145 3.82227 16.499L3.49316 13.334C3.4633 12.9457 3.37354 12.5869 3.19434 12.2285L2.47754 10.8252C2.14902 10.198 2.00002 9.48084 2 8.79395V6.61328C2.00015 4.61234 3.61328 3 5.61426 3C6.18151 3.00005 6.719 3.11903 7.22656 3.3877L8.69043 4.10449L10.1533 3.3877C10.6611 3.1189 11.1991 3 11.7666 3ZM12.1816 16.0967C12.1681 16.1714 12.1549 16.2494 12.1416 16.3291C12.1317 16.3886 12.1213 16.4493 12.1113 16.5107L12.0459 16.3711C12.1058 16.2354 12.1627 16.0749 12.2197 15.8955C12.2065 15.9595 12.1943 16.0268 12.1816 16.0967Z" fill="currentColor"/>
-    </svg>
-  );
-}
 
 interface PatientDetailDrawerProps {
   patient: Patient | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  patients: Patient[];
+  onPatientChange: (patient: Patient) => void;
+  onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
+}
+
+const ALERT_TONE = {
+  success: {
+    chip: "bg-success-muted text-success-emphasis",
+    dot: "bg-success",
+  },
+  accent: {
+    chip: "bg-accent-muted text-accent-emphasis",
+    dot: "bg-accent-muted-foreground",
+  },
+  warning: {
+    chip: "bg-warning-muted-hover text-warning",
+    dot: "bg-warning",
+  },
+  error: {
+    chip: "bg-error-muted text-error-emphasis",
+    dot: "bg-destructive",
+  },
+} as const;
+
+function sortForChartPrep(patients: Patient[]): Patient[] {
+  return [...patients].sort((a, b) => {
+    const byTime =
+      timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime);
+    if (byTime !== 0) return byTime;
+    return a.operatory - b.operatory;
+  });
+}
+
+function formatBenefit(amount: number): string {
+  return `$${amount.toLocaleString("en-US")}`;
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p className="text-xs font-normal uppercase leading-none text-muted-foreground">
+      {children}
+    </p>
+  );
 }
 
 export default function PatientDetailDrawer({
   patient,
   open,
   onOpenChange,
+  patients,
+  onPatientChange,
+  onOpenClinical,
 }: PatientDetailDrawerProps) {
+  const { privacyMode, markReviewed } = useAiView();
+
+  const queue = useMemo(() => sortForChartPrep(patients), [patients]);
+  const index = patient
+    ? queue.findIndex((p) => p.id === patient.id)
+    : -1;
+  const hasPrev = index > 0;
+  const hasNext = index >= 0 && index < queue.length - 1;
+
+  const goBy = useCallback(
+    (delta: number) => {
+      const next = queue[index + delta];
+      if (next) onPatientChange(next);
+    },
+    [queue, index, onPatientChange]
+  );
+
+  useEffect(() => {
+    if (!open || !patient) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        goBy(-1);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        goBy(1);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [open, patient, goBy]);
+
   if (!patient) return null;
 
   const age = computeAge(patient.dob);
+  const phone = patientPhone(patient.id);
+  const tooth = procedureTooth(patient);
+  const tasks = tasksFor(patient);
+  const derivedUnscheduled = unscheduledTxFor(patient);
+  const unscheduled =
+    derivedUnscheduled.length > 0
+      ? derivedUnscheduled
+      : FALLBACK_UNSCHEDULED;
+  const hasAllergies = Boolean(
+    patient.allergies && patient.allergies.length > 0
+  );
+  const privateText = privacyMode ? "blur-sm select-none" : "";
+  const providerColor = patient.provider
+    ? getProviderColor(patient.provider.id)
+    : null;
+
+  const openClinical = (tab: ClinicalTab) => {
+    onOpenChange(false);
+    onOpenClinical(patient, tab);
+  };
+
+  const handleReview = () => {
+    markReviewed(patient.id);
+    openClinical("xray");
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="!w-[400px] !max-w-[400px] overflow-y-auto p-0"
+        showCloseButton={false}
+        className="!w-[520px] !max-w-[520px] gap-6 overflow-hidden p-6 sm:!max-w-[520px]"
       >
-        <SheetHeader className="p-5 pb-0">
-          <SheetTitle className="text-2xl font-bold">
+        <SheetClose
+          aria-label="Close"
+          className="absolute top-[15px] right-[15px] flex size-4 items-center justify-center text-foreground opacity-70 transition-opacity hover:opacity-100"
+        >
+          <i
+            className="fa-regular fa-xmark text-[10px] leading-none"
+            aria-hidden
+          />
+        </SheetClose>
+        <SheetHeader className="shrink-0 gap-1.5 p-0 pr-8">
+          <SheetTitle
+            className={cn(
+              "text-xl font-semibold leading-none text-foreground",
+              privateText
+            )}
+          >
             {patient.name}
           </SheetTitle>
-        </SheetHeader>
-
-        <div className="px-5 pb-5 pt-4 space-y-5">
-          <div className="space-y-1">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Date of Birth
-            </div>
-            <div className="text-sm">
-              {patient.dob}
-              <span className="text-muted-foreground ml-1">({age} yrs)</span>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Allergies
-            </div>
-            {patient.allergies && patient.allergies.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {patient.allergies.map((allergy) => (
-                  <span
-                    key={allergy}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-warning-emphasis bg-warning-muted px-2 py-0.5 rounded"
-                  >
-                    <i className="fa-solid fa-triangle-exclamation text-[10px]" />
-                    {allergy}
-                  </span>
+          <SheetDescription
+            className={cn("text-sm text-muted-foreground", privateText)}
+          >
+            Age {age} • DOB {patient.dob} • {phone}
+          </SheetDescription>
+          {(hasAllergies || patient.conditionAlert) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {hasAllergies &&
+                patient.allergies!.map((allergy) => (
+                  <Badge key={allergy} variant="destructive" className="border-muted">
+                    <i
+                      className="fa-regular fa-triangle-exclamation text-[12px]"
+                      data-icon="inline-start"
+                      aria-hidden
+                    />
+                    {allergyLabel(allergy)}
+                  </Badge>
                 ))}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">None reported</div>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Today's Appointment
-            </div>
-            <div className="text-sm font-medium">{patient.procedure}</div>
-            <div className="text-sm text-muted-foreground">
-              {patient.appointmentTime} &middot; Operatory {patient.operatory}
-            </div>
-            <div className="mt-1">
-              {patient.status === "in-chair" ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-emphasis">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                  In Chair
+              {patient.conditionAlert && (
+                <span
+                  className={cn(
+                    "inline-flex h-[19px] w-fit shrink-0 items-center gap-[5px] rounded-full px-2 text-[11px] font-medium leading-none",
+                    ALERT_TONE[patient.conditionAlert.severity].chip
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      ALERT_TONE[patient.conditionAlert.severity].dot
+                    )}
+                  />
+                  {patient.conditionAlert.label}
                 </span>
-              ) : patient.status === "completed" ? (
-                <span className="text-xs text-muted-foreground">Completed</span>
-              ) : (
-                <span className="text-xs text-muted-foreground">Upcoming</span>
               )}
             </div>
-          </div>
+          )}
+        </SheetHeader>
 
-          {patient.provider && (
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Provider
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            className="bg-button-outline-bg"
+            onClick={() => openClinical("xray")}
+          >
+            <i
+              className="fa-regular fa-images text-base"
+              data-icon="inline-start"
+              aria-hidden
+            />
+            Images
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-button-outline-bg"
+            onClick={() => openClinical("voice")}
+          >
+            <i
+              className="fa-regular fa-microphone text-base"
+              data-icon="inline-start"
+              aria-hidden
+            />
+            Voice Notes
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-button-outline-bg"
+            onClick={() => openClinical("perio")}
+          >
+            <i
+              className="fa-regular fa-waveform-lines text-base"
+              data-icon="inline-start"
+              aria-hidden
+            />
+            Voice Perio
+          </Button>
+        </div>
+
+        <div
+          key={patient.id}
+          className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto"
+        >
+          {patient.insurance && (
+            <section className="flex flex-col gap-1.5">
+              <SectionLabel>Insurance</SectionLabel>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Badge
+                  className={cn(
+                    "border",
+                    patient.insurance.status === "Active" &&
+                      "border-success-muted-border bg-success-muted text-success",
+                    patient.insurance.status === "Pending" &&
+                      "border-warning-muted-border bg-warning-muted text-warning",
+                    patient.insurance.status === "Inactive" &&
+                      "border-error-muted-border bg-error-muted text-destructive"
+                  )}
+                >
+                  {patient.insurance.status === "Active" && (
+                    <i
+                      className="fa-solid fa-shield-check text-[12px]"
+                      data-icon="inline-start"
+                      aria-hidden
+                    />
+                  )}
+                  {patient.insurance.status}
+                </Badge>
+                <p className="text-sm text-foreground">
+                  {patient.insurance.carrier} •{" "}
+                  {formatBenefit(patient.insurance.remainingBenefit)} remaining
+                  benefits
+                </p>
               </div>
-              <div className="flex items-center gap-2.5">
+            </section>
+          )}
+
+          <section className="flex flex-col gap-1.5">
+            <SectionLabel>Today</SectionLabel>
+            <p className="text-base font-medium leading-6 text-foreground">
+              {tooth != null ? `${tooth} • ${patient.procedure}` : patient.procedure}
+            </p>
+            {patient.provider && providerColor && (
+              <div className="flex items-center gap-1.5">
                 <Avatar
                   size="sm"
-                  className="size-7 after:border-transparent"
-                  style={{
-                    backgroundColor: getProviderColor(patient.provider.id).bg,
-                  }}
+                  className="size-6 after:border-transparent"
+                  style={{ backgroundColor: providerColor.bg }}
                 >
                   <AvatarFallback
-                    className="text-[11px] font-semibold"
+                    className="text-xs font-semibold"
                     style={{
-                      backgroundColor: getProviderColor(patient.provider.id).bg,
-                      color: getProviderColor(patient.provider.id).fg,
+                      backgroundColor: providerColor.bg,
+                      color: providerColor.fg,
                     }}
                   >
                     {patient.provider.initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-foreground">
-                    {patient.provider.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {patient.provider.role}
-                  </span>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  {patient.provider.name} • {patient.appointmentTime} • Op{" "}
+                  {patient.operatory}
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </section>
 
-          {patient.insurance && (
-            <div className="space-y-1">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Insurance
-              </div>
-              <div className="text-sm text-foreground">
-                {patient.insurance.carrier}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                ${patient.insurance.remainingBenefit} remaining &middot;{" "}
-                <span
-                  className={cn(
-                    patient.insurance.status === "Active" &&
-                      "text-success-emphasis",
-                    patient.insurance.status === "Pending" &&
-                      "text-warning-emphasis",
-                    patient.insurance.status === "Inactive" && "text-destructive"
-                  )}
-                >
-                  {patient.insurance.status}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {patient.conditionAlert && (
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Condition Alert
-              </div>
-              <span
-                className={cn(
-                  "inline-flex w-fit items-center gap-1.5 h-[20px] px-2 rounded-full",
-                  patient.conditionAlert.severity === "success" &&
-                    "bg-success-muted text-success-emphasis",
-                  patient.conditionAlert.severity === "accent" &&
-                    "bg-accent-muted text-accent-emphasis",
-                  patient.conditionAlert.severity === "warning" &&
-                    "bg-warning-muted text-warning-emphasis",
-                  patient.conditionAlert.severity === "error" &&
-                    "bg-error-muted text-error-emphasis"
-                )}
-              >
-                <span
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    patient.conditionAlert.severity === "success" &&
-                      "bg-success",
-                    patient.conditionAlert.severity === "accent" &&
-                      "bg-accent-muted-foreground",
-                    patient.conditionAlert.severity === "warning" &&
-                      "bg-warning",
-                    patient.conditionAlert.severity === "error" &&
-                      "bg-destructive"
-                  )}
-                />
-                <span className="text-[11px] font-medium">
-                  {patient.conditionAlert.label}
-                </span>
-              </span>
-            </div>
-          )}
-
-          {patient.aiFindings && patient.aiFindings.length > 0 && (
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                AI Findings
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {patient.aiFindings.map((finding) => (
-                  <Badge
-                    key={finding}
-                    variant="secondary"
-                    className="text-xs font-normal bg-gray-100 text-gray-700"
-                  >
-                    {finding}
+          <section className="flex flex-col gap-3">
+            <SectionLabel>AI Opportunities</SectionLabel>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                {ODONTOGRAM_OPPORTUNITIES.map((item) => (
+                  <Badge key={item.label} variant="outline">
+                    {item.count} {item.label}
                   </Badge>
                 ))}
               </div>
+              <img
+                src="/assets/patient-sheet-odontogram.svg"
+                alt="Odontogram with marked treatment"
+                width={472}
+                height={145}
+                className="block h-[145px] w-full"
+              />
             </div>
-          )}
+          </section>
 
-          <div className="space-y-2 pt-4 border-t border-zinc-200">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-              Quick Actions
-            </div>
-            <Button variant="outline" className="w-full justify-start gap-2 h-9">
-              <i className="fa-regular fa-images text-sm" />
-              Images
-            </Button>
-            <Button variant="outline" className="w-full justify-start gap-2 h-9">
-              <i className="fa-regular fa-microphone text-sm" />
-              Note
-            </Button>
-            <Button variant="outline" className="w-full justify-start gap-2 h-9">
-              <PerioIcon className="text-base" />
-              Perio
-            </Button>
+          <div className="flex gap-3">
+            <section className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <SectionLabel>Tasks</SectionLabel>
+              {tasks.map((task) => (
+                <div
+                  key={task}
+                  className="flex items-center gap-2.5 text-sm text-muted-foreground"
+                >
+                  <i
+                    className="fa-regular fa-circle text-base text-success"
+                    aria-hidden
+                  />
+                  <i
+                    className="fa-regular fa-xmark text-base text-destructive"
+                    aria-hidden
+                  />
+                  <span>{task}</span>
+                </div>
+              ))}
+            </section>
+            <section className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <SectionLabel>Unscheduled tx</SectionLabel>
+              {unscheduled.map((item) => (
+                <p
+                  key={`${item.tooth}-${item.label}`}
+                  className="text-sm text-muted-foreground"
+                >
+                  {item.tooth} • {item.label}
+                </p>
+              ))}
+            </section>
           </div>
         </div>
+
+        <SheetFooter className="mt-auto min-h-0 shrink-0 flex-row items-center justify-between gap-2.5 p-0">
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-button-outline-bg"
+              disabled={!hasPrev}
+              aria-label="Previous patient"
+              title="Previous patient (↑)"
+              onClick={(e) => {
+                e.stopPropagation();
+                goBy(-1);
+              }}
+            >
+              <i className="fa-regular fa-angle-up text-base" aria-hidden />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-button-outline-bg"
+              disabled={!hasNext}
+              aria-label="Next patient"
+              title="Next patient (↓)"
+              onClick={(e) => {
+                e.stopPropagation();
+                goBy(1);
+              }}
+            >
+              <i className="fa-regular fa-angle-down text-base" aria-hidden />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              className="bg-button-outline-bg"
+              onClick={() => onOpenChange(false)}
+            >
+              Close
+            </Button>
+            <Button onClick={handleReview}>
+              Review
+              <i
+                className="fa-regular fa-arrow-right text-base"
+                data-icon="inline-end"
+                aria-hidden
+              />
+            </Button>
+          </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
