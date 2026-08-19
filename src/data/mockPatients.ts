@@ -107,7 +107,7 @@ export function deriveReadyForChair(
   return delta > 0 && delta <= windowMinutes;
 }
 
-function hashStringToSeed(input: string): number {
+export function hashStringToSeed(input: string): number {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i);
@@ -116,7 +116,7 @@ function hashStringToSeed(input: string): number {
   return hash >>> 0;
 }
 
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;

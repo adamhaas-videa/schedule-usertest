@@ -4,15 +4,23 @@ import L1Header from "@/components/layout/L1Header";
 import L2Header from "@/components/layout/L2Header";
 import OperatoryGrid from "@/components/OperatoryGrid";
 import PatientListView from "@/components/PatientListView";
-import PatientDetailDrawer from "@/components/PatientDetailDrawer";
+import PatientSummaryPanel from "@/components/PatientSummaryPanel";
 import ClinicalView from "@/components/clinical/ClinicalView";
-import { mockPatients, applySimulatedTime } from "@/data/mockPatients";
+import {
+  mockPatients,
+  applySimulatedTime,
+  timeToMinutes,
+} from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
 import {
   getSimulatedNowMinutes,
   READY_FOR_CHAIR_WINDOW_MIN,
 } from "@/lib/timeline";
-import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
+import { DEFAULT_CARD_VERSION } from "@/lib/cardVersions";
+import {
+  DEFAULT_SUMMARY_VERSION,
+  type SummaryVersion,
+} from "@/lib/summaryVersions";
 
 export type ScheduleView = "list" | "calendar";
 export type ClinicalTab = "xray" | "voice" | "perio";
@@ -39,9 +47,13 @@ export default function App() {
   const [filters, setFilters] = useState<ScheduleFilters>(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState<ScheduleView>("calendar");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [cardVersion, setCardVersion] = useState<CardVersion>(
-    DEFAULT_CARD_VERSION
+  const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
+    DEFAULT_SUMMARY_VERSION
   );
+  // The card interaction model is no longer switchable from the header — the
+  // header menu now demos the summary slideout tiers instead. Cards stay on the
+  // default model (see src/lib/cardVersions.ts).
+  const cardVersion = DEFAULT_CARD_VERSION;
   const [view, setView] = useState<AppView>({ kind: "schedule" });
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +101,32 @@ export default function App() {
     });
   }, [patients, filters]);
 
+  // Footer arrows in the summary panel walk the schedule in clock order, which
+  // is not the order `filteredPatients` comes in (that is grouped by operatory).
+  const stepOrder = useMemo(
+    () =>
+      [...filteredPatients].sort(
+        (a, b) =>
+          timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime) ||
+          a.operatory - b.operatory
+      ),
+    [filteredPatients]
+  );
+
+  const handleStepPatient = useCallback(
+    (delta: -1 | 1) => {
+      setSelectedPatient((current) => {
+        if (!current || stepOrder.length === 0) return current;
+        const index = stepOrder.findIndex((p) => p.id === current.id);
+        if (index === -1) return current;
+        const next =
+          (index + delta + stepOrder.length) % stepOrder.length;
+        return stepOrder[next];
+      });
+    },
+    [stepOrder]
+  );
+
   const activeNav =
     view.kind === "clinical" && view.tab === "voice" ? "voice-notes" : "schedule";
 
@@ -102,8 +140,8 @@ export default function App() {
       {view.kind === "schedule" ? (
         <>
           <L1Header
-            cardVersion={cardVersion}
-            onCardVersionChange={setCardVersion}
+            summaryVersion={summaryVersion}
+            onSummaryVersionChange={setSummaryVersion}
           />
           <L2Header
             selectedDate={selectedDate}
@@ -139,10 +177,14 @@ export default function App() {
             )}
           </main>
 
-          <PatientDetailDrawer
+          <PatientSummaryPanel
             patient={selectedPatient}
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
+            version={summaryVersion}
+            privacyMode={privacyMode}
+            onOpenClinical={handleOpenClinical}
+            onStepPatient={handleStepPatient}
           />
         </>
       ) : (
