@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Patient, Provider, ScheduleBlock } from "@/data/mockPatients";
-import { minutesToTime, timeToMinutes, mockBlocks } from "@/data/mockPatients";
+import {
+  ALL_OPERATORIES,
+  minutesToTime,
+  timeToMinutes,
+  mockBlocks,
+} from "@/data/mockPatients";
 import OperatoryColumn from "./OperatoryColumn";
 import OperatoryHeader from "./OperatoryHeader";
 import ColumnModeMenu, { type ColumnMode } from "./ColumnModeMenu";
@@ -13,9 +18,8 @@ import {
   END_MINUTES,
   minutesToY,
   formatHour,
-  getSimulatedNowMinutes,
 } from "@/lib/timeline";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import type { CardVersion } from "@/lib/cardVersions";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +32,9 @@ interface OperatoryGridProps {
   onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   cardVersion: CardVersion;
+  nowMinutes: number;
 }
 
-const ALL_OPERATORIES = [1, 2, 3, 4, 5, 6, 7, 8];
 const HALF_HOURS = HOURS.slice(0, -1);
 const GUTTER = 64;
 const TOP_PAD = 24;
@@ -112,8 +116,8 @@ export default function OperatoryGrid({
   onSelectPatient,
   scrollRef,
   cardVersion,
+  nowMinutes,
 }: OperatoryGridProps) {
-  const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
   const [columnMode, setColumnMode] = useState<ColumnMode>("operatory");
 
   // Scroll the timeline so the given patient's card is centered. Used by the
@@ -127,14 +131,6 @@ export default function OperatoryGrid({
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setNowMinutes(getSimulatedNowMinutes()),
-      60_000
-    );
-    return () => clearInterval(interval);
-  }, []);
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
   const focused = columnMode === "operatory" && selectedOps.length > 0;

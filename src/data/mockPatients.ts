@@ -40,6 +40,9 @@ export interface Patient {
   conditionAlert?: ConditionAlert;
 }
 
+/** Operatories shown on every card-demo schedule screen. */
+export const ALL_OPERATORIES: number[] = [1, 2, 3, 4, 5, 6];
+
 // Non-appointment time blocks (e.g. lunch) rendered on the operatory timeline.
 export interface ScheduleBlock {
   id: string;
@@ -164,7 +167,7 @@ const INSURANCE_STATUS: readonly Insurance["status"][] = [
 ];
 
 const CONDITION_ALERTS: readonly ConditionAlert[] = [
-  { label: "Healthy Gums", severity: "success" },
+  { label: "No bone loss detected", severity: "success" },
   { label: "Stage 1 Perio", severity: "accent" },
   { label: "Stage 2 Perio", severity: "warning" },
   { label: "Stage 3 Perio", severity: "error" },

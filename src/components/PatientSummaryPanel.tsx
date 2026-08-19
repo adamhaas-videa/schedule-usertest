@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Odontogram from "@/components/Odontogram";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import type { Patient } from "@/data/mockPatients";
 import { buildPatientSummary } from "@/data/patientSummary";
 import { getProviderColor } from "@/lib/providerColors";

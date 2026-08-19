@@ -1,0 +1,1530 @@
+<title>Patient Card Concepts</title>
+<style>
+  /* ============================================================
+     PAGE CHROME TOKENS  (the spec sheet the specimens sit on)
+     ============================================================ */
+  :root {
+    --pg-ground:      #EFECE8;
+    --pg-ground-alt:  #E7E3DE;
+    --pg-ink:         #1B1A18;
+    --pg-ink-2:       #5C5852;
+    --pg-ink-3:       #8A857D;
+    --pg-rule:        #D6D1CA;
+    --pg-rule-soft:   #E2DED8;
+    --pg-mark:        #124555;
+    --pg-mark-soft:   #A3CCD5;
+    --pg-caliper:     #B08A2E;
+
+    /* ---- ENAMEL SEMANTIC TOKENS (light) &mdash; verbatim from schedule/src/index.css ---- */
+    --e-background:   #FCFBFA;
+    --e-foreground:   #18181B;
+    --e-card:         #FFFFFF;
+    --e-muted:        #F4F2F0;
+    --e-muted-fg:     #52525B;
+    --e-muted-fg-2:   #71717A;
+    --e-border:       #E6E3E0;
+    --e-primary:      #124555;
+    --e-primary-fg:   #FFFFFF;
+    --e-link:         #124555;
+
+    --e-success:      #2E7D3A;
+    --e-warning:      #C08B1E;
+    --e-error:        #C63E38;
+
+    --e-success-muted:     #EFF6F0;
+    --e-success-muted-bd:  #D4EAD7;
+    --e-success-muted-fg:  #1C5027;
+    --e-warning-muted:     #FDF8EE;
+    --e-warning-muted-bd:  #FAEFD4;
+    --e-warning-muted-fg:  #7C5712;
+    --e-error-muted:       #FDF2F1;
+    --e-error-muted-bd:    #FADBD8;
+    --e-error-muted-fg:    #832824;
+    --e-info-muted:        #EDF5F7;
+    --e-info-muted-bd:     #A3CCD5;
+    --e-info-muted-fg:     #124555;
+    --e-accent-muted:      #F0F4FC;
+    --e-accent-muted-bd:   #BDCEF4;
+    --e-accent-muted-fg:   #2D4F98;
+
+    --e-btn-outline-bg: #FFFFFF;
+    --e-avatar-bg:      #DCE5F9;
+    --e-avatar-fg:      #223C78;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --pg-ground:      #131315;
+      --pg-ground-alt:  #1B1B1E;
+      --pg-ink:         #F2F0ED;
+      --pg-ink-2:       #A5A09A;
+      --pg-ink-3:       #77726C;
+      --pg-rule:        #2E2E32;
+      --pg-rule-soft:   #26262A;
+      --pg-mark:        #6AABB9;
+      --pg-mark-soft:   #0E3644;
+      --pg-caliper:     #DBA63C;
+
+      --e-background:   #18181B;
+      --e-foreground:   #FAFAFA;
+      --e-card:         #27272A;
+      --e-muted:        #27272A;
+      --e-muted-fg:     #A1A1AA;
+      --e-muted-fg-2:   #A1A1AA;
+      --e-border:       #3F3F46;
+      --e-primary:      #1F6D7E;
+      --e-primary-fg:   #FFFFFF;
+      --e-link:         #6AABB9;
+
+      --e-success:      #4A9956;
+      --e-warning:      #DBA63C;
+      --e-error:        #DB5A54;
+
+      --e-success-muted:     #153D1E;
+      --e-success-muted-bd:  #0F2C16;
+      --e-success-muted-fg:  #A9D5AF;
+      --e-warning-muted:     #43300C;
+      --e-warning-muted-bd:  #43300C;
+      --e-warning-muted-fg:  #F4DCA4;
+      --e-error-muted:       #481716;
+      --e-error-muted-bd:    #481716;
+      --e-error-muted-fg:    #F3B2AE;
+      --e-info-muted:        #0E3644;
+      --e-info-muted-bd:     #0E3644;
+      --e-info-muted-fg:     #A3CCD5;
+      --e-accent-muted:      #223C78;
+      --e-accent-muted-bd:   #223C78;
+      --e-accent-muted-fg:   #BDCEF4;
+
+      --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+      --e-avatar-bg:      #223C78;
+      --e-avatar-fg:      #DCE5F9;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --pg-ground:      #131315;
+    --pg-ground-alt:  #1B1B1E;
+    --pg-ink:         #F2F0ED;
+    --pg-ink-2:       #A5A09A;
+    --pg-ink-3:       #77726C;
+    --pg-rule:        #2E2E32;
+    --pg-rule-soft:   #26262A;
+    --pg-mark:        #6AABB9;
+    --pg-mark-soft:   #0E3644;
+    --pg-caliper:     #DBA63C;
+
+    --e-background:   #18181B;
+    --e-foreground:   #FAFAFA;
+    --e-card:         #27272A;
+    --e-muted:        #27272A;
+    --e-muted-fg:     #A1A1AA;
+    --e-muted-fg-2:   #A1A1AA;
+    --e-border:       #3F3F46;
+    --e-primary:      #1F6D7E;
+    --e-primary-fg:   #FFFFFF;
+    --e-link:         #6AABB9;
+
+    --e-success:      #4A9956;
+    --e-warning:      #DBA63C;
+    --e-error:        #DB5A54;
+
+    --e-success-muted:     #153D1E;
+    --e-success-muted-bd:  #0F2C16;
+    --e-success-muted-fg:  #A9D5AF;
+    --e-warning-muted:     #43300C;
+    --e-warning-muted-bd:  #43300C;
+    --e-warning-muted-fg:  #F4DCA4;
+    --e-error-muted:       #481716;
+    --e-error-muted-bd:    #481716;
+    --e-error-muted-fg:    #F3B2AE;
+    --e-info-muted:        #0E3644;
+    --e-info-muted-bd:     #0E3644;
+    --e-info-muted-fg:     #A3CCD5;
+    --e-accent-muted:      #223C78;
+    --e-accent-muted-bd:   #223C78;
+    --e-accent-muted-fg:   #BDCEF4;
+
+    --e-btn-outline-bg: rgba(63, 63, 70, 0.3);
+    --e-avatar-bg:      #223C78;
+    --e-avatar-fg:      #DCE5F9;
+  }
+
+  /* ============================================================
+     PAGE
+     ============================================================ */
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--pg-ground);
+    color: var(--pg-ink);
+    font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+
+  /* --- masthead --- */
+  .mast { display: flex; flex-direction: column; gap: 20px; }
+
+  .mast-kicker {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+  }
+
+  h1 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: clamp(30px, 4.4vw, 46px);
+    line-height: 1.04;
+    letter-spacing: -0.032em;
+    font-weight: 640;
+    text-wrap: balance;
+    max-width: 16ch;
+  }
+
+  .mast-lede {
+    max-width: 62ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+  }
+  .mast-lede strong { color: var(--pg-ink); font-weight: 600; }
+
+  .constraint {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--pg-rule);
+    border-left: 3px solid var(--pg-caliper);
+    background: var(--pg-ground-alt);
+    max-width: 640px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+  }
+  .constraint b { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- the six needs, as a numbered legend --- */
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .legend-item {
+    background: var(--pg-ground);
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .legend-n {
+    flex: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--pg-mark);
+    color: var(--pg-ground);
+    font-size: 10px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+  }
+  .legend-t { font-size: 11.5px; line-height: 1.5; color: var(--pg-ink-2); }
+  .legend-t b { display: block; color: var(--pg-ink); font-weight: 600; font-size: 12px; }
+
+  /* --- section scaffolding --- */
+  section { display: flex; flex-direction: column; gap: 24px; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 10px; }
+
+  .sec-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pg-mark);
+  }
+  .sec-rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--pg-rule);
+  }
+
+  h2 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 25px;
+    line-height: 1.15;
+    letter-spacing: -0.022em;
+    font-weight: 620;
+  }
+
+  .thesis {
+    max-width: 66ch;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--pg-ink-2);
+  }
+  .thesis b { color: var(--pg-ink); font-weight: 600; }
+
+  /* --- specimen field --- */
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px 44px;
+    padding: 32px 28px;
+    background: var(--e-background);
+    border: 1px solid var(--pg-rule);
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--pg-rule) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--pg-rule) 55%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .unit { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+
+  .unit-label {
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .unit-label .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .dot-dr { background: var(--e-primary); }
+  .dot-hy { background: var(--e-accent-muted-fg); }
+
+  /* dimension caliper under each specimen */
+  .caliper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    color: var(--pg-caliper);
+  }
+  .caliper .bar {
+    flex: 1;
+    height: 5px;
+    border-left: 1px solid var(--pg-caliper);
+    border-right: 1px solid var(--pg-caliper);
+    position: relative;
+  }
+  .caliper .bar::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 2px;
+    border-top: 1px dashed var(--pg-caliper);
+  }
+
+  /* coverage chips (which of the six needs this card carries) */
+  .cover { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .cover-lab {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    margin-right: 3px;
+  }
+  .cv {
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+  .cv-on  { background: var(--pg-mark); color: var(--pg-ground); }
+  .cv-part{ background: transparent; color: var(--pg-mark); border: 1px solid var(--pg-mark); }
+  .cv-off { background: transparent; color: var(--pg-ink-3); border: 1px dashed var(--pg-rule); }
+
+  .trade {
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--pg-ink-2);
+    border-top: 1px solid var(--pg-rule-soft);
+    padding-top: 8px;
+  }
+  .trade b { color: var(--pg-ink); font-weight: 600; }
+
+  /* ============================================================
+     THE CARD &mdash; Enamel primitives, 280 x 228
+     ============================================================ */
+  .card {
+    width: 280px;
+    height: 228px;
+    flex: none;
+    background: var(--e-card);
+    border: 1.5px solid var(--e-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    color: var(--e-foreground);
+    overflow: hidden;
+    position: relative;
+  }
+  .card.h88  { height: 88px; }
+  .card.wide { width: 474px; height: 236px; padding: 0; flex-direction: row; }
+
+  .c-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .c-name {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.006em;
+    color: var(--e-foreground);
+  }
+  .c-meta {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--e-muted-fg);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .c-elig {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--e-muted-fg);
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+  }
+  .c-elig .amt { color: var(--e-foreground); font-weight: 600; }
+
+  /* status pill */
+  .pill {
+    flex: none;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pill svg { width: 9px; height: 9px; }
+  .pill-active { background: var(--e-success-muted); border-color: var(--e-success-muted-bd); color: var(--e-success-muted-fg); }
+  .pill-done   { background: var(--e-muted); border-color: var(--e-border); color: var(--e-muted-fg); }
+  .pill-up     { background: var(--e-info-muted); border-color: var(--e-info-muted-bd); color: var(--e-info-muted-fg); }
+
+  .c-div { height: 1px; background: var(--e-border); margin: 6px 0; }
+
+  /* flex:1 + min-height:0 + overflow:hidden means the body is what gives when
+     content runs long &mdash; the footer never gets pushed out of the 228px box. */
+  .c-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+  .c-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .prov { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .av {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--e-avatar-bg);
+    color: var(--e-avatar-fg);
+    font-size: 10px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .prov-role { font-size: 11px; font-weight: 500; color: var(--e-muted-fg); }
+
+  .acts { display: flex; align-items: center; gap: 6px; }
+  .ibtn {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--e-border);
+    background: var(--e-btn-outline-bg);
+    color: var(--e-muted-fg);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .ibtn svg { width: 15px; height: 15px; }
+  .pbtn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: none;
+    background: var(--e-primary);
+    color: var(--e-primary-fg);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pbtn svg { width: 13px; height: 13px; }
+  .ibtn.solid { background: var(--e-primary); border-color: var(--e-primary); color: var(--e-primary-fg); }
+
+  /* ---- Concept A: ranked flag rows ---- */
+  .flags { display: flex; flex-direction: column; gap: 3px; }
+  .flag {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 11.5px;
+    line-height: 1.38;
+    min-width: 0;
+  }
+  .flag .gl { flex: none; width: 11px; display: grid; place-items: center; transform: translateY(1px); }
+  .flag .gl svg { width: 11px; height: 11px; }
+  .flag .lab { font-weight: 600; white-space: nowrap; }
+  .flag .det {
+    color: var(--e-muted-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .sev-err  { color: var(--e-error); }
+  .sev-warn { color: var(--e-warning); }
+  .sev-ok   { color: var(--e-success); }
+  .sev-info { color: var(--e-link); }
+  .flag.err  .lab { color: var(--e-error-muted-fg); }
+  .flag.warn .lab { color: var(--e-warning-muted-fg); }
+  .flag.info .lab { color: var(--e-foreground); }
+  .flag.ok   .lab { color: var(--e-success-muted-fg); }
+
+  .recap {
+    margin-top: auto;
+    padding-top: 5px;
+    border-top: 1px dashed var(--e-border);
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--e-muted-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---- Concept B: pre / post narrative ---- */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--e-muted-fg);
+    margin-bottom: 6px;
+  }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--e-border); }
+  .eyebrow.pre  { color: var(--e-link); }
+  .eyebrow.post { color: var(--e-success-muted-fg); }
+
+  .narr {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--e-foreground);
+  }
+  .narr .q { color: var(--e-warning-muted-fg); font-style: italic; }
+  .narr .did { color: var(--e-muted-fg); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .chip {
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .chip svg { width: 9px; height: 9px; }
+  .chip-err  { background: var(--e-error-muted);   border-color: var(--e-error-muted-bd);   color: var(--e-error-muted-fg); }
+  .chip-warn { background: var(--e-warning-muted); border-color: var(--e-warning-muted-bd); color: var(--e-warning-muted-fg); }
+  .chip-ok   { background: var(--e-success-muted); border-color: var(--e-success-muted-bd); color: var(--e-success-muted-fg); }
+  .chip-info { background: var(--e-info-muted);    border-color: var(--e-info-muted-bd);    color: var(--e-info-muted-fg); }
+
+  /* ---- Concept C: quote hero + 2x2 ledger ---- */
+  .quote {
+    font-size: 13px;
+    line-height: 1.32;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: -0.004em;
+    color: var(--e-foreground);
+    border-left: 2px solid var(--e-warning);
+    padding-left: 9px;
+  }
+  .quote-sub {
+    margin-top: 3px;
+    padding-left: 11px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--e-muted-fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .ledger {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 12px;
+    margin-top: auto;
+    padding-top: 7px;
+    border-top: 1px solid var(--e-border);
+  }
+  .led-k {
+    font-size: 8.5px;
+    line-height: 1.5;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--e-muted-fg);
+  }
+  .led-v {
+    font-size: 11.5px;
+    line-height: 1.3;
+    font-weight: 600;
+    margin-top: 1px;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .led-v.crit { color: var(--e-error-muted-fg); }
+  .led-v.warn { color: var(--e-warning-muted-fg); }
+  .led-v.norm { color: var(--e-foreground); }
+  .led-v.good { color: var(--e-success-muted-fg); }
+  .led-v .sub { font-weight: 400; color: var(--e-muted-fg); }
+
+  /* ---- wide (474) enhanced variant ---- */
+  .wide-rail {
+    width: 151px;
+    flex: none;
+    background: var(--e-muted);
+    border-right: 1px solid var(--e-border);
+    border-radius: 8.5px 0 0 8.5px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .wide-main { flex: 1; min-width: 0; padding: 12px; display: flex; flex-direction: column; }
+  .rail-h {
+    font-size: 9px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--e-muted-fg);
+  }
+  .rail-body { font-size: 11px; line-height: 1.4; color: var(--e-foreground); }
+  .rail-link {
+    margin-top: auto;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--e-link);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rail-link svg { width: 10px; height: 10px; }
+
+  /* ---- comparison table ---- */
+  .tbl-scroll { overflow-x: auto; border: 1px solid var(--pg-rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 11.5px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--pg-rule-soft); vertical-align: top; line-height: 1.5; }
+  thead th {
+    background: var(--pg-ground-alt);
+    font-size: 9.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--pg-ink-2);
+    font-weight: 600;
+    border-bottom: 1px solid var(--pg-rule);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.k { color: var(--pg-ink); font-weight: 600; white-space: nowrap; }
+  td .rank { color: var(--pg-ink-2); }
+  td .rank b { color: var(--pg-ink); font-weight: 600; }
+
+  /* ---- recommendation ---- */
+  .rec {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule);
+    border: 1px solid var(--pg-rule);
+  }
+  .rec-cell { background: var(--pg-ground); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+  .rec-cell h3 {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 15px;
+    font-weight: 620;
+    letter-spacing: -0.012em;
+  }
+  .rec-cell p { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--pg-ink-2); }
+  .rec-tag {
+    align-self: flex-start;
+    font-size: 9.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 3px 8px;
+    border: 1px solid var(--pg-mark);
+    color: var(--pg-mark);
+  }
+  .rec-tag.alt { border-color: var(--pg-rule); color: var(--pg-ink-3); }
+
+  .note {
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: var(--pg-ink-2);
+    max-width: 70ch;
+  }
+  .note b { color: var(--pg-ink); font-weight: 600; }
+
+  /* preview switch &mdash; fixed so it is reachable from anywhere down the page */
+  .theme {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 20;
+    display: flex;
+    background: var(--pg-ground-alt);
+    border: 1px solid var(--pg-rule);
+    box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.35);
+  }
+  .theme button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pg-ink-3);
+    padding: 6px 11px;
+    cursor: pointer;
+    transition: color 120ms ease, background 120ms ease;
+  }
+  .theme button + button { border-left: 1px solid var(--pg-rule); }
+  .theme button:hover { color: var(--pg-ink); }
+  .theme button[aria-pressed="true"] { background: var(--pg-mark); color: var(--pg-ground); }
+
+  :where(button):focus-visible,
+  :where(a):focus-visible { outline: 2px solid var(--pg-mark); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("videa-concepts-theme"); } catch (e) {}
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+
+<div class="theme" role="group" aria-label="Preview theme">
+  <button type="button" data-theme-set="light">Light</button>
+  <button type="button" data-theme-set="dark">Dark</button>
+  <button type="button" data-theme-set="auto">Auto</button>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M13.5 4.5 6.5 12 2.5 8.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 1.5 13.5 3.4v4.2c0 3.2-2.3 5.7-5.5 6.9-3.2-1.2-5.5-3.7-5.5-6.9V3.4L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.6 8.1 7.3 9.8l3.2-3.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 16 16"><path d="M8 1.9 15 14H1L8 1.9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.2v3.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.7" r="0.9" fill="currentColor"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.6h13M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-cal-x" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="11.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.6h13M5 1.5v3M11 1.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="m6.2 9.2 3.6 3.6M9.8 9.2l-3.6 3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-pill" viewBox="0 0 16 16"><rect x="0.9" y="5.1" width="14.2" height="5.8" rx="2.9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.1v5.8" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-dot" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3.6" fill="currentColor"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 16 16"><rect x="5.6" y="1.3" width="4.8" height="8.2" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.2 7.6a4.8 4.8 0 0 0 9.6 0M8 12.4v2.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-img" viewBox="0 0 16 16"><rect x="1.4" y="2.6" width="13.2" height="10.8" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.4" cy="6.3" r="1.2" fill="currentColor"/><path d="m2.2 12 3.6-3.6 2.6 2.6 2.3-2.3 3.1 3.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2.6 8h10.2M9 4.2 12.8 8 9 11.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 16 16"><path d="M6.2 2.5H2.5v11h11V9.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9.4 2.5h4.1v4.1M13.5 2.5 7.4 8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <!-- Videa perio glyph, from schedule/src/components/PatientCard.tsx -->
+    <symbol id="i-perio" viewBox="0 0 20 20">
+      <path d="M13.2009 11.4583V17.6705C13.2009 18.0588 12.8723 18.3873 12.4841 18.3873C12.0958 18.3873 11.7673 18.0588 11.7673 17.6705V11.4583C11.7673 11.07 12.0958 10.7415 12.4841 10.7415C12.8723 10.7415 13.2009 11.07 13.2009 11.4583ZM15.5902 12.414V16.7148C15.5902 17.1031 15.2617 17.4316 14.8734 17.4316C14.4851 17.4316 14.1566 17.1031 14.1566 16.7148V12.414C14.1566 12.0257 14.4851 11.6972 14.8734 11.6972C15.2617 11.6972 15.5902 12.0257 15.5902 12.414ZM10.8115 12.8919V16.2369C10.8115 16.6252 10.483 16.9537 10.0947 16.9537C9.70646 16.9537 9.37793 16.6252 9.37793 16.2369V12.8919C9.37793 12.5036 9.70646 12.1751 10.0947 12.1751C10.483 12.1751 10.8115 12.5036 10.8115 12.8919ZM17.9795 13.8476V15.2812C17.9795 15.6695 17.651 15.998 17.2627 15.998C16.8745 15.998 16.5459 15.6695 16.5459 15.2812V13.8476C16.5459 13.4593 16.8745 13.1308 17.2627 13.1308C17.651 13.1308 17.9795 13.4593 17.9795 13.8476Z" fill="currentColor"/>
+      <path d="M11.7666 3C13.7675 3.00011 15.3797 4.61241 15.3799 6.61328V8.79395C15.3799 9.25833 15.3098 9.73566 15.1641 10.1904C14.8589 10.3374 14.2119 10.4671 13.8018 9.70801C13.8944 9.41403 13.9463 9.10429 13.9463 8.79395V6.61328C13.9461 5.41881 12.9611 4.4337 11.7666 4.43359C11.4383 4.43359 11.0798 4.52269 10.7812 4.67188L9.01855 5.56836C8.80952 5.6579 8.57035 5.65794 8.36133 5.56836L6.59961 4.67188C6.30106 4.5226 5.97249 4.43366 5.61426 4.43359C4.41968 4.43359 3.43375 5.41874 3.43359 6.61328V8.79395C3.43361 9.27177 3.55267 9.74987 3.76172 10.168L4.47852 11.6016C4.7174 12.1092 4.86701 12.6465 4.92676 13.2139L5.22559 16.3799C5.25545 16.6487 5.49487 16.8574 5.76367 16.8574C6.00245 16.8572 6.24066 16.6782 6.27051 16.4395L7.13672 12.4072C7.15117 12.335 7.17175 12.2652 7.19531 12.1973C7.54125 12.0297 8.34446 12.1311 8.53809 12.6855L7.6748 16.7383C7.49563 17.6341 6.68934 18.2908 5.76367 18.291C4.7482 18.291 3.91187 17.5145 3.82227 16.499L3.49316 13.334C3.4633 12.9457 3.37354 12.5869 3.19434 12.2285L2.47754 10.8252C2.14902 10.198 2.00002 9.48084 2 8.79395V6.61328C2.00015 4.61234 3.61328 3 5.61426 3C6.18151 3.00005 6.719 3.11903 7.22656 3.3877L8.69043 4.10449L10.1533 3.3877C10.6611 3.1189 11.1991 3 11.7666 3Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <!-- ================== MASTHEAD ================== -->
+  <header class="mast">
+    <div class="mast-kicker">Enamel &middot; Schedule &middot; Patient card</div>
+    <h1>Six things, 280&nbsp;&times;&nbsp;228</h1>
+    <p class="mast-lede">
+      Three concepts for the schedule patient card, each rendered in both conditional
+      types &mdash; <strong>doctor restorative</strong> and <strong>hygiene visit</strong>. Every specimen below is
+      built from Enamel semantic tokens at the card's existing footprint, so what you
+      see is what fits.
+    </p>
+    <div class="constraint">
+      <div>
+        <b>Hard constraint.</b> The card is 280 &times; 228 in the list, and duration-driven in the
+        operatory grid &mdash; 88px at 30 min, 133px at 45, 178px at 60. Nothing here changes those
+        numbers. The six needs have to be earned out of the existing <b>middle region: 256 &times; ~79px</b>,
+        roughly five lines of type. Every concept is therefore an argument about what gets cut.
+      </div>
+    </div>
+  </header>
+
+  <!-- ================== THE SIX ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">The six needs</div>
+      <p class="thesis">
+        Each specimen carries a coverage row: <b>filled</b> = surfaced on the card,
+        <b>outlined</b> = surfaced but truncated, <b>dashed</b> = pushed to the drawer.
+        The numbers are the ones from the brief, in the brief's order.
+      </p>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-n">1</span><span class="legend-t"><b>Last-visit recap</b>What was actually completed &mdash; prophy, x-rays, restorations.</span></div>
+      <div class="legend-item"><span class="legend-n">2</span><span class="legend-t"><b>Outstanding treatment + why</b>Rejected or deferred, in the patient's own words. Leland's first look.</span></div>
+      <div class="legend-item"><span class="legend-n">3</span><span class="legend-t"><b>Discussed / recommended next</b>Opportunities raised last visit &mdash; SRP, night guard, crown.</span></div>
+      <div class="legend-item"><span class="legend-n">4</span><span class="legend-t"><b>Recall status</b>Next cleaning booked or not. Hardest thing to find in the PMS today.</span></div>
+      <div class="legend-item"><span class="legend-n">5</span><span class="legend-t"><b>Remaining benefits</b>Checked before any treatment conversation; shapes the framing.</span></div>
+      <div class="legend-item"><span class="legend-n">6</span><span class="legend-t"><b>Health flags</b>Allergies, pre-med, chronic conditions.</span></div>
+    </div>
+  </section>
+
+  <!-- ================== CONCEPT A ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept A</div>
+      <h2>Flag Stack</h2>
+      <p class="thesis">
+        The middle region becomes four ranked one-line flags &mdash; severity glyph, bold label,
+        muted detail &mdash; plus a dimmed recap line at the floor. <b>Rank order is the conditional
+        logic:</b> a restorative card leads with pre-med and money left on the table; a hygiene
+        card leads with recall and perio. Nothing wraps, so the card is scannable at a glance
+        down a column, and the cost is nuance &mdash; the patient's reasoning is clipped to a fragment.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- A &middot; doctor -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Restorative</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38 &middot; Op 3</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-elig">Delta Dental &middot; <span class="amt">$640 left</span> &middot; resets Jan 1</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="flags">
+              <div class="flag err">
+                <span class="gl sev-err"><svg><use href="#i-pill"/></svg></span>
+                <span class="lab">Pre-med</span><span class="det">clindamycin 600 mg &middot; PCN</span>
+              </div>
+              <div class="flag err">
+                <span class="gl sev-err"><svg><use href="#i-cal-x"/></svg></span>
+                <span class="lab">No recall</span><span class="det">6 mo overdue</span>
+              </div>
+              <div class="flag warn">
+                <span class="gl sev-warn"><svg><use href="#i-dot"/></svg></span>
+                <span class="lab">Crown #14</span><span class="det">declined &middot; &ldquo;until January&rdquo;</span>
+              </div>
+              <div class="flag info">
+                <span class="gl sev-info"><svg><use href="#i-dot"/></svg></span>
+                <span class="lab">Discussed</span><span class="det">night guard, MOD #19</span>
+              </div>
+            </div>
+            <div class="recap">Last visit 02/25 &middot; exam, 4 BWX, prophy</div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-part">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-on">6</span>
+        </div>
+        <div class="trade"><b>Trade:</b> the &ldquo;why&rdquo; survives only as a four-word fragment. Full reasoning lives one click deep.</div>
+      </div>
+
+      <!-- A &middot; hygiene -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene visit</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">James Lee</div>
+              <div class="c-meta">11:15 AM &middot; Age 45 &middot; Op 1</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-elig">Blue Cross &middot; <span class="amt">$320 left</span> &middot; 1 prophy left</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="flags">
+              <div class="flag err">
+                <span class="gl sev-err"><svg><use href="#i-cal-x"/></svg></span>
+                <span class="lab">No recall</span><span class="det">2 mo overdue</span>
+              </div>
+              <div class="flag warn">
+                <span class="gl sev-warn"><svg><use href="#i-warn"/></svg></span>
+                <span class="lab">Warfarin</span><span class="det">bleeding risk &middot; T2DM</span>
+              </div>
+              <div class="flag warn">
+                <span class="gl sev-warn"><svg><use href="#i-dot"/></svg></span>
+                <span class="lab">SRP 4 quads</span><span class="det">accepted, never booked</span>
+              </div>
+              <div class="flag info">
+                <span class="gl sev-info"><svg><use href="#i-dot"/></svg></span>
+                <span class="lab">BWX due</span><span class="det">last 08/12/25</span>
+              </div>
+            </div>
+            <div class="recap">Last visit 08/12/25 &middot; prophy, 4 BWX, fluoride</div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-part">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-on">6</span>
+        </div>
+        <div class="trade"><b>Conditional:</b> recall jumps to rank 1 and perio replaces restorative. Same component, different rank function.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== CONCEPT B ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept B</div>
+      <h2>Pre / Post</h2>
+      <p class="thesis">
+        One card, two states, switched by appointment status. <b>Before</b> the appointment it is a
+        huddle brief: a written recap of the last visit with the patient's own words intact, and
+        the open loops as chips. <b>After</b>, the same region flips to what was done today &mdash; and
+        the red chips flip green as the loops close. Recall stops being a static field and becomes
+        the thing the visit is measured by.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- B &middot; doctor pre -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Pre-appointment</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38 &middot; Op 3</div>
+            </div>
+            <span class="pill pill-up"><svg><use href="#i-cal"/></svg>Upcoming</span>
+          </div>
+          <div class="c-elig">Delta Dental &middot; <span class="amt">$640 left</span> &middot; resets Jan 1</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="eyebrow pre">Since last visit &middot; 02/25/26</div>
+            <div class="narr">
+              Exam, 4 BWX, prophy. Crown #14 declined &mdash;
+              <span class="q">&ldquo;waiting until January.&rdquo;</span> Night guard discussed.
+            </div>
+            <div class="chips">
+              <span class="chip chip-err"><svg><use href="#i-pill"/></svg>Pre-med</span>
+              <span class="chip chip-err"><svg><use href="#i-cal-x"/></svg>No recall &middot; 6 mo</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-part">6</span>
+        </div>
+        <div class="trade"><b>Strength:</b> the only concept where the quote survives whole. It reads like a sentence someone would actually say in the huddle.</div>
+      </div>
+
+      <!-- B &middot; doctor post -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Post-appointment</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38 &middot; Op 3</div>
+            </div>
+            <span class="pill pill-done"><svg><use href="#i-check"/></svg>Completed</span>
+          </div>
+          <div class="c-elig">Delta Dental &middot; <span class="amt">$290 left</span> &middot; resets Jan 1</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="eyebrow post">Done today</div>
+            <div class="narr">
+              Crown prep #14, temp seated, 2 PA. Night guard scan taken.
+              <span class="did">MOD #19 still open.</span>
+            </div>
+            <div class="chips">
+              <span class="chip chip-ok"><svg><use href="#i-check"/></svg>Seat 03/18</span>
+              <span class="chip chip-ok"><svg><use href="#i-check"/></svg>Recall 08/14/26</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn solid" aria-label="Images"><svg><use href="#i-img"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-off">6</span>
+        </div>
+        <div class="trade"><b>Note:</b> benefits tick down and the two red chips resolve green. The post state doubles as the handoff to front desk.</div>
+      </div>
+
+      <!-- B &middot; hygiene pre -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; Pre-appointment</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">James Lee</div>
+              <div class="c-meta">11:15 AM &middot; Age 45 &middot; Op 1</div>
+            </div>
+            <span class="pill pill-up"><svg><use href="#i-cal"/></svg>Upcoming</span>
+          </div>
+          <div class="c-elig">Blue Cross &middot; <span class="amt">$320 left</span> &middot; 1 prophy left</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="eyebrow pre">Since last visit &middot; 08/12/25</div>
+            <div class="narr">
+              Prophy, 4 BWX, fluoride. SRP 4 quads accepted, never booked &mdash;
+              <span class="q">&ldquo;split it across two plan years.&rdquo;</span>
+            </div>
+            <div class="chips">
+              <span class="chip chip-err"><svg><use href="#i-cal-x"/></svg>No recall &middot; 2 mo</span>
+              <span class="chip chip-warn"><svg><use href="#i-warn"/></svg>Warfarin</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-on">2</span><span class="cv cv-part">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-part">6</span>
+        </div>
+        <div class="trade"><b>Watch:</b> prose has no fixed length. Copy needs a hard ~150-character budget or the chips get pushed off.</div>
+      </div>
+
+      <!-- B &middot; hygiene post -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; Post-appointment</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">James Lee</div>
+              <div class="c-meta">11:15 AM &middot; Age 45 &middot; Op 1</div>
+            </div>
+            <span class="pill pill-done"><svg><use href="#i-check"/></svg>Completed</span>
+          </div>
+          <div class="c-elig">Blue Cross &middot; <span class="amt">$208 left</span> &middot; 0 prophy left</div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="eyebrow post">Done today</div>
+            <div class="narr">
+              Prophy, 4 BWX, fluoride. Perio charted &mdash; Stage 2, generalized 4&ndash;5 mm.
+              <span class="did">SRP re-presented.</span>
+            </div>
+            <div class="chips">
+              <span class="chip chip-ok"><svg><use href="#i-check"/></svg>SRP UR/UL 09/02</span>
+              <span class="chip chip-ok"><svg><use href="#i-check"/></svg>Recall 02/14/27</span>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn solid" aria-label="Images"><svg><use href="#i-img"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-off">6</span>
+        </div>
+        <div class="trade"><b>The point:</b> &ldquo;no recall &middot; 2 mo&rdquo; &rarr; &ldquo;recall 02/14/27&rdquo; is the single clearest proof the visit worked.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== CONCEPT C ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Concept C</div>
+      <h2>Quote &amp; Ledger</h2>
+      <p class="thesis">
+        Leland's literal first look gets the hero slot &mdash; the patient's own sentence, set in italic
+        against a warning rule, with the procedure and dollar figure underneath it. Everything else
+        compresses into a 2 &times; 2 label/value ledger. <b>Densest of the three</b>, and the only one where
+        recall, benefits, alerts and next-step all hold a fixed, always-in-the-same-place position.
+      </p>
+    </div>
+
+    <div class="field">
+      <!-- C &middot; doctor -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-dr"></span>Doctor &middot; Restorative</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38 &middot; Last visit 02/25</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="quote">&ldquo;Waiting until January.&rdquo;</div>
+            <div class="quote-sub">Crown #14 &middot; declined 02/25 &middot; $1,240</div>
+            <div class="ledger">
+              <div>
+                <div class="led-k">Recall</div>
+                <div class="led-v crit">Not booked <span class="sub">&middot; 6 mo</span></div>
+              </div>
+              <div>
+                <div class="led-k">Benefits</div>
+                <div class="led-v norm">$640 <span class="sub">&middot; resets 1/1</span></div>
+              </div>
+              <div>
+                <div class="led-k">Alerts</div>
+                <div class="led-v warn">Pre-med &middot; PCN</div>
+              </div>
+              <div>
+                <div class="led-k">Next</div>
+                <div class="led-v norm">Crown, guard</div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">MG</span><span class="prov-role">DDS</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-part">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-on">6</span>
+        </div>
+        <div class="trade"><b>Trade:</b> the last-visit recap shrinks to a date in the meta line. Procedures move to the drawer.</div>
+      </div>
+
+      <!-- C &middot; hygiene -->
+      <div class="unit">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene visit</div>
+        <div class="card">
+          <div class="c-top">
+            <div>
+              <div class="c-name">James Lee</div>
+              <div class="c-meta">11:15 AM &middot; Age 45 &middot; Last prophy 08/12</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-div"></div>
+          <div class="c-body">
+            <div class="quote">&ldquo;Split it across two plan years.&rdquo;</div>
+            <div class="quote-sub">SRP 4 quads &middot; accepted 08/12 &middot; $2,840</div>
+            <div class="ledger">
+              <div>
+                <div class="led-k">Recall</div>
+                <div class="led-v crit">Not booked <span class="sub">&middot; 2 mo</span></div>
+              </div>
+              <div>
+                <div class="led-k">Benefits</div>
+                <div class="led-v norm">$320 <span class="sub">&middot; 1 prophy</span></div>
+              </div>
+              <div>
+                <div class="led-k">Alerts</div>
+                <div class="led-v warn">Warfarin &middot; T2DM</div>
+              </div>
+              <div>
+                <div class="led-k">Next</div>
+                <div class="led-v norm">SRP UR/UL, BWX</div>
+              </div>
+            </div>
+          </div>
+          <div class="c-foot">
+            <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+            <div class="acts">
+              <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+              <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+              <button class="pbtn">Review<svg><use href="#i-arrow"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>228</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-part">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-on">6</span>
+        </div>
+        <div class="trade"><b>Conditional:</b> only the hero and the <i>Next</i> cell change by type. Recall / Benefits / Alerts are fixed slots in both.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== GRID DEGRADATION ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Degradation</div>
+      <h2>What survives at 88px</h2>
+      <p class="thesis">
+        In the operatory grid a 30-minute appointment gets 88px of height &mdash; header plus roughly one
+        line. Each concept needs a defined truncation rule, not a scrollbar. These are the rules,
+        rendered at true size; the full card returns on hover as a popover.
+      </p>
+    </div>
+
+    <div class="field">
+      <div class="unit">
+        <div class="unit-label">A &middot; 30 min &mdash; top-ranked flag only</div>
+        <div class="card h88">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-body" style="margin-top:6px">
+            <div class="flag err">
+              <span class="gl sev-err"><svg><use href="#i-pill"/></svg></span>
+              <span class="lab">Pre-med</span><span class="det">clindamycin 600 mg</span>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>88</span></div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">B &middot; 30 min &mdash; chips only, prose drops</div>
+        <div class="card h88">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38</div>
+            </div>
+            <span class="pill pill-up"><svg><use href="#i-cal"/></svg>Upcoming</span>
+          </div>
+          <div class="c-body" style="margin-top:5px">
+            <div class="chips" style="margin-top:0">
+              <span class="chip chip-err"><svg><use href="#i-pill"/></svg>Pre-med</span>
+              <span class="chip chip-err"><svg><use href="#i-cal-x"/></svg>No recall</span>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>88</span></div>
+      </div>
+
+      <div class="unit">
+        <div class="unit-label">C &middot; 30 min &mdash; quote only, ledger drops</div>
+        <div class="card h88">
+          <div class="c-top">
+            <div>
+              <div class="c-name">Sarah Cohen</div>
+              <div class="c-meta">10:30 AM &middot; Age 38</div>
+            </div>
+            <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+          </div>
+          <div class="c-body" style="margin-top:6px">
+            <div class="quote" style="font-size:12px">&ldquo;Waiting until January.&rdquo;</div>
+          </div>
+        </div>
+        <div class="caliper"><span>280</span><span class="bar"></span><span>88</span></div>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Rule of thumb.</b> A always shows rank 1 and only rank 1 &mdash; predictable, but it can hide a
+      critical flag behind a merely-important one. B and C both degrade to a fixed element, which
+      means the 30-minute card and the 60-minute card never disagree about what matters most.
+    </p>
+  </section>
+
+  <!-- ================== WIDE VARIANT ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Enhanced view</div>
+      <h2>The 474 &times; 236 card</h2>
+      <p class="thesis">
+        The enhanced doctor and hygienist views already run a wider card with a left rail. That rail
+        is where the concepts stop competing: it takes the narrative half (recap + reasoning) and the
+        main region keeps the ledger. Same components, no new sizes.
+      </p>
+    </div>
+
+    <div class="field">
+      <div class="unit" style="width:474px">
+        <div class="unit-label"><span class="dot dot-hy"></span>Hygiene &middot; Enhanced</div>
+        <div class="card wide">
+          <div class="wide-rail">
+            <div class="rail-h">Since 08/12/25</div>
+            <div class="rail-body">
+              Prophy, 4 BWX, fluoride. SRP 4 quads accepted, never booked &mdash;
+              <span style="color:var(--e-warning-muted-fg);font-style:italic">&ldquo;split it across two plan years.&rdquo;</span>
+            </div>
+            <a class="rail-link" href="#">View perio chart<svg><use href="#i-ext"/></svg></a>
+          </div>
+          <div class="wide-main">
+            <div class="c-top">
+              <div>
+                <div class="c-name">James Lee</div>
+                <div class="c-meta">11:15 AM &middot; Age 45 &middot; Op 1</div>
+              </div>
+              <span class="pill pill-active"><svg><use href="#i-shield"/></svg>Active</span>
+            </div>
+            <div class="c-div"></div>
+            <div class="c-body">
+              <div class="ledger" style="margin-top:0;padding-top:0;border-top:none;gap:10px 14px">
+                <div><div class="led-k">Recall</div><div class="led-v crit">Not booked <span class="sub">&middot; 2 mo</span></div></div>
+                <div><div class="led-k">Benefits</div><div class="led-v norm">$320 <span class="sub">&middot; 1 prophy</span></div></div>
+                <div><div class="led-k">Alerts</div><div class="led-v warn">Warfarin &middot; T2DM</div></div>
+                <div><div class="led-k">Next</div><div class="led-v norm">SRP UR/UL, BWX</div></div>
+              </div>
+            </div>
+            <div class="c-foot">
+              <div class="prov"><span class="av">EM</span><span class="prov-role">RDH</span></div>
+              <div class="acts">
+                <button class="ibtn" aria-label="Perio chart"><svg><use href="#i-perio"/></svg></button>
+                <button class="ibtn" aria-label="Voice note"><svg><use href="#i-mic"/></svg></button>
+                <button class="ibtn solid" aria-label="Images"><svg><use href="#i-img"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caliper"><span>474</span><span class="bar"></span><span>236</span></div>
+        <div class="cover">
+          <span class="cover-lab">Covers</span>
+          <span class="cv cv-on">1</span><span class="cv cv-on">2</span><span class="cv cv-on">3</span>
+          <span class="cv cv-on">4</span><span class="cv cv-on">5</span><span class="cv cv-on">6</span>
+        </div>
+        <div class="trade"><b>All six, uncompressed.</b> The rail carries B's narrative, the main region carries C's ledger.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================== CONDITIONAL LOGIC ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Conditional logic</div>
+      <h2>What actually differs by type</h2>
+      <p class="thesis">
+        One component, one rank function, two configurations. The card never branches on markup &mdash;
+        it branches on which fields feed which slot, and in what priority.
+      </p>
+    </div>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Slot</th>
+            <th>Doctor &middot; restorative</th>
+            <th>Hygiene visit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="k">Rank 1</td>
+            <td class="rank"><b>Health flag</b> &mdash; pre-med, allergy, anticoagulant. Blocks the appointment if missed.</td>
+            <td class="rank"><b>Recall status</b> &mdash; the hygiene visit's entire job is booking the next one.</td>
+          </tr>
+          <tr>
+            <td class="k">Rank 2</td>
+            <td class="rank"><b>Recall status</b> &mdash; restorative patients fall out of prophy recall most often.</td>
+            <td class="rank"><b>Health flag</b> &mdash; bleeding risk drives instrumentation choice.</td>
+          </tr>
+          <tr>
+            <td class="k">Rank 3</td>
+            <td class="rank"><b>Deferred restorative + reason</b> &mdash; crown, MOD, endo. Quote verbatim.</td>
+            <td class="rank"><b>Perio status + SRP disposition</b> &mdash; accepted / declined / never booked.</td>
+          </tr>
+          <tr>
+            <td class="k">Rank 4</td>
+            <td class="rank"><b>Discussed</b> &mdash; night guard, whitening, ortho referral.</td>
+            <td class="rank"><b>Radiographs due</b> &mdash; BWX interval, FMX interval.</td>
+          </tr>
+          <tr>
+            <td class="k">Meta line</td>
+            <td class="rank">Carrier &middot; <b>$ remaining</b> &middot; plan reset date. Reset date matters for &ldquo;until January.&rdquo;</td>
+            <td class="rank">Carrier &middot; <b>$ remaining</b> &middot; <b>preventive visits left</b>. Counts, not just dollars.</td>
+          </tr>
+          <tr>
+            <td class="k">Actions</td>
+            <td class="rank">Voice note &middot; Perio &middot; <b>Review</b>. Post-visit: note + images.</td>
+            <td class="rank"><b>Perio first</b> &middot; Voice note &middot; Review. Post-visit: note + images.</td>
+          </tr>
+          <tr>
+            <td class="k">Never on card</td>
+            <td class="rank">Full tx plan, ledger balance, claim history, chart notes.</td>
+            <td class="rank">Full probing depths, recession map, home-care notes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================== RECOMMENDATION ================== -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-rule">Where I'd land</div>
+      <h2>Ledger for the grid, narrative for the huddle</h2>
+    </div>
+
+    <div class="rec">
+      <div class="rec-cell">
+        <span class="rec-tag">Build first</span>
+        <h3>C &mdash; Quote &amp; Ledger</h3>
+        <p>
+          Fixed slots beat ranked ones once you are scanning eight columns. Recall lives in the same
+          pixel on every card, which is the specific thing the PMS fails at today, and the quote gives
+          Leland his first look without a click. It also degrades cleanly &mdash; the hero is always the
+          hero at 88px.
+        </p>
+      </div>
+      <div class="rec-cell">
+        <span class="rec-tag alt">Layer on</span>
+        <h3>B &mdash; Pre / Post state</h3>
+        <p>
+          Not a competing card, a state machine on top of whichever body you pick. The post-visit
+          state is worth building on its own merits: it turns the card into the front-desk handoff
+          and makes &ldquo;did we book the recall&rdquo; answerable without opening anything.
+        </p>
+      </div>
+      <div class="rec-cell">
+        <span class="rec-tag alt">Hold</span>
+        <h3>A &mdash; Flag Stack</h3>
+        <p>
+          Best pure scan-ability of the three, but rank-ordering means the same field moves position
+          card to card, so the eye has to read rather than land. Worth revisiting if the flag set
+          turns out to be shorter and more stable than we think.
+        </p>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Open question for the data side.</b> Three of the six &mdash; deferred-treatment reasoning, what was
+      discussed, and recall intent &mdash; are not structured fields in most PMSs. They live in chart-note
+      prose. Concepts B and C both assume something extracts them into short strings; A assumes it too,
+      just less visibly. That extraction is the actual dependency here, not the layout.
+    </p>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll("[data-theme-set]");
+
+    function sync() {
+      var current = root.getAttribute("data-theme") || "auto";
+      buttons.forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.themeSet === current));
+      });
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var next = b.dataset.themeSet;
+        if (next === "auto") root.removeAttribute("data-theme");
+        else root.setAttribute("data-theme", next);
+        try { localStorage.setItem("videa-concepts-theme", next); } catch (e) {}
+        sync();
+      });
+    });
+
+    sync();
+  })();
+</script>

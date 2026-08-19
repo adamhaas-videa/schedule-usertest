@@ -1,11 +1,13 @@
 import { memo } from "react";
+import { ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
 import { computeAge } from "@/data/mockPatients";
-import type { ClinicalTab } from "@/App";
+import type { ClinicalTab } from "@/types/clinical";
 import { getProviderColor } from "@/lib/providerColors";
 import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
+import { useAiView } from "@/context/AiViewContext";
 import { cn } from "@/lib/utils";
 
 interface PatientCardProps {
@@ -100,10 +102,118 @@ function ProviderChip({ patient }: { patient: Patient }) {
   );
 }
 
-// CTA order per Figma: 1) Images, 2) Microphone, 3) Perio.
-// Visibility depends on the demo card version: always-on (V1) or reveal on
-// hover/focus (V2). Muted on past / completed appointments.
-function CardActions({
+function ActionStrip({
+  hoverOnly,
+  gapClass,
+  children,
+}: {
+  hoverOnly: boolean;
+  gapClass: "gap-2" | "gap-1.5";
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-x-0 bottom-0 z-20 flex items-center justify-end px-2.5 pt-3 pb-2.5",
+        gapClass,
+        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent group-hover/card:from-stone-50 group-hover/card:via-stone-50",
+        hoverOnly &&
+          "opacity-0 pointer-events-none transition-opacity duration-150 group-hover/card:opacity-100 group-hover/card:pointer-events-auto group-focus-within/card:opacity-100 group-focus-within/card:pointer-events-auto"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function TertiaryIconButton({
+  label,
+  muted,
+  onClick,
+  children,
+}: {
+  label: string;
+  muted?: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn(
+        muted && "text-muted-foreground hover:text-foreground"
+      )}
+      onClick={onClick}
+      aria-label={label}
+    >
+      {children}
+    </Button>
+  );
+}
+
+// V1: Voice + Perio (tertiary icons) then Review (primary, right). Clicking
+// Review opens the patient workflow and flips the CTA to Reviewed.
+function V1CardActions({
+  reviewed,
+  onAction,
+  onReview,
+  muted = false,
+  hoverOnly = false,
+}: {
+  reviewed: boolean;
+  onAction: (e: React.MouseEvent, tab: ClinicalTab) => void;
+  onReview: (e: React.MouseEvent) => void;
+  muted?: boolean;
+  hoverOnly?: boolean;
+}) {
+  return (
+    <ActionStrip hoverOnly={hoverOnly} gapClass="gap-1.5">
+      {/* Two-stage collapse as the operatory column (the @container/card)
+          narrows. Measured against the card, not the viewport, so 8-up
+          columns shed icons even on a wide display.
+            ≤200px: Perio drops (Voice + Review)
+            ≤156px: Voice drops (Review only) */}
+      <div className="@max-[156px]/card:hidden">
+        <TertiaryIconButton
+          label="Voice note"
+          muted={muted}
+          onClick={(e) => onAction(e, "voice")}
+        >
+          <i className="fa-regular fa-microphone w-4 h-4" aria-hidden />
+        </TertiaryIconButton>
+      </div>
+      <div className="@max-[200px]/card:hidden">
+        <TertiaryIconButton
+          label="Perio"
+          muted={muted}
+          onClick={(e) => onAction(e, "perio")}
+        >
+          <PerioIcon className="w-4 h-4" />
+        </TertiaryIconButton>
+      </div>
+      {reviewed ? (
+        <button
+          type="button"
+          onClick={(e) => onAction(e, "xray")}
+          aria-label="Reviewed"
+          className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-full bg-success-muted text-success-muted-foreground border border-success-muted-border text-sm font-medium whitespace-nowrap hover:bg-success-muted-hover transition-colors cursor-pointer"
+        >
+          Reviewed
+          <i className="fa-solid fa-check text-[11px]" aria-hidden />
+        </button>
+      ) : (
+        <Button size="default" onClick={onReview}>
+          Review
+          <ArrowRight className="size-3.5" data-icon="inline-end" />
+        </Button>
+      )}
+    </ActionStrip>
+  );
+}
+
+// V2: Images / Voice / Perio icon buttons. Reveal on hover. Muted on completed.
+function V2CardActions({
   onAction,
   muted = false,
   hoverOnly = false,
@@ -116,14 +226,7 @@ function CardActions({
     ? "bg-muted text-muted-foreground hover:bg-muted-hover hover:text-foreground"
     : "";
   return (
-    <div
-      className={cn(
-        "absolute inset-x-0 bottom-0 flex items-center justify-end gap-1.5 px-2.5 pt-3 pb-2.5",
-        "bg-gradient-to-t from-card from-60% via-card via-80% to-transparent",
-        hoverOnly &&
-          "opacity-0 pointer-events-none transition-opacity duration-150 group-hover/card:opacity-100 group-hover/card:pointer-events-auto group-focus-within/card:opacity-100 group-focus-within/card:pointer-events-auto"
-      )}
-    >
+    <ActionStrip hoverOnly={hoverOnly} gapClass="gap-1.5">
       <Button
         size="icon"
         className={mutedClass}
@@ -148,7 +251,7 @@ function CardActions({
       >
         <PerioIcon className="w-4 h-4" />
       </Button>
-    </div>
+    </ActionStrip>
   );
 }
 
@@ -169,9 +272,11 @@ function FullCard({
   cardVersion,
   className,
 }: CardChromeProps) {
+  const { reviewedIds, markReviewed } = useAiView();
   const status = deriveStatus(patient);
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
+  const reviewed = reviewedIds.has(patient.id);
 
   // A 30-min appointment renders at ~88px (durationToHeight(30) - CARD_GAP),
   // which is only just tall enough for the top row + provider chip — the
@@ -183,8 +288,8 @@ function FullCard({
   const isSmall = patient.durationMinutes <= 30;
 
   // Per-version interaction model (demo switcher):
-  //   V1: buttons always visible; name → summary drawer
-  //   V2: buttons revealed on hover/focus; name → summary drawer
+  //   V1: Voice + Perio (tertiary) + Review (primary, right); name → summary
+  //   V2: Images / Note / Perio revealed on hover/focus; name → summary drawer
   //   V3: no buttons; whole card → Images tab (name is not separately clickable)
   //   V4: no buttons; whole card → Images tab; name → summary drawer
   const showActions = cardVersion === 1 || cardVersion === 2;
@@ -200,6 +305,12 @@ function FullCard({
   const handleAction = (e: React.MouseEvent, tab: ClinicalTab) => {
     e.stopPropagation();
     onOpenClinical(patient, tab);
+  };
+
+  const handleReview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    markReviewed(patient.id);
+    onOpenClinical(patient, "xray");
   };
 
   const handleCardActivate = () => {
@@ -218,7 +329,7 @@ function FullCard({
   return (
     <div
       className={cn(
-        "group/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] bg-card p-2.5 overflow-hidden",
+        "group/card @container/card relative flex h-full flex-col gap-2 rounded-[10px] border-[1.5px] bg-card p-2.5 overflow-hidden transition-colors hover:bg-stone-50 dark:hover:bg-foreground/[0.07]",
         providerTone ? "border-transparent" : "border-border",
         cardOpensImages &&
           // Inset rings (not outer): the card wrapper in OperatoryColumn sets
@@ -227,7 +338,7 @@ function FullCard({
           // drawn outside the border-box) gets chopped square at the rounded
           // corners; an inset ring stays inside the border-box, follows the
           // 10px radius, and is clipped cleanly by overflow-hidden.
-          "cursor-pointer hover:inset-ring-2 hover:inset-ring-primary/25 focus-visible:outline-none focus-visible:inset-ring-2 focus-visible:inset-ring-primary/40",
+          "cursor-pointer hover:inset-ring-2 hover:inset-ring-stone-300 focus-visible:outline-none focus-visible:inset-ring-2 focus-visible:inset-ring-stone-400",
         className
       )}
       style={providerTone ? { borderColor: providerTone } : undefined}
@@ -305,22 +416,22 @@ function FullCard({
         <ProviderChip patient={patient} />
       </div>
 
-      {/* Action strip — visibility controlled by the demo card version */}
-      {showActions && (
-        <CardActions
-          onAction={handleAction}
-          muted={status === "completed"}
-          hoverOnly={hoverActions}
-        />
-      )}
-
-      {/* Full-card hover tint. Sits above the action-strip gradient so the
-          affordance covers the entire card instead of being clipped at the
-          bottom; pointer-events-none keeps the buttons underneath clickable. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-10 rounded-[8.5px] opacity-0 transition-opacity duration-150 bg-foreground/[0.04] dark:bg-foreground/[0.07] group-hover/card:opacity-100"
-      />
+      {showActions &&
+        (cardVersion === 1 ? (
+          <V1CardActions
+            reviewed={reviewed}
+            onAction={handleAction}
+            onReview={handleReview}
+            muted={status === "completed"}
+            hoverOnly={hoverActions}
+          />
+        ) : (
+          <V2CardActions
+            onAction={handleAction}
+            muted={status === "completed"}
+            hoverOnly={hoverActions}
+          />
+        ))}
     </div>
   );
 }
