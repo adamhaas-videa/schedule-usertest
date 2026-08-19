@@ -18,7 +18,6 @@ import {
   END_MINUTES,
   minutesToY,
   formatHour,
-  getSimulatedNowMinutes,
 } from "@/lib/timeline";
 import type { ClinicalTab } from "@/types/clinical";
 import type { CardVersion } from "@/lib/cardVersions";
@@ -33,6 +32,7 @@ interface OperatoryGridProps {
   onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   cardVersion: CardVersion;
+  nowMinutes: number;
 }
 
 const HALF_HOURS = HOURS.slice(0, -1);
@@ -116,8 +116,8 @@ export default function OperatoryGrid({
   onSelectPatient,
   scrollRef,
   cardVersion,
+  nowMinutes,
 }: OperatoryGridProps) {
-  const [nowMinutes, setNowMinutes] = useState(getSimulatedNowMinutes);
   const [columnMode, setColumnMode] = useState<ColumnMode>("operatory");
 
   // Scroll the timeline so the given patient's card is centered. Used by the
@@ -131,14 +131,6 @@ export default function OperatoryGrid({
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setNowMinutes(getSimulatedNowMinutes()),
-      60_000
-    );
-    return () => clearInterval(interval);
-  }, []);
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
   const focused = columnMode === "operatory" && selectedOps.length > 0;

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, useRef } from "react";
+import { useNowMinutes } from "@/lib/useNowMinutes";
 import { useNavigate } from "react-router-dom";
 import L1Header from "@/components/layout/L1Header";
 import L2Header from "@/components/layout/L2Header";
@@ -33,6 +34,7 @@ export default function SchedulePage() {
     DEFAULT_CARD_VERSION
   );
   const scrollRef = useRef<HTMLDivElement>(null);
+  const nowMinutes = useNowMinutes();
 
   const handleSelectPatient = useCallback((patient: Patient) => {
     setSelectedPatient(patient);
@@ -48,8 +50,10 @@ export default function SchedulePage() {
 
   const patients = useMemo(
     () =>
-      getEnrichedPatients().filter((p) => ALL_OPERATORIES.includes(p.operatory)),
-    []
+      getEnrichedPatients(nowMinutes).filter((p) =>
+        ALL_OPERATORIES.includes(p.operatory)
+      ),
+    [nowMinutes]
   );
 
   const filteredPatients = useMemo(() => {
@@ -106,6 +110,7 @@ export default function SchedulePage() {
             onOpenClinical={handleOpenClinical}
             onSelectPatient={handleSelectPatient}
             cardVersion={cardVersion}
+            nowMinutes={nowMinutes}
           />
         )}
       </main>
