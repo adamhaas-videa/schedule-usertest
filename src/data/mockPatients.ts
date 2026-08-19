@@ -167,7 +167,7 @@ const INSURANCE_STATUS: readonly Insurance["status"][] = [
 ];
 
 const CONDITION_ALERTS: readonly ConditionAlert[] = [
-  { label: "Healthy Gums", severity: "success" },
+  { label: "No bone loss detected", severity: "success" },
   { label: "Stage 1 Perio", severity: "accent" },
   { label: "Stage 2 Perio", severity: "warning" },
   { label: "Stage 3 Perio", severity: "error" },

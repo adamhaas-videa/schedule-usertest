@@ -40,7 +40,7 @@ const GRID_TEMPLATE = cn(
 //   Stage 3 Perio → bg #fae3e2 / text #c63e38 / red dot
 //   Stage 2 Perio → bg #faefd8 / text #c08b1e / amber dot
 //   Stage 1 Perio → periwinkle accent / periwinkle dot
-//   Healthy Gums  → bg #e5ecfb / text #0e3644 / NO dot
+//   No bone loss detected → bg #e5ecfb / text #0e3644 / NO dot
 const ALERT_VARIANT: Record<
   ConditionAlertSeverity,
   { wrap: string; dot: string | null }
