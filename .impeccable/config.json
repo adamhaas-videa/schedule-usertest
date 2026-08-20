@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "concepts/north-star-concepts.html"
+        ],
+        "createdAt": "2026-08-15T00:51:13.032Z",
+        "reason": "Claude: .field is a true-size specimen measurement surface on a spec sheet (24px cell = the ruler the components are judged against), and the graph-paper field is the established convention in this repo's concepts/ folder, set by patient-card-concepts.html"
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "concepts/patient-card-concepts-v2.html"
+        ],
+        "createdAt": "2026-08-15T00:52:24.927Z",
+        "reason": "Specimen field is a measurement surface: cards render at true size with dimension calipers (280x228, 88/133px) and the rule itself exempts measurement/blueprint surfaces. 28px graph-paper ground is inherited verbatim from v1's spec-sheet world."
+      },
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "concepts/patient-card-concepts-v3.html"
+        ],
+        "createdAt": "2026-08-17T16:57:04.918Z",
+        "reason": "Specimen field is a measurement surface: cards render at true size with dimension calipers (280x228, 88/133, 474x236) and the rule exempts measurement/blueprint surfaces. Graph-paper ground is the established concepts/ convention set by v1."
+      }
+    ]
+  }
+}

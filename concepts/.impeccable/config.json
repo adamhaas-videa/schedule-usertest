@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "concepts/patient-card-concepts-v3.html"
+        ],
+        "createdAt": "2026-08-17T16:17:10.789Z",
+        "reason": "Same sanctioned exception as the v2 file: the specimen field is a measurement surface. Cards render at true size with dimension calipers (280x228, 88/133, 474x236) and the rule exempts measurement/blueprint surfaces. Graph-paper ground is the inherited v1 spec-sheet world."
+      }
+    ]
+  }
+}

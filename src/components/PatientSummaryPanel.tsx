@@ -136,6 +136,13 @@ export default function PatientSummaryPanel({
                       />
                       {alert.label}
                     </Badge>
+                  ) : alert.tone === "success" ? (
+                    <Badge
+                      key={alert.label}
+                      className="border-success-muted-border bg-success-muted text-success"
+                    >
+                      {alert.label}
+                    </Badge>
                   ) : (
                     <Badge
                       key={alert.label}

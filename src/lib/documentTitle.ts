@@ -1,4 +1,4 @@
-import { productNav } from "@/components/navigation/products";
+import { isNavItem, productNav } from "@/components/navigation/products";
 import { CLINICAL_TAB_NAV } from "@/types/clinical";
 
 const BRAND = "Videa";
@@ -15,10 +15,10 @@ export function titleForPath(pathname: string): string {
 
   const product = productNav.find(
     (entry) =>
-      entry.type !== "divider" &&
+      isNavItem(entry) &&
       (pathname === entry.path || pathname.startsWith(`${entry.path}/`))
   );
-  if (product && product.type !== "divider") {
+  if (product && isNavItem(product)) {
     return `${BRAND} ${product.label}`;
   }
 

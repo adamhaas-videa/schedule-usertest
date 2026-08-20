@@ -1,9 +1,15 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { AiViewContext, type AiView } from "./AiViewContext";
+import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
 import { DEFAULT_CHART_VERSION, type ChartVersion } from "@/lib/chartVersions";
+import { DEFAULT_NAV_VERSION, type NavVersion } from "@/lib/navVersions";
+import {
+  DEFAULT_SUMMARY_VERSION,
+  type SummaryVersion,
+} from "@/lib/summaryVersions";
 
 /**
- * Holds AI view mode, privacy, and chart-demo version for the whole app.
+ * Holds AI view mode, privacy, and demo versions for the whole app.
  * Mounted above <Routes> so selections persist across navigation.
  */
 export function AiViewProvider({ children }: { children: ReactNode }) {
@@ -12,6 +18,13 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [chartVersion, setChartVersion] = useState<ChartVersion>(
     DEFAULT_CHART_VERSION
+  );
+  const [navVersion, setNavVersion] = useState<NavVersion>(DEFAULT_NAV_VERSION);
+  const [cardVersion, setCardVersion] = useState<CardVersion>(
+    DEFAULT_CARD_VERSION
+  );
+  const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
+    DEFAULT_SUMMARY_VERSION
   );
   const [reviewedIds, setReviewedIds] = useState<ReadonlySet<string>>(
     () => new Set()
@@ -37,6 +50,12 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
         setPrivacyMode,
         chartVersion,
         setChartVersion,
+        navVersion,
+        setNavVersion,
+        cardVersion,
+        setCardVersion,
+        summaryVersion,
+        setSummaryVersion,
         reviewedIds,
         markReviewed,
       }}

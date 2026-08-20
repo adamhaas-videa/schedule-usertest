@@ -31,7 +31,7 @@ export interface ToothFinding {
   mark: ToothMark;
 }
 
-export type AlertTone = "error" | "warning";
+export type AlertTone = "error" | "warning" | "success";
 
 export interface SummaryAlert {
   label: string;
@@ -247,9 +247,15 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
     alerts.push({ label: pick(rand, MEDICAL_ALERTS), tone: "warning" });
   }
   if (patient.conditionAlert) {
+    const severity = patient.conditionAlert.severity;
     alerts.push({
       label: patient.conditionAlert.label,
-      tone: patient.conditionAlert.severity === "error" ? "error" : "warning",
+      tone:
+        severity === "error"
+          ? "error"
+          : severity === "success"
+            ? "success"
+            : "warning",
     });
   }
 

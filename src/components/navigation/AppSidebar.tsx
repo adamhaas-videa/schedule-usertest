@@ -9,7 +9,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { productNav, type ProductNavItem } from "./products";
+import { useAiView } from "@/context/AiViewContext";
+import { getNavEntries } from "@/lib/navVersions";
+import { type ProductNavItem } from "./products";
 
 export const SIDEBAR_EXPANDED_WIDTH = 220;
 export const SIDEBAR_COLLAPSED_WIDTH = 56;
@@ -59,13 +61,26 @@ function NavRow({
   onSelect: (path: string) => void;
 }) {
   const { IconComponent } = item;
+  const locked = Boolean(item.locked);
   return (
     <button
       type="button"
       onClick={() => onSelect(item.path)}
       aria-current={active ? "page" : undefined}
-      aria-label={collapsed ? item.label : undefined}
-      title={collapsed ? item.label : undefined}
+      aria-label={
+        collapsed
+          ? locked
+            ? `${item.label} (not purchased)`
+            : item.label
+          : undefined
+      }
+      title={
+        collapsed
+          ? locked
+            ? `${item.label} (not purchased)`
+            : item.label
+          : undefined
+      }
       className={sidebarItemClass(collapsed, active)}
     >
       <span className="flex items-center justify-center shrink-0 size-5">
@@ -78,11 +93,23 @@ function NavRow({
       <span
         className={cn(
           "text-sm font-medium whitespace-nowrap transition-[opacity,max-width] duration-200 ease-in-out",
-          collapsed ? "max-w-0 opacity-0" : "max-w-[150px] opacity-100"
+          collapsed
+            ? "max-w-0 opacity-0"
+            : locked
+              ? "min-w-0 flex-1 truncate opacity-100"
+              : "max-w-[150px] opacity-100"
         )}
       >
         {item.label}
       </span>
+      {locked && !collapsed && (
+        <span className="ml-auto flex size-4 shrink-0 items-center justify-center">
+          <i
+            className="fa-regular fa-lock text-[13px] text-center"
+            aria-hidden
+          />
+        </span>
+      )}
     </button>
   );
 }
@@ -220,6 +247,8 @@ export default function AppSidebar({
   const collapsed = controlledCollapsed ?? internalCollapsed;
   const navigate = useNavigate();
   const location = useLocation();
+  const { navVersion } = useAiView();
+  const navEntries = getNavEntries(navVersion);
 
   const toggle = () => {
     const next = !collapsed;
@@ -257,7 +286,18 @@ export default function AppSidebar({
         )}
       >
         <div className="relative z-20 flex flex-col gap-1 pt-2">
-          {productNav.map((entry) => {
+          {navEntries.map((entry) => {
+            if (entry.type === "label") {
+              if (collapsed) return null;
+              return (
+                <div
+                  key={entry.key}
+                  className="px-3 py-2 text-[12px] font-normal leading-none uppercase tracking-wide text-muted-foreground"
+                >
+                  {entry.label}
+                </div>
+              );
+            }
             if (entry.type === "divider") {
               return (
                 <div key={entry.key} className="px-3 py-1">
@@ -305,15 +345,18 @@ export default function AppSidebar({
         <AccountMenu collapsed={collapsed} />
       </div>
 
-      {/* Full-surface overlay — clicking anywhere on the sidebar chrome (logo,
-          padding, empty space) toggles collapse/expand. Sits below the nav and
-          footer (z-20), above everything else (z-10). */}
+      {/* Full-surface overlay — clicking chrome (logo, padding, empty space)
+          toggles collapse/expand. col-resize cursor signals that this is a
+          resize/toggle affordance, not a link. Extends a few pixels past the
+          right edge so the seam itself is hoverable. Sits below nav/footer
+          (z-20), above everything else (z-10). */}
       <button
         type="button"
         onClick={toggle}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute inset-0 z-10 cursor-pointer outline-none"
+        className="absolute top-0 left-0 bottom-0 z-10 cursor-col-resize outline-none"
+        style={{ right: collapsed ? "-8px" : "-6px" }}
       />
     </aside>
   );

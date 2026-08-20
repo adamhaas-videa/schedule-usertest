@@ -18,11 +18,6 @@ import {
   type ScheduleFilters,
   type ScheduleView,
 } from "@/types/clinical";
-import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
-import {
-  DEFAULT_SUMMARY_VERSION,
-  type SummaryVersion,
-} from "@/lib/summaryVersions";
 import { useAiView } from "@/context/AiViewContext";
 
 const INITIAL_FILTERS: ScheduleFilters = {
@@ -32,18 +27,13 @@ const INITIAL_FILTERS: ScheduleFilters = {
 
 export default function SchedulePage() {
   const navigate = useNavigate();
-  const { privacyMode, setPrivacyMode } = useAiView();
+  const { privacyMode, setPrivacyMode, cardVersion, summaryVersion } =
+    useAiView();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<ScheduleFilters>(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState<ScheduleView>("calendar");
-  const [cardVersion, setCardVersion] = useState<CardVersion>(
-    DEFAULT_CARD_VERSION
-  );
-  const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
-    DEFAULT_SUMMARY_VERSION
-  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const nowMinutes = useNowMinutes();
 
@@ -112,12 +102,7 @@ export default function SchedulePage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <L1Header
-        cardVersion={cardVersion}
-        onCardVersionChange={setCardVersion}
-        summaryVersion={summaryVersion}
-        onSummaryVersionChange={setSummaryVersion}
-      />
+      <L1Header />
       <L2Header
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}

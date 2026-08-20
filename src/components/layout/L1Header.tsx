@@ -1,21 +1,6 @@
-import CardVersionMenu from "@/components/CardVersionMenu";
-import SummaryVersionMenu from "@/components/SummaryVersionMenu";
-import type { CardVersion } from "@/lib/cardVersions";
-import type { SummaryVersion } from "@/lib/summaryVersions";
+import DemoMenu from "@/components/DemoMenu";
 
-interface L1HeaderProps {
-  cardVersion: CardVersion;
-  onCardVersionChange: (version: CardVersion) => void;
-  summaryVersion: SummaryVersion;
-  onSummaryVersionChange: (version: SummaryVersion) => void;
-}
-
-export default function L1Header({
-  cardVersion,
-  onCardVersionChange,
-  summaryVersion,
-  onSummaryVersionChange,
-}: L1HeaderProps) {
+export default function L1Header() {
   return (
     <header className="h-14 shrink-0 bg-card border-b border-border flex items-center gap-4 px-4 overflow-hidden">
       <h1 className="text-xl font-semibold text-foreground whitespace-nowrap">
@@ -23,12 +8,6 @@ export default function L1Header({
       </h1>
 
       <div className="flex-1 min-w-0" />
-
-      <CardVersionMenu value={cardVersion} onChange={onCardVersionChange} />
-      <SummaryVersionMenu
-        value={summaryVersion}
-        onChange={onSummaryVersionChange}
-      />
 
       <button
         type="button"
@@ -38,14 +17,7 @@ export default function L1Header({
         Start Recording
       </button>
 
-      <button
-        type="button"
-        className="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        aria-label="Notifications"
-        title="Notifications"
-      >
-        <i className="fa-regular fa-bell text-base" aria-hidden />
-      </button>
+      <DemoMenu />
     </header>
   );
 }
