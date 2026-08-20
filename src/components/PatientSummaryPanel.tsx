@@ -112,7 +112,7 @@ export default function PatientSummaryPanel({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className={cn(PANEL_WIDTH, "gap-0 p-0")}>
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
           <SheetHeader className="flex flex-col gap-1.5 p-0">
             <SheetTitle
               className={cn("text-xl font-semibold text-foreground", privateText)}
@@ -123,7 +123,7 @@ export default function PatientSummaryPanel({
               {summary.identity} • {summary.phone}
             </div>
             {summary.alerts.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {summary.alerts.map((alert) =>
                   alert.tone === "error" ? (
                     <Badge
@@ -148,40 +148,8 @@ export default function PatientSummaryPanel({
                 )}
               </div>
             )}
-          </SheetHeader>
-
-          {sections.shortcuts && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenClinical(patient, "xray")}
-              >
-                <i className="fa-regular fa-images text-base" aria-hidden />
-                Images
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onOpenClinical(patient, "voice")}
-              >
-                <i className="fa-regular fa-microphone text-base" aria-hidden />
-                Voice Notes
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onOpenClinical(patient, "perio")}
-              >
-                <i
-                  className="fa-regular fa-waveform-lines text-base"
-                  aria-hidden
-                />
-                Voice Perio
-              </Button>
-            </div>
-          )}
-
-          {sections.insurance && patient.insurance && (
-            <Section label="Insurance">
-              <div className="flex flex-wrap items-center gap-1.5">
+            {sections.insurance && patient.insurance && (
+              <div className="flex flex-wrap items-center gap-2 py-2">
                 <Badge
                   className={cn(
                     patient.insurance.status === "Active" &&
@@ -203,36 +171,68 @@ export default function PatientSummaryPanel({
                   {patient.insurance.remainingBenefit} remaining benefits
                 </span>
               </div>
-            </Section>
+            )}
+          </SheetHeader>
+
+          {sections.shortcuts && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => onOpenClinical(patient, "xray")}
+              >
+                <i className="fa-regular fa-images text-base" aria-hidden />
+                Images
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onOpenClinical(patient, "voice")}
+              >
+                <i className="fa-regular fa-microphone text-base" aria-hidden />
+                Clinical Notes
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onOpenClinical(patient, "perio")}
+              >
+                <i
+                  className="fa-regular fa-waveform-lines text-base"
+                  aria-hidden
+                />
+                Perio Chart
+              </Button>
+            </div>
           )}
 
-          <Section label="Today">
-            <div className="text-base leading-6 font-medium text-foreground">
-              {tooth ? `${tooth} • ` : ""}
-              {patient.procedure}
-            </div>
-            <div className="flex items-center gap-2">
-              <Avatar
-                size="sm"
-                className="size-[22px] after:border-transparent"
-                style={{ backgroundColor: providerColor.bg }}
-              >
-                <AvatarFallback
-                  className="text-[11px] font-semibold"
-                  style={{
-                    backgroundColor: providerColor.bg,
-                    color: providerColor.fg,
-                  }}
+          <div className="flex w-full flex-col gap-1.5 rounded-md bg-accent p-3">
+            <SectionLabel>Today</SectionLabel>
+            <div className="flex flex-col gap-1.5">
+              <div className="text-base leading-6 font-medium text-foreground">
+                {tooth ? `${tooth} • ` : ""}
+                {patient.procedure}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Avatar
+                  size="sm"
+                  className="size-[22px] after:border-transparent"
+                  style={{ backgroundColor: providerColor.bg }}
                 >
-                  {patient.provider?.initials ?? "—"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-muted-foreground">
-                {patient.provider?.name ?? "Unassigned"} •{" "}
-                {patient.appointmentTime} • Op {patient.operatory}
-              </span>
+                  <AvatarFallback
+                    className="text-[11px] font-semibold"
+                    style={{
+                      backgroundColor: providerColor.bg,
+                      color: providerColor.fg,
+                    }}
+                  >
+                    {patient.provider?.initials ?? "—"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-muted-foreground">
+                  {patient.provider?.name ?? "Unassigned"} •{" "}
+                  {patient.appointmentTime} • Op {patient.operatory}
+                </span>
+              </div>
             </div>
-          </Section>
+          </div>
 
           <Section label="Last appointment">
             <div className="text-sm text-foreground">
@@ -246,7 +246,7 @@ export default function PatientSummaryPanel({
 
           {sections.voiceNoteSummary && (
             <Section label="Last voice note">
-              <p className="text-sm leading-5 text-muted-foreground">
+              <p className="text-sm leading-5 text-foreground">
                 {summary.voiceNoteSummary}
               </p>
             </Section>
@@ -270,20 +270,13 @@ export default function PatientSummaryPanel({
                   </div>
                 )}
                 {sections.odontogram && (
-                  <Odontogram findings={summary.findings} />
+                  <Odontogram
+                    findings={summary.findings}
+                    unscheduledTx={summary.unscheduledTx}
+                  />
                 )}
               </div>
             </div>
-          )}
-
-          {sections.recommendations && summary.recommendations.length > 0 && (
-            <Section label="Recommendations">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {summary.recommendations.map((recommendation) => (
-                  <Chiclet key={recommendation}>{recommendation}</Chiclet>
-                ))}
-              </div>
-            </Section>
           )}
 
           {(sections.tasks || sections.unscheduledTx) && (

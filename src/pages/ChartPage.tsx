@@ -42,8 +42,7 @@ export default function ChartPage() {
         <h1 className="text-2xl font-semibold text-foreground">{meta.title}</h1>
         <p className="text-sm text-muted-foreground max-w-md">{meta.description}</p>
         <p className="text-xs text-muted-foreground">
-          Chart demo placeholder for {patient.name}. Switch versions from the
-          Chart demo menu on Schedule.
+          Chart demo placeholder for {patient.name}.
         </p>
       </div>
     </div>

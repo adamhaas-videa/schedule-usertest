@@ -66,7 +66,6 @@ export interface PatientSummary {
   voiceNoteSummary: string;
   lastAppointment: LastAppointment;
   opportunities: SummaryOpportunity[];
-  recommendations: string[];
   findings: ToothFinding[];
   tasks: SummaryTask[];
   unscheduledTx: UnscheduledTx[];
@@ -90,15 +89,6 @@ const PAST_PROCEDURES = [
   "Periodontal Maintenance",
   "Crown Delivery",
   "Limited Exam",
-] as const;
-
-const CARE_RECOMMENDATIONS = [
-  "Fluoride varnish",
-  "3-month recall",
-  "Night guard",
-  "Chlorhexidine rinse",
-  "Xylitol program",
-  "Sealant review",
 ] as const;
 
 // Universal numbering: 1–16 upper (right to left), 17–32 lower (left to right).
@@ -136,6 +126,16 @@ const OPPORTUNITY_LABEL: Record<ToothMark, string> = {
   "root-canal": "Root Canal",
   extraction: "Extraction",
   implant: "Implant",
+};
+
+// Huddle odontogram hover copy (videa-ai-ui defaultRecommendationNames).
+export const HOVER_RECOMMENDATION: Record<ToothMark, string> = {
+  crown: "Crown",
+  filling: "Filling",
+  incipient: "Incipient Tx",
+  extraction: "Extraction",
+  implant: "Implant",
+  "root-canal": "Root Canal",
 };
 
 // AI opportunity chiclets read in escalating-cost order in the design.
@@ -272,14 +272,6 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
     (mark) => ({ label: OPPORTUNITY_LABEL[mark], count: counts.get(mark)! })
   );
 
-  const recommendations = [...CARE_RECOMMENDATIONS]
-    .sort(
-      (a, b) =>
-        hashStringToSeed(`${patient.id}${a}`) -
-        hashStringToSeed(`${patient.id}${b}`)
-    )
-    .slice(0, 2 + Math.floor(rand() * 2));
-
   // Treatment diagnosed but not booked: the heavier findings, which is what a
   // front desk would chase.
   const unscheduledTx = findings
@@ -315,7 +307,6 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
       providerName: patient.provider?.name ?? "Unassigned",
     },
     opportunities,
-    recommendations,
     findings,
     tasks,
     unscheduledTx,

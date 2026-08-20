@@ -12,7 +12,6 @@ export interface SummarySections {
   insurance: boolean;
   voiceNoteSummary: boolean;
   aiOpportunities: boolean;
-  recommendations: boolean;
   odontogram: boolean;
   tasks: boolean;
   unscheduledTx: boolean;
@@ -31,7 +30,6 @@ const ESSENTIALS: SummarySections = {
   insurance: false,
   voiceNoteSummary: false,
   aiOpportunities: false,
-  recommendations: false,
   odontogram: false,
   tasks: false,
   unscheduledTx: false,
@@ -42,7 +40,6 @@ const CORE: SummarySections = {
   insurance: false,
   voiceNoteSummary: true,
   aiOpportunities: true,
-  recommendations: true,
   odontogram: true,
   tasks: true,
   unscheduledTx: true,
@@ -62,7 +59,8 @@ export const SUMMARY_VERSIONS: SummaryVersionMeta[] = [
     id: 2,
     label: "V2",
     title: "Core with Daily Dashboard",
-    description: "Core chart experience with daily dashboard details.",
+    description:
+      "Core chart experience with Daily Dashboard odontogram and hover recommendations.",
     sections: CORE,
   },
   {

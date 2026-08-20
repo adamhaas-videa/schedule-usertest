@@ -1,4 +1,15 @@
-import type { ToothFinding, ToothMark } from "@/data/patientSummary";
+import type {
+  ToothFinding,
+  ToothMark,
+  UnscheduledTx,
+} from "@/data/patientSummary";
+import { HOVER_RECOMMENDATION } from "@/data/patientSummary";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // Tooth silhouettes and condition marks exported from the odontogram component
@@ -198,7 +209,7 @@ const MARK_LABEL: Record<ToothMark, string> = {
   "root-canal": "root canal",
 };
 
-function Tooth({
+function ToothVisual({
   spec,
   mark,
   arch,
@@ -208,13 +219,8 @@ function Tooth({
   arch: Arch;
 }) {
   const layers = mark ? MARKS[arch][mark] : [];
-
   return (
-    <div
-      className="relative shrink-0"
-      style={{ width: spec.w, height: spec.h }}
-      title={mark ? `#${spec.n} — ${MARK_LABEL[mark]}` : `#${spec.n}`}
-    >
+    <>
       <img
         alt=""
         aria-hidden
@@ -241,17 +247,94 @@ function Tooth({
           />
         </div>
       ))}
-    </div>
+    </>
+  );
+}
+
+function Tooth({
+  spec,
+  mark,
+  arch,
+  unscheduled,
+}: {
+  spec: ToothSpec;
+  mark?: ToothMark;
+  arch: Arch;
+  unscheduled?: UnscheduledTx;
+}) {
+  const box = {
+    className: "relative shrink-0",
+    style: { width: spec.w, height: spec.h },
+  };
+
+  if (!mark) {
+    return (
+      <div {...box}>
+        <ToothVisual spec={spec} arch={arch} />
+      </div>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        className={cn(
+          box.className,
+          "appearance-none border-0 bg-transparent p-0 cursor-default rounded-[2px] transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        )}
+        style={box.style}
+        aria-label={`Tooth ${spec.n}, ${HOVER_RECOMMENDATION[mark]}`}
+      >
+        <ToothVisual spec={spec} mark={mark} arch={arch} />
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className="flex max-w-[220px] flex-col items-start bg-popover px-3 py-2.5 text-left text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 [&>svg]:bg-popover [&>svg]:fill-popover"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <i className="fa-regular fa-tooth text-base" aria-hidden />
+            {spec.n}
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <i
+                className="fa-regular fa-sparkles text-xs text-primary"
+                aria-hidden
+              />
+              Recommendations
+            </div>
+            <ul className="m-0 list-disc pl-4">
+              <li className="text-sm text-foreground">
+                {HOVER_RECOMMENDATION[mark]}
+              </li>
+            </ul>
+          </div>
+          {unscheduled && (
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-semibold text-foreground">
+                Not Scheduled
+              </div>
+              <ul className="m-0 list-disc pl-4">
+                <li className="text-sm text-foreground">{unscheduled.label}</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
 function Quadrant({
   teeth,
   marks,
+  unscheduled,
   arch,
 }: {
   teeth: ToothSpec[];
   marks: Map<number, ToothMark>;
+  unscheduled: Map<number, UnscheduledTx>;
   arch: Arch;
 }) {
   return (
@@ -266,6 +349,7 @@ function Quadrant({
           key={spec.n}
           spec={spec}
           mark={marks.get(spec.n)}
+          unscheduled={unscheduled.get(spec.n)}
           arch={arch}
         />
       ))}
@@ -275,15 +359,23 @@ function Quadrant({
 
 interface OdontogramProps {
   findings: ToothFinding[];
+  unscheduledTx?: UnscheduledTx[];
   className?: string;
 }
 
 // Full-mouth chart, upper arch over lower, each arch split into its two
 // quadrant boxes. One mark per tooth: the last finding wins, which matches how
 // the parsed clinical text is ordered (explicit notes before seeded history).
-export default function Odontogram({ findings, className }: OdontogramProps) {
+export default function Odontogram({
+  findings,
+  unscheduledTx = [],
+  className,
+}: OdontogramProps) {
   const marks = new Map<number, ToothMark>();
   for (const { tooth, mark } of findings) marks.set(tooth, mark);
+
+  const unscheduled = new Map<number, UnscheduledTx>();
+  for (const tx of unscheduledTx) unscheduled.set(tx.tooth, tx);
 
   const summary = findings.length
     ? findings
@@ -292,19 +384,41 @@ export default function Odontogram({ findings, className }: OdontogramProps) {
     : "no charted findings";
 
   return (
-    <div
-      className={cn("flex w-full flex-col gap-[3px]", className)}
-      role="img"
-      aria-label={`Odontogram: ${summary}`}
-    >
-      <div className="flex h-[71.757px] w-full items-center gap-[3px]">
-        <Quadrant teeth={Q1} marks={marks} arch="upper" />
-        <Quadrant teeth={Q2} marks={marks} arch="upper" />
+    <TooltipProvider delay={100}>
+      <div
+        className={cn("flex w-full flex-col gap-[3px]", className)}
+        role="img"
+        aria-label={`Odontogram: ${summary}`}
+      >
+        <div className="flex h-[71.757px] w-full items-center gap-[3px]">
+          <Quadrant
+            teeth={Q1}
+            marks={marks}
+            unscheduled={unscheduled}
+            arch="upper"
+          />
+          <Quadrant
+            teeth={Q2}
+            marks={marks}
+            unscheduled={unscheduled}
+            arch="upper"
+          />
+        </div>
+        <div className="flex h-[69.796px] w-full items-center gap-[3px]">
+          <Quadrant
+            teeth={Q4}
+            marks={marks}
+            unscheduled={unscheduled}
+            arch="lower"
+          />
+          <Quadrant
+            teeth={Q3}
+            marks={marks}
+            unscheduled={unscheduled}
+            arch="lower"
+          />
+        </div>
       </div>
-      <div className="flex h-[69.796px] w-full items-center gap-[3px]">
-        <Quadrant teeth={Q4} marks={marks} arch="lower" />
-        <Quadrant teeth={Q3} marks={marks} arch="lower" />
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }
