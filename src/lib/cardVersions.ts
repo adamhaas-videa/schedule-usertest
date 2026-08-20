@@ -1,7 +1,7 @@
 // Demo-only concept switcher for the schedule patient card. Lets us showcase
 // several iterative interaction models on the same mock data during a video.
 // This is a prototype affordance, not a product setting.
-export type CardVersion = 1 | 2 | 3 | 4;
+export type CardVersion = 1 | 2 | 3 | 4 | 5;
 
 export interface CardVersionMeta {
   id: CardVersion;
@@ -14,31 +14,66 @@ export const CARD_VERSIONS: CardVersionMeta[] = [
   {
     id: 1,
     label: "V1",
-    title: "Always-on actions",
+    title: "Summary actions",
     description:
-      "Review / Voice / Perio. Review is the primary CTA (right); Voice and Perio are tertiary icon buttons. Always visible only on the in-chair patient; every other card reveals them on hover. Name opens the summary drawer.",
+      "Treatment header, two-line summary, condition chips. Actions stay on for the in-chair patient and reveal on hover everywhere else, same as V2. Completed cards fade, including the header color.",
   },
   {
     id: 2,
     label: "V2",
-    title: "Actions on hover",
+    title: "Always-on actions",
     description:
-      "The primary action buttons are hidden and only appear when you hover a patient card. Name still opens the summary drawer.",
+      "Review is the primary button, with Voice and Perio as icons. Always visible on the in-chair patient; every other card reveals them on hover.",
   },
   {
     id: 3,
     label: "V3",
-    title: "Whole card → Images",
+    title: "Actions on hover",
     description:
-      "No individual buttons. Clicking anywhere on the card navigates to the Images tab in the patient workflow.",
+      "Action buttons stay hidden until you hover a card. The patient name still opens the summary slideout.",
   },
   {
     id: 4,
     label: "V4",
-    title: "Card → Images, name → Summary",
+    title: "Whole card \u2192 Images",
     description:
-      "No individual buttons. Clicking the card opens the Images tab; clicking the patient name opens the patient summary drawer.",
+      "No buttons on the card. Clicking anywhere opens that patient's Images tab.",
+  },
+  {
+    id: 5,
+    label: "V5",
+    title: "Card \u2192 Images, name \u2192 Summary",
+    description:
+      "No buttons on the card. Clicking the card opens the Images tab; clicking the name opens the summary slideout.",
   },
 ];
 
 export const DEFAULT_CARD_VERSION: CardVersion = 1;
+
+export type CardColorMode = "provider" | "appointment";
+
+export interface CardColorModeMeta {
+  id: CardColorMode;
+  label: string;
+  title: string;
+  description: string;
+}
+
+export const CARD_COLOR_MODES: CardColorModeMeta[] = [
+  {
+    id: "provider",
+    label: "P",
+    title: "Provider colors",
+    description:
+      "Header fill and card outline use the provider avatar palette. Same dentist, same color, regardless of procedure.",
+  },
+  {
+    id: "appointment",
+    label: "Tx",
+    title: "Appointment colors",
+    description:
+      "Header fill and card outline follow the procedure family \u2014 crowns, SRPs, prophies, fillings, and so on. Avatar stays on the provider.",
+  },
+];
+
+export const DEFAULT_CARD_COLOR_MODE: CardColorMode = "provider";

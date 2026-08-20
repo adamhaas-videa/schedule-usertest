@@ -185,7 +185,7 @@ const HYGIENE_PROCEDURE_PATTERNS = [
   /periodontal assessment/i,
 ];
 
-function isHygieneProcedure(procedure: string): boolean {
+export function isHygieneProcedure(procedure: string): boolean {
   return HYGIENE_PROCEDURE_PATTERNS.some((re) => re.test(procedure));
 }
 

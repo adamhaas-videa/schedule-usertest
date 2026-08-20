@@ -4,11 +4,12 @@ export const END_HOUR = 19;
 // any card renders at least a 30-min slot's height. Only clamps VISUAL height —
 // schedule geometry (top position, open-slot/occupied math) uses real durations.
 export const MIN_CARD_MINUTES = 30;
-// 180px/hour → 90px per 30-min slot → 88px card height after CARD_GAP (=2),
-// which fits the FullCard content floor (p-2.5 padding + gap-2 + ~34px top
-// row + 22px provider chip ≈ 84–86px) with a ~2px buffer. Lowering this
-// re-introduces clipping of the provider chip on 30-min appointments.
-export const PIXELS_PER_HOUR = 180;
+// 230px/hour → 115px per 30-min slot → 113px card after CARD_GAP (=2). A 60-min
+// appointment lands at 228px, which is the Summary actions (V1) full-suite
+// card in Figma (treatment header + insurance + two-line summary + footer).
+// The previous 180px/hour scale clipped that layout. Legacy V2–V5 cards just
+// get more breathing room.
+export const PIXELS_PER_HOUR = 230;
 export const TOTAL_HEIGHT = (END_HOUR - START_HOUR) * PIXELS_PER_HOUR;
 export const START_MINUTES = START_HOUR * 60;
 export const END_MINUTES = END_HOUR * 60;

@@ -8,6 +8,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAiView } from "@/context/AiViewContext";
 import { getNavEntries } from "@/lib/navVersions";
@@ -19,14 +24,34 @@ export const SIDEBAR_COLLAPSED_WIDTH = 56;
 const PRACTICE_NAME = "Vista Dental Studio";
 const PRACTICE_INITIALS = "VD";
 
-const footerNav = [
-  { key: "help", label: "Help", iconClass: "fa-regular fa-circle-question" },
-  {
+const utilityNav = {
+  help: {
+    key: "help",
+    label: "Help",
+    iconClass: "fa-regular fa-circle-question",
+  },
+  learning: {
     key: "learning",
     label: "Learning Center",
     iconClass: "fa-regular fa-book-open",
   },
-  { key: "settings", label: "Settings", iconClass: "fa-regular fa-gear" },
+  settings: {
+    key: "settings",
+    label: "Settings",
+    iconClass: "fa-regular fa-gear",
+  },
+} as const;
+
+const footerNav = [
+  utilityNav.help,
+  utilityNav.learning,
+  utilityNav.settings,
+] as const;
+
+const accountUtilityItems = [
+  utilityNav.settings,
+  utilityNav.learning,
+  utilityNav.help,
 ] as const;
 
 const accountMenuItems = [
@@ -153,40 +178,81 @@ function PracticeAvatar() {
   );
 }
 
-function AccountMenu({ collapsed }: { collapsed: boolean }) {
+function AccountMenuItem({
+  label,
+  iconClass,
+}: {
+  label: string;
+  iconClass: string;
+}) {
   return (
-    <Popover>
-      <PopoverTrigger
-        aria-label={PRACTICE_NAME}
-        title={collapsed ? PRACTICE_NAME : undefined}
-        className={cn(
-          "flex items-center rounded-lg text-left cursor-pointer transition-all duration-200 ease-in-out overflow-hidden",
-          "text-sidebar-foreground hover:bg-sidebar-item-hover hover:text-sidebar-item-hover-foreground",
-          "aria-expanded:bg-sidebar-item-hover aria-expanded:text-sidebar-item-hover-foreground",
-          collapsed ? "justify-center size-8" : "w-full gap-2 p-2"
-        )}
-      >
-        <PracticeAvatar />
-        <span
-          className={cn(
-            "min-w-0 flex-1 text-sm font-medium leading-none truncate transition-[opacity,max-width] duration-200 ease-in-out",
-            collapsed ? "max-w-0 opacity-0" : "max-w-[150px] opacity-100"
-          )}
+    <button
+      type="button"
+      className="flex h-7 w-full max-h-7 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted cursor-pointer"
+    >
+      <span className="flex size-4 shrink-0 items-center justify-center">
+        <i className={cn("text-base text-center", iconClass)} aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </button>
+  );
+}
+
+function AccountMenu({
+  collapsed,
+  utilitiesInMenu,
+}: {
+  collapsed: boolean;
+  utilitiesInMenu: boolean;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+      <Tooltip>
+        <TooltipTrigger
+          delay={400}
+          disabled={menuOpen}
+          render={
+            <PopoverTrigger
+              aria-label={PRACTICE_NAME}
+              className={cn(
+                "flex items-center rounded-lg text-left cursor-pointer transition-all duration-200 ease-in-out overflow-hidden",
+                "text-sidebar-foreground hover:bg-sidebar-item-hover hover:text-sidebar-item-hover-foreground",
+                "aria-expanded:bg-sidebar-item-hover aria-expanded:text-sidebar-item-hover-foreground",
+                collapsed ? "justify-center size-8" : "w-full gap-2 p-2"
+              )}
+            />
+          }
+        >
+          <PracticeAvatar />
+          <span
+            className={cn(
+              "min-w-0 flex-1 text-sm font-medium leading-none truncate transition-[opacity,max-width] duration-200 ease-in-out",
+              collapsed ? "max-w-0 opacity-0" : "max-w-[150px] opacity-100"
+            )}
+          >
+            {PRACTICE_NAME}
+          </span>
+          <span
+            className={cn(
+              "flex size-5 shrink-0 items-center justify-center transition-[opacity,width] duration-200 ease-in-out",
+              collapsed ? "w-0 opacity-0 overflow-hidden" : "opacity-100"
+            )}
+          >
+            <i
+              className="fa-regular fa-angles-up-down text-base text-center"
+              aria-hidden
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent
+          side={collapsed ? "right" : "top"}
+          sideOffset={8}
         >
           {PRACTICE_NAME}
-        </span>
-        <span
-          className={cn(
-            "flex size-5 shrink-0 items-center justify-center transition-[opacity,width] duration-200 ease-in-out",
-            collapsed ? "w-0 opacity-0 overflow-hidden" : "opacity-100"
-          )}
-        >
-          <i
-            className="fa-regular fa-angles-up-down text-base text-center"
-            aria-hidden
-          />
-        </span>
-      </PopoverTrigger>
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent
         side={collapsed ? "right" : "top"}
         align={collapsed ? "end" : "start"}
@@ -202,31 +268,30 @@ function AccountMenu({ collapsed }: { collapsed: boolean }) {
           </Button>
         </div>
         <div className="mx-px my-1 h-px bg-border" />
+        {utilitiesInMenu && (
+          <>
+            {accountUtilityItems.map((item) => (
+              <AccountMenuItem
+                key={item.key}
+                label={item.label}
+                iconClass={item.iconClass}
+              />
+            ))}
+            <div className="mx-px my-1 h-px bg-border" />
+          </>
+        )}
         {accountMenuItems.map((item) => (
-          <button
+          <AccountMenuItem
             key={item.key}
-            type="button"
-            className="flex h-7 w-full max-h-7 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted cursor-pointer"
-          >
-            <span className="flex size-4 shrink-0 items-center justify-center">
-              <i className={cn("text-base text-center", item.iconClass)} aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-          </button>
+            label={item.label}
+            iconClass={item.iconClass}
+          />
         ))}
         <div className="mx-px my-1 h-px bg-border" />
-        <button
-          type="button"
-          className="flex h-7 w-full max-h-7 items-center gap-1.5 overflow-hidden rounded-lg px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted cursor-pointer"
-        >
-          <span className="flex size-4 shrink-0 items-center justify-center">
-            <i
-              className="fa-regular fa-arrow-right-from-bracket text-base text-center"
-              aria-hidden
-            />
-          </span>
-          <span className="min-w-0 flex-1 truncate">Log out</span>
-        </button>
+        <AccountMenuItem
+          label="Log out"
+          iconClass="fa-regular fa-arrow-right-from-bracket"
+        />
       </PopoverContent>
     </Popover>
   );
@@ -247,8 +312,9 @@ export default function AppSidebar({
   const collapsed = controlledCollapsed ?? internalCollapsed;
   const navigate = useNavigate();
   const location = useLocation();
-  const { navVersion } = useAiView();
+  const { navVersion, navFooterMode } = useAiView();
   const navEntries = getNavEntries(navVersion);
+  const utilitiesInMenu = navFooterMode === "minimal";
 
   const toggle = () => {
     const next = !collapsed;
@@ -327,22 +393,24 @@ export default function AppSidebar({
           collapsed ? "items-center gap-1 px-2 pb-4" : "gap-2 p-2"
         )}
       >
-        <div
-          className={cn(
-            "flex flex-col gap-1",
-            collapsed ? "items-center" : "w-full"
-          )}
-        >
-          {footerNav.map((item) => (
-            <FooterRow
-              key={item.key}
-              label={item.label}
-              iconClass={item.iconClass}
-              collapsed={collapsed}
-            />
-          ))}
-        </div>
-        <AccountMenu collapsed={collapsed} />
+        {!utilitiesInMenu && (
+          <div
+            className={cn(
+              "flex flex-col gap-1",
+              collapsed ? "items-center" : "w-full"
+            )}
+          >
+            {footerNav.map((item) => (
+              <FooterRow
+                key={item.key}
+                label={item.label}
+                iconClass={item.iconClass}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
+        )}
+        <AccountMenu collapsed={collapsed} utilitiesInMenu={utilitiesInMenu} />
       </div>
 
       {/* Full-surface overlay — clicking chrome (logo, padding, empty space)

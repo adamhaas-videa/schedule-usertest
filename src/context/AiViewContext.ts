@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
-import type { CardVersion } from "@/lib/cardVersions";
+import type { CardColorMode, CardVersion } from "@/lib/cardVersions";
 import type { ChartVersion } from "@/lib/chartVersions";
-import type { NavVersion } from "@/lib/navVersions";
+import type { NavFooterMode, NavVersion } from "@/lib/navVersions";
 import type { SummaryVersion } from "@/lib/summaryVersions";
 
 export type AiView = "patient" | "clinical";
@@ -27,14 +27,23 @@ export interface AiViewState {
   setChartVersion: (version: ChartVersion) => void;
   /**
    * Demo-only switchers. Nav version changes the product-suite sidebar;
-   * card and summary versions stay on the schedule surface.
+   * footer mode only changes Help / Learning / Settings vs the practice menu.
+   * Card and summary versions stay on the schedule surface.
    */
   navVersion: NavVersion;
   setNavVersion: (version: NavVersion) => void;
+  navFooterMode: NavFooterMode;
+  setNavFooterMode: (mode: NavFooterMode) => void;
   cardVersion: CardVersion;
   setCardVersion: (version: CardVersion) => void;
   summaryVersion: SummaryVersion;
   setSummaryVersion: (version: SummaryVersion) => void;
+  /**
+   * Demo-only: color the Summary actions card chrome from the provider
+   * palette or from the appointment/procedure family.
+   */
+  cardColorMode: CardColorMode;
+  setCardColorMode: (mode: CardColorMode) => void;
   /**
    * Patient ids whose V1 "Review" CTA has been used this session. Lives above
    * the router so the card flips to "Reviewed" when the user comes back.

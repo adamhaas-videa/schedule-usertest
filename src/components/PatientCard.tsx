@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
@@ -9,6 +8,7 @@ import { getProviderColor } from "@/lib/providerColors";
 import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
 import { useAiView } from "@/context/AiViewContext";
 import { cn } from "@/lib/utils";
+import SummaryActionsCard from "@/components/SummaryActionsCard";
 
 interface PatientCardProps {
   patient: Patient;
@@ -152,9 +152,9 @@ function TertiaryIconButton({
   );
 }
 
-// V1: Voice + Perio (tertiary icons) then Review (primary, right). Clicking
+// V2: Voice + Perio (tertiary icons) then Review (primary, right). Clicking
 // Review opens the patient workflow and flips the CTA to Reviewed.
-function V1CardActions({
+function AlwaysOnReviewActions({
   reviewed,
   onAction,
   onReview,
@@ -205,15 +205,19 @@ function V1CardActions({
       ) : (
         <Button size="default" onClick={onReview}>
           Review
-          <ArrowRight className="size-3.5" data-icon="inline-end" />
+          <i
+            className="fa-regular fa-arrow-right text-sm"
+            data-icon="inline-end"
+            aria-hidden
+          />
         </Button>
       )}
     </ActionStrip>
   );
 }
 
-// V2: Images / Voice / Perio icon buttons. Reveal on hover. Muted on completed.
-function V2CardActions({
+// V3: Images / Voice / Perio icon buttons. Reveal on hover. Muted on completed.
+function HoverIconActions({
   onAction,
   muted = false,
   hoverOnly = false,
@@ -272,7 +276,8 @@ function FullCard({
   cardVersion,
   className,
 }: CardChromeProps) {
-  const { reviewedIds, markReviewed } = useAiView();
+  const { reviewedIds, markReviewed, summaryVersion, cardColorMode } =
+    useAiView();
   const status = deriveStatus(patient);
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
@@ -288,19 +293,20 @@ function FullCard({
   const isSmall = patient.durationMinutes <= 30;
 
   // Per-version interaction model (demo switcher):
-  //   V1: Voice + Perio (tertiary) + Review (primary, right); name → summary
-  //   V2: Images / Note / Perio revealed on hover/focus; name → summary drawer
-  //   V3: no buttons; whole card → Images tab (name is not separately clickable)
-  //   V4: no buttons; whole card → Images tab; name → summary drawer
-  const showActions = cardVersion === 1 || cardVersion === 2;
-  // V1 keeps actions always-on only for the patient currently in the chair;
+  //   V1: Summary actions — handled by SummaryActionsCard
+  //   V2: Voice + Perio (tertiary) + Review (primary, right); name → summary
+  //   V3: Images / Note / Perio revealed on hover/focus; name → summary drawer
+  //   V4: no buttons; whole card → Images tab (name is not separately clickable)
+  //   V5: no buttons; whole card → Images tab; name → summary drawer
+  const showActions = cardVersion === 2 || cardVersion === 3;
+  // V2 keeps actions always-on only for the patient currently in the chair;
   // every other card (upcoming, ready, completed, etc.) reveals them on hover.
-  // V2 is always hover-reveal.
+  // V3 is always hover-reveal.
   const hoverActions =
-    cardVersion === 2 || (cardVersion === 1 && status !== "in-chair");
-  const cardOpensImages = cardVersion === 3 || cardVersion === 4;
+    cardVersion === 3 || (cardVersion === 2 && status !== "in-chair");
+  const cardOpensImages = cardVersion === 4 || cardVersion === 5;
   const nameOpensSummary =
-    cardVersion === 1 || cardVersion === 2 || cardVersion === 4;
+    cardVersion === 2 || cardVersion === 3 || cardVersion === 5;
 
   const handleAction = (e: React.MouseEvent, tab: ClinicalTab) => {
     e.stopPropagation();
@@ -312,6 +318,28 @@ function FullCard({
     markReviewed(patient.id);
     onOpenClinical(patient, "xray");
   };
+
+  const handleSummaryReview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    markReviewed(patient.id);
+    onOpenClinical(patient, "chart");
+  };
+
+  if (cardVersion === 1) {
+    return (
+      <SummaryActionsCard
+        patient={patient}
+        privacyMode={privacyMode}
+        summaryVersion={summaryVersion}
+        cardColorMode={cardColorMode}
+        reviewed={reviewed}
+        onOpenClinical={onOpenClinical}
+        onSelectPatient={onSelectPatient}
+        onReview={handleSummaryReview}
+        className={className}
+      />
+    );
+  }
 
   const handleCardActivate = () => {
     if (cardOpensImages) onOpenClinical(patient, "xray");
@@ -399,7 +427,7 @@ function FullCard({
       {/* Provider chip — sits directly beneath the top row. On a small card the
           action strip occupies this same row, so the chip yields to the actions:
           it fades out while the actions are revealed (hover/focus) and is hidden
-          outright when the actions are always-on (V1 in-chair). Tall cards keep
+          outright when the actions are always-on (V2 in-chair). Tall cards keep
           the chip permanently visible. */}
       <div
         className={cn(
@@ -417,8 +445,8 @@ function FullCard({
       </div>
 
       {showActions &&
-        (cardVersion === 1 ? (
-          <V1CardActions
+        (cardVersion === 2 ? (
+          <AlwaysOnReviewActions
             reviewed={reviewed}
             onAction={handleAction}
             onReview={handleReview}
@@ -426,7 +454,7 @@ function FullCard({
             hoverOnly={hoverActions}
           />
         ) : (
-          <V2CardActions
+          <HoverIconActions
             onAction={handleAction}
             muted={status === "completed"}
             hoverOnly={hoverActions}

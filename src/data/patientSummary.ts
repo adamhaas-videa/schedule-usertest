@@ -14,6 +14,7 @@
 import {
   computeAge,
   hashStringToSeed,
+  isHygieneProcedure,
   mulberry32,
   type Patient,
 } from "@/data/mockPatients";
@@ -318,3 +319,70 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
     unscheduledTx,
   };
 }
+
+const PERIO_ALERT = /perio|bone loss/i;
+
+export function getCardMedicalAlerts(patient: Patient): string[] {
+  return buildPatientSummary(patient)
+    .alerts.filter((alert) => !PERIO_ALERT.test(alert.label))
+    .map((alert) => alert.label);
+}
+
+const QUADRANT_LABEL: Record<string, string> = {
+  UL: "UL quadrant",
+  UR: "UR quadrant",
+  LL: "LL quadrant",
+  LR: "LR quadrant",
+};
+
+function toothQuadrant(tooth: number): string {
+  if (tooth >= 1 && tooth <= 8) return "UR";
+  if (tooth >= 9 && tooth <= 16) return "UL";
+  if (tooth >= 17 && tooth <= 24) return "LL";
+  return "LR";
+}
+
+// Two sentences, two lines on the schedule card. Hygiene visits lean perio;
+// restorative visits lean findings. Seeded off the same patient id as the
+// slideout so the card and the panel don't contradict each other.
+export function buildCardSummary(patient: Patient): string {
+  const summary = buildPatientSummary(patient);
+  const hygiene = isHygieneProcedure(patient.procedure);
+  const marked = summary.findings.filter((f) => f.mark !== "incipient");
+  const lead = marked[0] ?? summary.findings[0];
+  const caries = summary.findings.filter((f) => f.mark === "filling");
+  const crowns = summary.findings.filter((f) => f.mark === "crown");
+  const quad = lead ? QUADRANT_LABEL[toothQuadrant(lead.tooth)] : "UL quadrant";
+  const perio = patient.conditionAlert?.label ?? "No bone loss detected";
+
+  if (hygiene) {
+    const second =
+      perio === "No bone loss detected"
+        ? "Periodontal tissues stable; recare interval unchanged."
+        : `${perio} with localized bleeding on probing.`;
+    if (caries.length >= 2) {
+      const nums = caries
+        .slice(0, 2)
+        .map((f) => `#${f.tooth}`)
+        .join(", ");
+      return `Watch caries ${nums}. ${second}`;
+    }
+    return `Gingival recession noted, ${quad}. ${second}`;
+  }
+
+  if (caries.length >= 2) {
+    const nums = caries
+      .slice(0, 2)
+      .map((f) => `#${f.tooth}`)
+      .join(", ");
+    return `Caries detected ${nums}. Gingival recession noted, ${quad}.`;
+  }
+  if (crowns.length > 0) {
+    return `Crown recommended #${crowns[0].tooth}. Gingival recession noted, ${quad}.`;
+  }
+  if (lead) {
+    return `${OPPORTUNITY_LABEL[lead.mark]} noted #${lead.tooth}. Monitoring flagged on the ${quad}.`;
+  }
+  return `No new findings this visit. ${perio}.`;
+}
+

@@ -50,6 +50,34 @@ export const NAV_VERSIONS: NavVersionMeta[] = [
 
 export const DEFAULT_NAV_VERSION: NavVersion = 1;
 
+export type NavFooterMode = "full" | "minimal";
+
+export interface NavFooterModeMeta {
+  id: NavFooterMode;
+  label: string;
+  title: string;
+  description: string;
+}
+
+export const NAV_FOOTER_MODES: NavFooterModeMeta[] = [
+  {
+    id: "full",
+    label: "Full",
+    title: "Full",
+    description:
+      "Help, Learning Center, and Settings stay as their own rows above the practice switcher.",
+  },
+  {
+    id: "minimal",
+    label: "Min",
+    title: "Minimal",
+    description:
+      "Those three items move into the practice menu. Only the avatar remains in the sidebar footer.",
+  },
+];
+
+export const DEFAULT_NAV_FOOTER_MODE: NavFooterMode = "full";
+
 const NAV_BY_VERSION: Record<NavVersion, ProductNavEntry[]> = {
   1: productNav,
   2: workflowNav,

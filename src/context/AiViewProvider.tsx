@@ -1,8 +1,18 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { AiViewContext, type AiView } from "./AiViewContext";
-import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
+import {
+  DEFAULT_CARD_COLOR_MODE,
+  DEFAULT_CARD_VERSION,
+  type CardColorMode,
+  type CardVersion,
+} from "@/lib/cardVersions";
 import { DEFAULT_CHART_VERSION, type ChartVersion } from "@/lib/chartVersions";
-import { DEFAULT_NAV_VERSION, type NavVersion } from "@/lib/navVersions";
+import {
+  DEFAULT_NAV_FOOTER_MODE,
+  DEFAULT_NAV_VERSION,
+  type NavFooterMode,
+  type NavVersion,
+} from "@/lib/navVersions";
 import {
   DEFAULT_SUMMARY_VERSION,
   type SummaryVersion,
@@ -20,8 +30,14 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
     DEFAULT_CHART_VERSION
   );
   const [navVersion, setNavVersion] = useState<NavVersion>(DEFAULT_NAV_VERSION);
+  const [navFooterMode, setNavFooterMode] = useState<NavFooterMode>(
+    DEFAULT_NAV_FOOTER_MODE
+  );
   const [cardVersion, setCardVersion] = useState<CardVersion>(
     DEFAULT_CARD_VERSION
+  );
+  const [cardColorMode, setCardColorMode] = useState<CardColorMode>(
+    DEFAULT_CARD_COLOR_MODE
   );
   const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
     DEFAULT_SUMMARY_VERSION
@@ -52,8 +68,12 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
         setChartVersion,
         navVersion,
         setNavVersion,
+        navFooterMode,
+        setNavFooterMode,
         cardVersion,
         setCardVersion,
+        cardColorMode,
+        setCardColorMode,
         summaryVersion,
         setSummaryVersion,
         reviewedIds,
