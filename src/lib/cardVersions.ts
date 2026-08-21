@@ -61,19 +61,19 @@ export interface CardColorModeMeta {
 
 export const CARD_COLOR_MODES: CardColorModeMeta[] = [
   {
-    id: "provider",
-    label: "P",
-    title: "Provider colors",
-    description:
-      "Header fill and card outline use the provider avatar palette. Same dentist, same color, regardless of procedure.",
-  },
-  {
     id: "appointment",
     label: "Tx",
     title: "Appointment colors",
     description:
       "Header fill and card outline follow the procedure family: restorative (composite \u2192 onlay \u2192 crown \u2192 endo \u2192 extraction), hygiene (prophy / SRP), and prosthetic (implants, dentures, aligners). Avatar stays on the provider.",
   },
+  {
+    id: "provider",
+    label: "P",
+    title: "Provider colors",
+    description:
+      "Header fill and card outline use the provider avatar palette. Same dentist, same color, regardless of procedure.",
+  },
 ];
 
-export const DEFAULT_CARD_COLOR_MODE: CardColorMode = "provider";
+export const DEFAULT_CARD_COLOR_MODE: CardColorMode = "appointment";
