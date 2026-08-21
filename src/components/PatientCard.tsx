@@ -327,12 +327,6 @@ function FullCard({
     onOpenClinical(patient, "xray");
   };
 
-  const handleSummaryReview = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    markReviewed(patient.id);
-    onOpenClinical(patient, "chart");
-  };
-
   if (cardVersion === 1) {
     return (
       <SummaryActionsCard
@@ -343,7 +337,7 @@ function FullCard({
         reviewed={reviewed}
         onOpenClinical={onOpenClinical}
         onSelectPatient={onSelectPatient}
-        onReview={handleSummaryReview}
+        onReview={handleReview}
         className={className}
       />
     );

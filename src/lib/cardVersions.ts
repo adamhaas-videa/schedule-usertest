@@ -16,7 +16,7 @@ export const CARD_VERSIONS: CardVersionMeta[] = [
     label: "V1",
     title: "Summary actions",
     description:
-      "Treatment header, two-line summary, condition chips. Actions stay on for the in-chair patient and reveal on hover everywhere else, same as V2. Completed cards fade, including the header color.",
+      "Treatment header, two-line summary, condition chips. Card opens the summary slideout. Review goes to Images; Voice notes goes to Clinical Notes. Actions stay on for the in-chair patient and reveal on hover everywhere else.",
   },
   {
     id: 2,
