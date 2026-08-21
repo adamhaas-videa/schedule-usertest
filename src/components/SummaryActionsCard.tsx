@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Patient, Insurance, ConditionAlertSeverity } from "@/data/mockPatients";
-import { computeAge } from "@/data/mockPatients";
+import { computeAge, isHygieneProcedure } from "@/data/mockPatients";
 import {
   buildCardSummary,
   getCardMedicalAlerts,
@@ -308,6 +308,7 @@ function CardActionBar({
   const measureRef = useRef<HTMLDivElement>(null);
   const [dropped, setDropped] = useState<Set<ActionSlot>>(new Set());
   const hasAvatar = Boolean(patient.provider);
+  const showPerio = showVoiceActions && isHygieneProcedure(patient.procedure);
 
   useLayoutEffect(() => {
     const row = rowRef.current;
@@ -316,10 +317,8 @@ function CardActionBar({
 
     const present = new Set<ActionSlot>(["images", "review"]);
     if (hasAvatar) present.add("avatar");
-    if (showVoiceActions) {
-      present.add("voice");
-      present.add("perio");
-    }
+    if (showVoiceActions) present.add("voice");
+    if (showPerio) present.add("perio");
 
     const fit = () => {
       const available = row.clientWidth;
@@ -362,12 +361,13 @@ function CardActionBar({
     observer.observe(row);
     observer.observe(measure);
     return () => observer.disconnect();
-  }, [hasAvatar, showVoiceActions, reviewed]);
+  }, [hasAvatar, showVoiceActions, showPerio, reviewed]);
 
   const visible = (slot: ActionSlot) => {
     if (dropped.has(slot) && slot !== "review") return false;
     if (slot === "avatar") return hasAvatar;
-    if (slot === "voice" || slot === "perio") return showVoiceActions;
+    if (slot === "voice") return showVoiceActions;
+    if (slot === "perio") return showPerio;
     return true;
   };
 
@@ -433,12 +433,8 @@ function CardActionBar({
             "avatar",
             <ProviderAvatar patient={patient} isCompleted={isCompleted} />
           )}
-        {showVoiceActions && (
-          <>
-            {slot("voice", voiceIcon())}
-            {slot("perio", perioIcon())}
-          </>
-        )}
+        {showVoiceActions && slot("voice", voiceIcon())}
+        {showPerio && slot("perio", perioIcon())}
         {slot("images", imagesIcon())}
         {slot("review", reviewButton())}
       </div>
@@ -658,23 +654,24 @@ export default function SummaryActionsCard({
           )}
 
           {isSmall && (
-            <div
-              className={cn(
-                "absolute inset-x-0 bottom-0 z-20 px-3 pb-2.5 pt-1.5",
-                "bg-gradient-to-t from-stone-100 from-[38%] to-transparent",
-                "dark:from-muted",
-                hoverActions && HOVER_REVEAL
-              )}
-            >
-              <CardActionBar
-                patient={patient}
-                showVoiceActions={showVoiceActions}
-                reviewed={reviewed}
-                isCompleted={isCompleted}
-                hoverIcons={false}
-                onOpenTab={openTab}
-                onReview={onReview}
+            <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-2.5 pt-1.5">
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-100 from-[38%] to-transparent dark:from-muted",
+                  hoverActions && HOVER_REVEAL
+                )}
               />
+              <div className="relative">
+                <CardActionBar
+                  patient={patient}
+                  showVoiceActions={showVoiceActions}
+                  reviewed={reviewed}
+                  isCompleted={isCompleted}
+                  hoverIcons={hoverActions}
+                  onOpenTab={openTab}
+                  onReview={onReview}
+                />
+              </div>
             </div>
           )}
         </div>

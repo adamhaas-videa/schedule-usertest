@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Patient } from "@/data/mockPatients";
-import { computeAge } from "@/data/mockPatients";
+import { computeAge, isHygieneProcedure } from "@/data/mockPatients";
 import type { ClinicalTab } from "@/types/clinical";
 import { getProviderColor } from "@/lib/providerColors";
 import { DEFAULT_CARD_VERSION, type CardVersion } from "@/lib/cardVersions";
@@ -160,12 +160,14 @@ function AlwaysOnReviewActions({
   onReview,
   muted = false,
   hoverOnly = false,
+  showPerio = false,
 }: {
   reviewed: boolean;
   onAction: (e: React.MouseEvent, tab: ClinicalTab) => void;
   onReview: (e: React.MouseEvent) => void;
   muted?: boolean;
   hoverOnly?: boolean;
+  showPerio?: boolean;
 }) {
   return (
     <ActionStrip hoverOnly={hoverOnly} gapClass="gap-1.5">
@@ -183,15 +185,17 @@ function AlwaysOnReviewActions({
           <i className="fa-regular fa-microphone w-4 h-4" aria-hidden />
         </TertiaryIconButton>
       </div>
-      <div className="@max-[200px]/card:hidden">
-        <TertiaryIconButton
-          label="Perio"
-          muted={muted}
-          onClick={(e) => onAction(e, "perio")}
-        >
-          <PerioIcon className="w-4 h-4" />
-        </TertiaryIconButton>
-      </div>
+      {showPerio && (
+        <div className="@max-[200px]/card:hidden">
+          <TertiaryIconButton
+            label="Perio"
+            muted={muted}
+            onClick={(e) => onAction(e, "perio")}
+          >
+            <PerioIcon className="w-4 h-4" />
+          </TertiaryIconButton>
+        </div>
+      )}
       {reviewed ? (
         <button
           type="button"
@@ -221,10 +225,12 @@ function HoverIconActions({
   onAction,
   muted = false,
   hoverOnly = false,
+  showPerio = false,
 }: {
   onAction: (e: React.MouseEvent, tab: ClinicalTab) => void;
   muted?: boolean;
   hoverOnly?: boolean;
+  showPerio?: boolean;
 }) {
   const mutedClass = muted
     ? "bg-muted text-muted-foreground hover:bg-muted-hover hover:text-foreground"
@@ -247,14 +253,16 @@ function HoverIconActions({
       >
         <i className="fa-regular fa-microphone w-4 h-4" aria-hidden />
       </Button>
-      <Button
-        size="icon"
-        className={mutedClass}
-        onClick={(e) => onAction(e, "perio")}
-        aria-label="Perio"
-      >
-        <PerioIcon className="w-4 h-4" />
-      </Button>
+      {showPerio && (
+        <Button
+          size="icon"
+          className={mutedClass}
+          onClick={(e) => onAction(e, "perio")}
+          aria-label="Perio"
+        >
+          <PerioIcon className="w-4 h-4" />
+        </Button>
+      )}
     </ActionStrip>
   );
 }
@@ -452,12 +460,14 @@ function FullCard({
             onReview={handleReview}
             muted={status === "completed"}
             hoverOnly={hoverActions}
+            showPerio={isHygieneProcedure(patient.procedure)}
           />
         ) : (
           <HoverIconActions
             onAction={handleAction}
             muted={status === "completed"}
             hoverOnly={hoverActions}
+            showPerio={isHygieneProcedure(patient.procedure)}
           />
         ))}
     </div>

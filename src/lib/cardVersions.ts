@@ -72,7 +72,7 @@ export const CARD_COLOR_MODES: CardColorModeMeta[] = [
     label: "Tx",
     title: "Appointment colors",
     description:
-      "Header fill and card outline follow the procedure family \u2014 crowns, SRPs, prophies, fillings, and so on. Avatar stays on the provider.",
+      "Header fill and card outline follow the procedure family: restorative (composite \u2192 onlay \u2192 crown \u2192 endo \u2192 extraction), hygiene (prophy / SRP), and prosthetic (implants, dentures, aligners). Avatar stays on the provider.",
   },
 ];
 
