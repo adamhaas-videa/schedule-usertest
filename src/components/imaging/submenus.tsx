@@ -1,212 +1,424 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import VoicePerioIcon from "@/components/icons/VoicePerioIcon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useImagingToolbar } from "@/context/ImagingToolbarContext";
+import {
+  BRIGHTNESS_MAX,
+  BRIGHTNESS_MIN,
+  CONTRAST_MAX,
+  CONTRAST_MIN,
+  isAdjusted,
+  type DisplayThreshold,
+  type FindingKey,
+  type HdMode,
+} from "@/lib/imagingToolbar";
+import { Hd1Icon, Hd2Icon, PeriodontalMarkIcon } from "./toolbarIcons";
 
-function MenuHeader({ icon, label }: { icon: string; label: string }) {
+function L2Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-2 px-2 pb-1.5 mb-1 border-b border-white/10">
-      <i className={cn(icon, "text-xs text-zinc-400")} aria-hidden />
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+    <TooltipProvider delay={200}>
+      <div className="flex flex-col items-center gap-1.5">{children}</div>
+    </TooltipProvider>
+  );
+}
+
+// Pressed-in well from the original L2, plus the L1 cyan hairline so selected
+// chips still read on the #212734 panel (the old teal fill sat too close to it).
+const L2_ON_FILL = "#0A0A0A";
+const L2_ON_RING = "inset 0 0 0 1px rgba(78,206,234,0.55)";
+
+function L2Button({
+  label,
+  active = false,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
+  const on = active && !disabled;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        disabled={disabled}
+        onClick={onClick}
+        aria-label={label}
+        aria-pressed={active}
+        className={cn(
+          "flex size-8 items-center justify-center rounded transition-[background-color,box-shadow,opacity] duration-150",
+          disabled ? "cursor-not-allowed text-zinc-500" : "cursor-pointer",
+          on
+            ? "text-zinc-100 hover:opacity-90"
+            : !disabled && "bg-transparent text-slate-200 hover:bg-[#2c3344]"
+        )}
+        style={
+          on
+            ? { backgroundColor: L2_ON_FILL, boxShadow: L2_ON_RING }
+            : undefined
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
         {label}
-      </span>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function ThresholdBars({ count }: { count: 1 | 2 | 3 | 4 }) {
+  return (
+    <span
+      aria-hidden
+      className="flex flex-col items-center justify-center gap-[2px]"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="block h-[2px] w-4 rounded-full bg-slate-200" />
+      ))}
+    </span>
+  );
+}
+
+function VerticalSlider({
+  value,
+  min,
+  max,
+  onChange,
+  label,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (next: number) => void;
+  label: string;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const setFromClientY = (clientY: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = 1 - (clientY - rect.top) / rect.height;
+    const next = min + Math.round(ratio * (max - min));
+    onChange(Math.min(max, Math.max(min, next)));
+  };
+
+  return (
+    <div className="absolute left-full top-1/2 z-50 ml-2 flex h-48 -translate-y-1/2 items-center rounded-md bg-black px-3 py-4 shadow-lg">
+      <div
+        ref={trackRef}
+        role="slider"
+        aria-label={label}
+        aria-orientation="vertical"
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        tabIndex={0}
+        className="relative h-40 w-2 cursor-pointer rounded-full bg-zinc-600"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setFromClientY(e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            setFromClientY(e.clientY);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp" || e.key === "ArrowRight") {
+            e.preventDefault();
+            onChange(Math.min(max, value + 5));
+          } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            onChange(Math.max(min, value - 5));
+          }
+        }}
+      >
+        <span
+          className="absolute inset-x-0 bottom-0 rounded-full bg-white/80"
+          style={{ height: `${((value - min) / (max - min)) * 100}%` }}
+        />
+        <span
+          className="absolute left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow"
+          style={{ top: `${(1 - (value - min) / (max - min)) * 100}%` }}
+        />
+      </div>
     </div>
   );
 }
 
-interface FindingType {
-  key: string;
+const FINDINGS: {
+  key: FindingKey;
   label: string;
-  color?: string;
+  swatch?: string;
   icon?: "perio" | "anatomy";
-}
-
-const FINDING_TYPES: FindingType[] = [
-  { key: "restorative", label: "Restorative", color: "#DD174C" },
-  { key: "incipient", label: "Incipient", color: "#D4A700" },
+}[] = [
+  { key: "restorative", label: "Restorative", swatch: "#DD174C" },
+  { key: "incipient", label: "Incipient", swatch: "#D4A700" },
   { key: "periodontal", label: "Periodontal", icon: "perio" },
-  { key: "endodontic", label: "Endodontic", color: "#992D5B" },
+  { key: "endodontic", label: "Endodontic", swatch: "#992D5B" },
   { key: "anatomy", label: "Tooth Anatomy", icon: "anatomy" },
 ];
 
-/** Elements submenu — toggle which AI finding types are displayed. */
+/** Elements L2 — finding-type toggles. Stays pinned while flipping images. */
 export function FindingTypesMenu() {
-  const [enabled, setEnabled] = useState<Record<string, boolean>>({
-    restorative: true,
-    incipient: true,
-    periodontal: true,
-    endodontic: true,
-    anatomy: false,
-  });
+  const { findingTypes, setFindingTypes } = useImagingToolbar();
 
   return (
-    <div className="w-[188px]">
-      <MenuHeader icon="fa-regular fa-shapes" label="Elements" />
-      <div className="flex flex-col">
-        {FINDING_TYPES.map((f) => {
-          const on = enabled[f.key];
-          return (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setEnabled((p) => ({ ...p, [f.key]: !p[f.key] }))}
-              className={cn(
-                "flex items-center gap-2.5 h-8 px-2 rounded-md text-left transition-colors cursor-pointer",
-                on ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
-              )}
-            >
-              <span className="flex items-center justify-center size-4 shrink-0">
-                {f.icon === "perio" ? (
-                  <VoicePerioIcon className="size-4 text-emerald-400" />
-                ) : f.icon === "anatomy" ? (
-                  <i className="fa-regular fa-tooth text-sky-300 text-sm" aria-hidden />
-                ) : (
-                  <span
-                    className="size-3.5 rounded-[3px]"
-                    style={{ backgroundColor: f.color }}
-                  />
-                )}
-              </span>
-              <span className="flex-1 text-[13px] font-medium">{f.label}</span>
-              <i
-                className={cn(
-                  "text-xs",
-                  on ? "fa-solid fa-eye text-zinc-300" : "fa-solid fa-eye-slash text-zinc-600"
-                )}
-                aria-hidden
-              />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const THRESHOLDS = [
-  { key: "all", label: "Show All", bars: 4 },
-  { key: "more", label: "More", bars: 3 },
-  { key: "balanced", label: "Balanced", bars: 2 },
-  { key: "less", label: "Less", bars: 1 },
-];
-
-/** Threshold submenu — AI display sensitivity (single-select). */
-export function DisplayThresholdMenu() {
-  const [value, setValue] = useState("balanced");
-  return (
-    <div className="w-[188px]">
-      <MenuHeader icon="fa-regular fa-sliders-simple" label="Display Threshold" />
-      <div className="flex flex-col">
-        {THRESHOLDS.map((t) => {
-          const active = value === t.key;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setValue(t.key)}
-              className={cn(
-                "flex items-center gap-2.5 h-8 px-2 rounded-md text-left transition-colors cursor-pointer",
-                active ? "bg-[#4A5161] text-zinc-100" : "text-zinc-400 hover:text-zinc-200"
-              )}
-            >
-              <span className="flex items-end gap-0.5 h-3.5 w-4 shrink-0">
-                {[0, 1, 2, 3].map((i) => (
-                  <span
-                    key={i}
-                    className={cn(
-                      "flex-1 rounded-[1px]",
-                      i < t.bars ? "bg-deep-teal-300" : "bg-zinc-600"
-                    )}
-                    style={{ height: `${40 + i * 20}%` }}
-                  />
-                ))}
-              </span>
-              <span className="flex-1 text-[13px] font-medium">{t.label}</span>
-              {active && (
-                <i className="fa-solid fa-check text-xs text-deep-teal-300" aria-hidden />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-interface SimpleAction {
-  key: string;
-  label: string;
-  icon: string;
-  shortcut?: string;
-}
-
-const QUALITY_ACTIONS: SimpleAction[] = [
-  { key: "hd1", label: "HD Enhance", icon: "fa-regular fa-wand-magic-sparkles" },
-  { key: "hd2", label: "HD Enhance +", icon: "fa-regular fa-wand-magic-sparkles" },
-  { key: "quality-findings", label: "Image Quality Findings", icon: "fa-regular fa-image" },
-];
-
-/** Quality submenu (single-image view). */
-export function QualityMenu() {
-  const [active, setActive] = useState<string | null>("hd1");
-  return (
-    <div className="w-[196px]">
-      <MenuHeader icon="fa-regular fa-gem" label="Quality" />
-      <div className="flex flex-col">
-        {QUALITY_ACTIONS.map((a) => {
-          const on = active === a.key;
-          return (
-            <button
-              key={a.key}
-              type="button"
-              onClick={() => setActive(on ? null : a.key)}
-              className={cn(
-                "flex items-center gap-2.5 h-8 px-2 rounded-md text-left transition-colors cursor-pointer",
-                on ? "bg-[#4A5161] text-zinc-100" : "text-zinc-400 hover:text-zinc-200"
-              )}
-            >
-              <i className={cn(a.icon, "text-sm w-4 text-center")} aria-hidden />
-              <span className="flex-1 text-[13px] font-medium">{a.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const TOOLS_ACTIONS: SimpleAction[] = [
-  { key: "reset", label: "Reset settings", icon: "fa-regular fa-clock-rotate-left", shortcut: "D" },
-  { key: "brightness", label: "Brightness", icon: "fa-regular fa-sun-bright" },
-  { key: "contrast", label: "Contrast", icon: "fa-regular fa-circle-half-stroke" },
-  { key: "invert", label: "Invert colors", icon: "fa-regular fa-droplet-slash", shortcut: "I" },
-  { key: "magnify", label: "Magnify", icon: "fa-regular fa-magnifying-glass", shortcut: "M" },
-  { key: "rotate", label: "Rotate", icon: "fa-regular fa-arrow-rotate-right", shortcut: "." },
-  { key: "mirror", label: "Mirror", icon: "fa-regular fa-reflect-horizontal" },
-  { key: "fullscreen", label: "Full screen", icon: "fa-regular fa-expand" },
-];
-
-/** Tools submenu (single-image view). */
-export function ToolsMenu() {
-  return (
-    <div className="w-[204px]">
-      <MenuHeader icon="fa-regular fa-sliders" label="Tools" />
-      <div className="flex flex-col">
-        {TOOLS_ACTIONS.map((a) => (
-          <button
-            key={a.key}
-            type="button"
-            className="flex items-center gap-2.5 h-8 px-2 rounded-md text-left text-zinc-300 hover:bg-[#4A5161] transition-colors cursor-pointer"
+    <L2Shell>
+      {FINDINGS.map((f) => {
+        const on = findingTypes[f.key];
+        return (
+          <L2Button
+            key={f.key}
+            label={f.label}
+            active={on}
+            onClick={() =>
+              setFindingTypes({ ...findingTypes, [f.key]: !findingTypes[f.key] })
+            }
           >
-            <i className={cn(a.icon, "text-sm w-4 text-center")} aria-hidden />
-            <span className="flex-1 text-[13px] font-medium">{a.label}</span>
-            {a.shortcut && (
-              <span className="text-[10px] font-semibold text-zinc-500 border border-zinc-600 rounded px-1">
-                {a.shortcut}
-              </span>
+            <span className={cn("flex items-center justify-center", !on && "opacity-40")}>
+              {f.icon === "perio" ? (
+                <PeriodontalMarkIcon className="size-4" />
+              ) : f.icon === "anatomy" ? (
+                <i className="fa-regular fa-tooth text-sm" aria-hidden />
+              ) : (
+                <span
+                  className="size-3.5 rounded-[2px]"
+                  style={{ backgroundColor: f.swatch }}
+                />
+              )}
+            </span>
+          </L2Button>
+        );
+      })}
+    </L2Shell>
+  );
+}
+
+const THRESHOLDS: {
+  id: DisplayThreshold;
+  label: string;
+  bars: 1 | 2 | 3 | 4;
+}[] = [
+  { id: "all", label: "Show All", bars: 4 },
+  { id: "more", label: "More", bars: 3 },
+  { id: "balanced", label: "Balanced", bars: 2 },
+  { id: "less", label: "Less", bars: 1 },
+];
+
+/** Threshold L2 — single-select sensitivity. */
+export function DisplayThresholdMenu() {
+  const { threshold, setThreshold } = useImagingToolbar();
+
+  return (
+    <L2Shell>
+      <L2Button label="Display Threshold Settings">
+        <i className="fa-regular fa-gear text-base" aria-hidden />
+      </L2Button>
+      {THRESHOLDS.map((t) => (
+        <L2Button
+          key={t.id}
+          label={t.label}
+          active={threshold === t.id}
+          onClick={() => setThreshold(t.id)}
+        >
+          <ThresholdBars count={t.bars} />
+        </L2Button>
+      ))}
+    </L2Shell>
+  );
+}
+
+/** Quality L2 — mutually exclusive HD1/HD2 plus image-quality findings. */
+export function QualityMenu({ slot }: { slot: number }) {
+  const {
+    adjustmentsFor,
+    patchAdjustments,
+    qualityFindings,
+    setQualityFindings,
+  } = useImagingToolbar();
+  const adj = adjustmentsFor(slot);
+
+  const selectHd = (value: Exclude<HdMode, false>) => {
+    patchAdjustments(slot, { hd: adj.hd === value ? false : value });
+  };
+
+  return (
+    <L2Shell>
+      <L2Button
+        label={
+          adj.hd === "HD1" ? "Show original image" : "Show HD1 sharpened image"
+        }
+        active={adj.hd === "HD1"}
+        onClick={() => selectHd("HD1")}
+      >
+        <Hd1Icon />
+      </L2Button>
+      <L2Button
+        label={
+          adj.hd === "HD2" ? "Show original image" : "Show HD2 sharpened image"
+        }
+        active={adj.hd === "HD2"}
+        onClick={() => selectHd("HD2")}
+      >
+        <Hd2Icon />
+      </L2Button>
+      <L2Button
+        label={
+          qualityFindings
+            ? "Hide Image Quality Findings"
+            : "Show Image Quality Findings"
+        }
+        active={qualityFindings}
+        onClick={() => setQualityFindings(!qualityFindings)}
+      >
+        <span className="relative flex size-4 items-center justify-center">
+          <i
+            className={cn(
+              "fa-regular fa-browser text-sm",
+              qualityFindings ? "text-sky-300" : "text-slate-200"
             )}
-          </button>
-        ))}
+            aria-hidden
+          />
+          <i
+            className="fa-solid fa-triangle-exclamation absolute -right-1 -top-1 text-[8px] text-amber-400"
+            aria-hidden
+          />
+        </span>
+      </L2Button>
+    </L2Shell>
+  );
+}
+
+/** Tools L2 — per-image adjustments. Brightness/contrast open an L3 slider. */
+export function ToolsMenu({
+  slot,
+  onFullScreen,
+}: {
+  slot: number;
+  onFullScreen?: () => void;
+}) {
+  const { adjustmentsFor, patchAdjustments, resetAdjustments } =
+    useImagingToolbar();
+  const adj = adjustmentsFor(slot);
+  const dirty = isAdjusted(adj);
+  const [openSlider, setOpenSlider] = useState<"brightness" | "contrast" | null>(
+    null
+  );
+  const brightnessRef = useRef<HTMLDivElement>(null);
+  const contrastRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (openSlider === null) return;
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (brightnessRef.current?.contains(target)) return;
+      if (contrastRef.current?.contains(target)) return;
+      setOpenSlider(null);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    return () => document.removeEventListener("pointerdown", onPointer);
+  }, [openSlider]);
+
+  return (
+    <L2Shell>
+      <L2Button
+        label="Reset all settings (D)"
+        disabled={!dirty}
+        onClick={() => dirty && resetAdjustments(slot)}
+      >
+        <i className="fa-solid fa-clock-rotate-left text-sm" aria-hidden />
+      </L2Button>
+
+      <div ref={brightnessRef} className="relative">
+        <L2Button
+          label="Adjust brightness (1-6)"
+          active={openSlider === "brightness"}
+          onClick={() =>
+            setOpenSlider(openSlider === "brightness" ? null : "brightness")
+          }
+        >
+          <i className="fa-regular fa-sun-bright text-sm" aria-hidden />
+        </L2Button>
+        {openSlider === "brightness" && (
+          <VerticalSlider
+            label="Brightness"
+            min={BRIGHTNESS_MIN}
+            max={BRIGHTNESS_MAX}
+            value={adj.brightness}
+            onChange={(brightness) => patchAdjustments(slot, { brightness })}
+          />
+        )}
       </div>
-    </div>
+
+      <div ref={contrastRef} className="relative">
+        <L2Button
+          label="Adjust contrast"
+          active={openSlider === "contrast"}
+          onClick={() =>
+            setOpenSlider(openSlider === "contrast" ? null : "contrast")
+          }
+        >
+          <i className="fa-regular fa-circle-half-stroke text-sm" aria-hidden />
+        </L2Button>
+        {openSlider === "contrast" && (
+          <VerticalSlider
+            label="Contrast"
+            min={CONTRAST_MIN}
+            max={CONTRAST_MAX}
+            value={adj.contrast}
+            onChange={(contrast) => patchAdjustments(slot, { contrast })}
+          />
+        )}
+      </div>
+
+      <L2Button
+        label="Invert colors (I)"
+        active={adj.invert}
+        onClick={() => patchAdjustments(slot, { invert: !adj.invert })}
+      >
+        <i className="fa-regular fa-droplet-slash text-sm" aria-hidden />
+      </L2Button>
+
+      <L2Button
+        label="Toggle magnify mode (M)"
+        active={adj.magnify}
+        onClick={() => patchAdjustments(slot, { magnify: !adj.magnify })}
+      >
+        <i className="fa-regular fa-magnifying-glass text-sm" aria-hidden />
+      </L2Button>
+
+      <L2Button
+        label="Rotate image (.)"
+        onClick={() =>
+          patchAdjustments(slot, { rotation: (adj.rotation + 90) % 360 })
+        }
+      >
+        <i className="fa-regular fa-arrow-rotate-right text-sm" aria-hidden />
+      </L2Button>
+
+      <L2Button
+        label="Mirror image"
+        active={adj.mirrored}
+        onClick={() => patchAdjustments(slot, { mirrored: !adj.mirrored })}
+      >
+        <i className="fa-regular fa-reflect-horizontal text-sm" aria-hidden />
+      </L2Button>
+
+      <L2Button label="View in full screen" onClick={onFullScreen}>
+        <i className="fa-solid fa-expand text-sm" aria-hidden />
+      </L2Button>
+    </L2Shell>
   );
 }

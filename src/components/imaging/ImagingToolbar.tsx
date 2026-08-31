@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useImagingToolbar } from "@/context/ImagingToolbarContext";
+import type { ToolbarMenuId } from "@/lib/imagingToolbar";
 import type { IconState } from "./toolbarIcons";
 
 export type { IconState } from "./toolbarIcons";
@@ -16,6 +18,8 @@ export interface ToolbarItem {
   active?: boolean;
   hasSubmenu?: boolean;
   submenu?: ReactNode;
+  /** Anchor the L2 flyout to the top (default) or bottom of the L1 trigger. */
+  submenuAlign?: "start" | "end";
   onClick?: () => void;
 }
 
@@ -68,7 +72,7 @@ function ToolbarButton({
 
   return (
     <div
-      className="relative flex flex-col items-center gap-[6px]"
+      className="relative flex w-full flex-col items-center gap-[6px]"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -78,7 +82,6 @@ function ToolbarButton({
           if (item.hasSubmenu) {
             setOpen(!isOpen);
           } else {
-            setOpen(false);
             item.onClick?.();
           }
         }}
@@ -114,18 +117,17 @@ function ToolbarButton({
       </div>
 
       {isOpen && item.submenu && (
-        <>
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <div className="absolute left-[46px] top-0 z-40">
-            <div className="rounded-lg bg-[#393E4D] shadow-xl ring-1 ring-black/40 p-2">
-              {item.submenu}
-            </div>
+        <div
+          className={cn(
+            // Toolbar has px-1; +4px lands the L2 on the rail's outer edge.
+            "absolute left-[calc(100%+4px)] z-40 overflow-visible",
+            item.submenuAlign === "end" ? "bottom-0" : "top-0"
+          )}
+        >
+          <div className="rounded-md bg-[#212734] p-1.5">
+            {item.submenu}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -138,14 +140,16 @@ function ToolbarButton({
  * and disables when AI is off, since the two image sets only exist under AI.
  */
 export default function ImagingToolbar({ items }: { items: ToolbarEntry[] }) {
-  const [openKey, setOpenKey] = useState<string | null>(null);
+  const { openMenu, setOpenMenu } = useImagingToolbar();
 
   const renderItem = (item: ToolbarItem) => (
     <ToolbarButton
       key={item.key}
       item={item}
-      isOpen={openKey === item.key}
-      setOpen={(open) => setOpenKey(open ? item.key : null)}
+      isOpen={openMenu === item.key}
+      setOpen={(open) =>
+        setOpenMenu(open ? (item.key as ToolbarMenuId) : null)
+      }
     />
   );
 

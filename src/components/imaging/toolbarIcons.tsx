@@ -124,6 +124,71 @@ export function ElementsIcon({ state = "rest" }: { state?: IconState }) {
   );
 }
 
+/** HD1 / HD2 badge icons, ported from the image-toolbar playground. */
+function HdLabel({ label }: { label: "HD1" | "HD2" }) {
+  return (
+    <svg viewBox="0 0 22 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-auto" aria-hidden>
+      <rect
+        x="0.75"
+        y="0.75"
+        width="20.5"
+        height="12.5"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <text
+        x="11"
+        y="10.25"
+        textAnchor="middle"
+        fontFamily="Inter, sans-serif"
+        fontSize="8"
+        fontWeight="700"
+        fill="currentColor"
+      >
+        {label}
+      </text>
+    </svg>
+  );
+}
+
+export function Hd1Icon() {
+  return <HdLabel label="HD1" />;
+}
+
+export function Hd2Icon() {
+  return <HdLabel label="HD2" />;
+}
+
+export function PeriodontalMarkIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("block", className)}
+      aria-hidden
+    >
+      <line
+        x1="5.05"
+        y1="5.35"
+        x2="16.16"
+        y2="16.47"
+        stroke="#FF8A1E"
+        strokeWidth="2.4"
+      />
+      <rect
+        y="6.36"
+        width="8.57"
+        height="8.57"
+        rx="0.84"
+        transform="rotate(-45 0 6.36)"
+        fill="#FF8A1E"
+      />
+    </svg>
+  );
+}
+
 // AI — letterform rendered as text. Cool-grey at rest; bright cyan when on.
 // Hover === active, so hovering the toggle previews the "on" cyan.
 export function aiTextColor(state: IconState): string {

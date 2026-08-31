@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAiView } from "@/context/AiViewContext";
+import { useImagingToolbar } from "@/context/ImagingToolbarContext";
+import { imageFilter, imageTransform } from "@/lib/imagingToolbar";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import {
   FindingTypesMenu,
@@ -49,8 +51,40 @@ export default function SingleImageViewer({
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView } = useAiView();
+  const {
+    adjustmentsFor,
+    patchAdjustments,
+    resetAdjustments,
+    qualityFindings,
+  } = useImagingToolbar();
   const [zoom, setZoom] = useState(95);
   const [carouselOpen, setCarouselOpen] = useState(false);
+  const adj = adjustmentsFor(slot);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      const key = e.key;
+      if (key === "d" || key === "D") {
+        resetAdjustments(slot);
+      } else if (key === "i" || key === "I") {
+        patchAdjustments(slot, { invert: !adj.invert });
+      } else if (key === "m" || key === "M") {
+        patchAdjustments(slot, { magnify: !adj.magnify });
+      } else if (key === ".") {
+        patchAdjustments(slot, { rotation: (adj.rotation + 90) % 360 });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [
+    adj.invert,
+    adj.magnify,
+    adj.rotation,
+    patchAdjustments,
+    resetAdjustments,
+    slot,
+  ]);
 
   const index = slots.indexOf(slot);
   // Clinical assets live in /public/xrays/clinical/ as slot-01.png … slot-18.png,
@@ -133,7 +167,8 @@ export default function SingleImageViewer({
       iconClass: "fa-regular fa-high-definition",
       iconSizePx: 16,
       hasSubmenu: true,
-      submenu: <QualityMenu />,
+      submenuAlign: "end",
+      submenu: <QualityMenu key={slot} slot={slot} />,
     },
     {
       key: "tools",
@@ -141,7 +176,10 @@ export default function SingleImageViewer({
       iconClass: "fa-regular fa-pen-ruler",
       iconSizePx: 16,
       hasSubmenu: true,
-      submenu: <ToolsMenu />,
+      submenuAlign: "end",
+      submenu: (
+        <ToolsMenu key={slot} slot={slot} onFullScreen={onToggleExpand} />
+      ),
     },
   ];
 
@@ -152,8 +190,14 @@ export default function SingleImageViewer({
         <img
           src={src}
           alt={`Radiograph ${slot}`}
-          className="h-full w-full object-contain transition-transform"
-          style={{ transform: `scale(${zoom / 100})` }}
+          className={cn(
+            "h-full w-full object-contain transition-[transform,filter]",
+            adj.magnify && "cursor-zoom-in"
+          )}
+          style={{
+            transform: imageTransform(adj, zoom),
+            filter: imageFilter(adj),
+          }}
           draggable={false}
           onError={handleImgError}
         />
@@ -204,10 +248,28 @@ export default function SingleImageViewer({
             <img
               src={src}
               alt={`Radiograph ${slot}`}
-              className="h-full w-full object-contain transition-transform"
-              style={{ transform: `scale(${zoom / 100})` }}
+              className={cn(
+                "h-full w-full object-contain transition-[transform,filter]",
+                adj.magnify && "cursor-zoom-in"
+              )}
+              style={{
+                transform: imageTransform(adj, zoom),
+                filter: imageFilter(adj),
+              }}
               draggable={false}
+              onError={handleImgError}
             />
+            {qualityFindings && (
+              <div
+                className="pointer-events-none absolute inset-6 rounded-sm ring-2 ring-amber-400/70"
+                aria-hidden
+              >
+                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
+                  <i className="fa-solid fa-triangle-exclamation text-[9px]" />
+                  Quality
+                </span>
+              </div>
+            )}
 
             <ImageCarousel
               open={carouselOpen}

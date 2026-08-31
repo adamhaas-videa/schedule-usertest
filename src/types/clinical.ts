@@ -19,8 +19,8 @@ export const CLINICAL_TAB_NAV: {
   label: string;
   path: string;
 }[] = [
-  { id: "chart", label: "Summary", path: CLINICAL_TAB_PATH.chart },
   { id: "xray", label: "Images", path: CLINICAL_TAB_PATH.xray },
   { id: "voice", label: "Clinical Notes", path: CLINICAL_TAB_PATH.voice },
   { id: "perio", label: "Perio Chart", path: CLINICAL_TAB_PATH.perio },
+  { id: "chart", label: "Patient Summary", path: CLINICAL_TAB_PATH.chart },
 ];
