@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
 import { useAiView } from "@/context/AiViewContext";
+import { useToggleAiOverlay } from "@/context/ImagingToolbarContext";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import { FindingTypesMenu, DisplayThresholdMenu } from "./submenus";
 import ImagingRightPanel from "./ImagingRightPanel";
@@ -84,6 +85,7 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView } = useAiView();
+  const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
   const [series, setSeries] = useState<"fmx" | "bw">("fmx");
 
   const openImage = (slot: number) =>
@@ -156,7 +158,7 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
           </span>
         ),
         active: aiOn,
-        onClick: () => onAiToggle(!aiOn),      },
+        onClick: toggleAi,      },
       patient: {
         key: "patient-view",
         label: "Patient",

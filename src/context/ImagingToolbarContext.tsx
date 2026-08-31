@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -10,6 +11,8 @@ import {
   DEFAULT_ADJUSTMENTS,
   DEFAULT_FINDING_TYPES,
   DEFAULT_THRESHOLD,
+  ALL_OFF_FINDING_TYPES,
+  allFindingsOff,
   type DisplayThreshold,
   type FindingTypes,
   type ImageAdjustments,
@@ -22,6 +25,9 @@ interface ImagingToolbarState {
   setOpenMenu: (id: ToolbarMenuId | null) => void;
   findingTypes: FindingTypes;
   setFindingTypes: (next: FindingTypes) => void;
+  /** Snapshot used when AI is turned back on after every Element was off. */
+  restoreFindings: () => void;
+  turnFindingsOff: () => void;
   threshold: DisplayThreshold;
   setThreshold: (next: DisplayThreshold) => void;
   qualityFindings: boolean;
@@ -35,9 +41,26 @@ const ImagingToolbarContext = createContext<ImagingToolbarState | null>(null);
 
 export function ImagingToolbarProvider({ children }: { children: ReactNode }) {
   const [openMenu, setOpenMenu] = useState<ToolbarMenuId | null>(null);
-  const [findingTypes, setFindingTypes] = useState<FindingTypes>(
+  const [findingTypes, setFindingTypesState] = useState<FindingTypes>(
     DEFAULT_FINDING_TYPES
   );
+  const lastOnFindings = useRef<FindingTypes>(DEFAULT_FINDING_TYPES);
+
+  const setFindingTypes = useCallback((next: FindingTypes) => {
+    if (!allFindingsOff(next)) lastOnFindings.current = next;
+    setFindingTypesState(next);
+  }, []);
+
+  const turnFindingsOff = useCallback(() => {
+    setFindingTypesState((prev) => {
+      if (!allFindingsOff(prev)) lastOnFindings.current = prev;
+      return ALL_OFF_FINDING_TYPES;
+    });
+  }, []);
+
+  const restoreFindings = useCallback(() => {
+    setFindingTypesState(lastOnFindings.current);
+  }, []);
   const [threshold, setThreshold] =
     useState<DisplayThreshold>(DEFAULT_THRESHOLD);
   const [qualityFindings, setQualityFindings] = useState(false);
@@ -73,6 +96,8 @@ export function ImagingToolbarProvider({ children }: { children: ReactNode }) {
       setOpenMenu,
       findingTypes,
       setFindingTypes,
+      restoreFindings,
+      turnFindingsOff,
       threshold,
       setThreshold,
       qualityFindings,
@@ -84,6 +109,9 @@ export function ImagingToolbarProvider({ children }: { children: ReactNode }) {
     [
       openMenu,
       findingTypes,
+      setFindingTypes,
+      restoreFindings,
+      turnFindingsOff,
       threshold,
       qualityFindings,
       adjustmentsFor,
@@ -107,4 +135,21 @@ export function useImagingToolbar() {
     );
   }
   return ctx;
+}
+
+/** L1 AI toggle: Off clears every Element; On restores the last non-empty set. */
+export function useToggleAiOverlay(
+  aiOn: boolean,
+  onAiToggle: (on: boolean) => void
+) {
+  const { restoreFindings, turnFindingsOff } = useImagingToolbar();
+  return () => {
+    if (aiOn) {
+      turnFindingsOff();
+      onAiToggle(false);
+    } else {
+      restoreFindings();
+      onAiToggle(true);
+    }
+  };
 }

@@ -35,6 +35,18 @@ export const DEFAULT_FINDING_TYPES: FindingTypes = {
   anatomy: false,
 };
 
+export const ALL_OFF_FINDING_TYPES: FindingTypes = {
+  restorative: false,
+  incipient: false,
+  periodontal: false,
+  endodontic: false,
+  anatomy: false,
+};
+
+export function allFindingsOff(types: FindingTypes): boolean {
+  return (Object.values(types) as boolean[]).every((v) => !v);
+}
+
 export const DEFAULT_THRESHOLD: DisplayThreshold = "balanced";
 
 export const DEFAULT_ADJUSTMENTS: ImageAdjustments = {

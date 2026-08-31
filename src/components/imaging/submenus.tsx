@@ -7,11 +7,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useImagingToolbar } from "@/context/ImagingToolbarContext";
+import { useAiView } from "@/context/AiViewContext";
 import {
   BRIGHTNESS_MAX,
   BRIGHTNESS_MIN,
   CONTRAST_MAX,
   CONTRAST_MIN,
+  allFindingsOff,
   isAdjusted,
   type DisplayThreshold,
   type FindingKey,
@@ -172,6 +174,7 @@ const FINDINGS: {
 /** Elements L2 — finding-type toggles. Stays pinned while flipping images. */
 export function FindingTypesMenu() {
   const { findingTypes, setFindingTypes } = useImagingToolbar();
+  const { setAiOn } = useAiView();
 
   return (
     <L2Shell>
@@ -182,9 +185,14 @@ export function FindingTypesMenu() {
             key={f.key}
             label={f.label}
             active={on}
-            onClick={() =>
-              setFindingTypes({ ...findingTypes, [f.key]: !findingTypes[f.key] })
-            }
+            onClick={() => {
+              const next = {
+                ...findingTypes,
+                [f.key]: !findingTypes[f.key],
+              };
+              setFindingTypes(next);
+              setAiOn(!allFindingsOff(next));
+            }}
           >
             <span className={cn("flex items-center justify-center", !on && "opacity-40")}>
               {f.icon === "perio" ? (

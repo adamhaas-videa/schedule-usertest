@@ -4,7 +4,7 @@ import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAiView } from "@/context/AiViewContext";
-import { useImagingToolbar } from "@/context/ImagingToolbarContext";
+import { useImagingToolbar, useToggleAiOverlay } from "@/context/ImagingToolbarContext";
 import { imageFilter, imageTransform } from "@/lib/imagingToolbar";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import {
@@ -57,6 +57,7 @@ export default function SingleImageViewer({
     resetAdjustments,
     qualityFindings,
   } = useImagingToolbar();
+  const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
   const [zoom, setZoom] = useState(95);
   const [carouselOpen, setCarouselOpen] = useState(false);
   const adj = adjustmentsFor(slot);
@@ -132,7 +133,7 @@ export default function SingleImageViewer({
           </span>
         ),
         active: aiOn,
-        onClick: () => onAiToggle(!aiOn),      },
+        onClick: toggleAi,      },
       patient: {
         key: "patient-view",
         label: "Patient",
