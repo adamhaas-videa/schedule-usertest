@@ -128,7 +128,7 @@ const DEMO_TABS: { id: DemoTabId; label: string; description: string }[] = [
   },
   {
     id: "summary",
-    label: "Summary",
+    label: "Package",
     description: "Prototype chart tiers — summary slideout only",
   },
   {
