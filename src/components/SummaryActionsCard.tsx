@@ -135,7 +135,9 @@ function TruncatedSummary({
           type="button"
           onClick={onMore}
           aria-label="Read the full patient summary"
-          className="mt-0.5 cursor-pointer text-[10px] font-medium leading-none text-periwinkle-600 underline underline-offset-2 decoration-periwinkle-600/60 hover:text-periwinkle-700 hover:decoration-periwinkle-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-sm"
+          // Block at the blurb's own 11px/15px rhythm so it reads as the next
+          // line of the summary rather than a detached tag.
+          className="block cursor-pointer text-[11px] font-medium leading-[15px] text-periwinkle-600 underline underline-offset-2 decoration-periwinkle-600/60 hover:text-periwinkle-700 hover:decoration-periwinkle-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-sm"
         >
           more
         </button>
