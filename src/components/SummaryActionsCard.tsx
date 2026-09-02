@@ -100,8 +100,11 @@ function InsuranceBadge({ insurance }: { insurance: Insurance }) {
 
 function TruncatedSummary({
   text,
+  onMore,
 }: {
   text: string;
+  /** Opens the patient summary panel — the "more" link's target. */
+  onMore: (e: React.MouseEvent) => void;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [truncated, setTruncated] = useState(false);
@@ -125,9 +128,17 @@ function TruncatedSummary({
         {text}
       </p>
       {truncated && (
-        <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">
+        // Link-styled so the overflow reads as a hit target. The card itself
+        // already opens the summary on click; this stops the bubble so the
+        // panel opens once, from the link.
+        <button
+          type="button"
+          onClick={onMore}
+          aria-label="Read the full patient summary"
+          className="mt-0.5 cursor-pointer text-[10px] font-medium leading-none text-periwinkle-600 underline underline-offset-2 decoration-periwinkle-600/60 hover:text-periwinkle-700 hover:decoration-periwinkle-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-sm"
+        >
           more
-        </span>
+        </button>
       )}
     </div>
   );
@@ -587,7 +598,13 @@ export default function SummaryActionsCard({
                     <p className="text-[10px] uppercase leading-none text-muted-foreground">
                       Patient Summary
                     </p>
-                    <TruncatedSummary text={blurb} />
+                    <TruncatedSummary
+                      text={blurb}
+                      onMore={(e) => {
+                        e.stopPropagation();
+                        openSummary();
+                      }}
+                    />
                   </div>
                 </>
               )}
