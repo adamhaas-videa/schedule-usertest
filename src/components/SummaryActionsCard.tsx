@@ -408,6 +408,8 @@ export interface SummaryActionsCardProps {
   privacyMode: boolean;
   summaryVersion: SummaryVersion;
   cardColorMode: CardColorMode;
+  /** Demo toggle: render the Patient Summary blurb and the divider above it. */
+  showSummary: boolean;
   reviewed: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient?: (patient: Patient) => void;
@@ -420,6 +422,7 @@ export default function SummaryActionsCard({
   privacyMode,
   summaryVersion,
   cardColorMode,
+  showSummary,
   reviewed,
   onOpenClinical,
   onSelectPatient,
@@ -429,6 +432,13 @@ export default function SummaryActionsCard({
   const { sections } = getSummaryVersion(summaryVersion);
   const showInsurance = sections.insurance && Boolean(patient.insurance);
   const isSmall = patient.durationMinutes <= 30;
+  // A full-hour card (228px) has spare height once the header, insurance row,
+  // divider, summary, and footer are laid out; a 45-min card does not.
+  const isTall = patient.durationMinutes >= 60;
+  // Each grouping (header / insurance / divider / summary) gets 4px more
+  // breathing room where the card can afford it: every tall card, and any
+  // non-small card once the summary is off and its rows are gone.
+  const roomy = !isSmall && (isTall || !showSummary);
   const isCompleted = patient.status === "completed";
   const isInChair = patient.status === "in-chair";
   // Same interaction as V2: in-chair keeps CTAs on; every other card
@@ -544,7 +554,12 @@ export default function SummaryActionsCard({
                 {patient.appointmentTime} · Age {age}
               </span>
               {!isSmall && showInsurance && patient.insurance && (
-                <div className="mt-0.5 flex items-center gap-1.5 py-0.5 min-w-0">
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 py-0.5 min-w-0",
+                    roomy ? "mt-1.5" : "mt-0.5"
+                  )}
+                >
                   <InsuranceBadge insurance={patient.insurance} />
                   <span className="text-[10px] text-muted-foreground truncate">
                     {patient.insurance.carrier} · $
@@ -558,21 +573,27 @@ export default function SummaryActionsCard({
 
           {!isSmall && (
             <>
-              <div className="py-1.5">
-                <div className="h-px w-full bg-border" />
-              </div>
-              <div
-                className={cn(
-                  "flex min-h-0 flex-1 flex-col gap-1",
-                  isCompleted && "opacity-60"
-                )}
-              >
-                <p className="text-[10px] uppercase leading-none text-muted-foreground">
-                  Patient Summary
-                </p>
-                <TruncatedSummary text={blurb} />
-              </div>
-              <div className="pt-1.5">
+              {showSummary && (
+                <>
+                  <div className={roomy ? "py-2.5" : "py-1.5"}>
+                    <div className="h-px w-full bg-border" />
+                  </div>
+                  <div
+                    className={cn(
+                      "flex min-h-0 flex-1 flex-col gap-1",
+                      isCompleted && "opacity-60"
+                    )}
+                  >
+                    <p className="text-[10px] uppercase leading-none text-muted-foreground">
+                      Patient Summary
+                    </p>
+                    <TruncatedSummary text={blurb} />
+                  </div>
+                </>
+              )}
+              {/* mt-auto pins the footer to the card's bottom edge when the
+                  summary (the only flex-1 row) is toggled off. */}
+              <div className="mt-auto pt-1.5">
                 <CardActionBar
                   patient={patient}
                   reviewed={reviewed}

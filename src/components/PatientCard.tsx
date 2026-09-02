@@ -284,8 +284,13 @@ function FullCard({
   cardVersion,
   className,
 }: CardChromeProps) {
-  const { reviewedIds, markReviewed, summaryVersion, cardColorMode } =
-    useAiView();
+  const {
+    reviewedIds,
+    markReviewed,
+    summaryVersion,
+    cardColorMode,
+    cardSummaryOn,
+  } = useAiView();
   const status = deriveStatus(patient);
   const age = computeAge(patient.dob);
   const nameClass = privacyMode ? "blur-sm select-none" : "";
@@ -334,6 +339,7 @@ function FullCard({
         privacyMode={privacyMode}
         summaryVersion={summaryVersion}
         cardColorMode={cardColorMode}
+        showSummary={cardSummaryOn}
         reviewed={reviewed}
         onOpenClinical={onOpenClinical}
         onSelectPatient={onSelectPatient}

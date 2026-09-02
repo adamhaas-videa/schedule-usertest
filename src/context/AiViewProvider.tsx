@@ -42,6 +42,7 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
   const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
     DEFAULT_SUMMARY_VERSION
   );
+  const [cardSummaryOn, setCardSummaryOn] = useState(true);
   const [reviewedIds, setReviewedIds] = useState<ReadonlySet<string>>(
     () => new Set()
   );
@@ -76,6 +77,8 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
         setCardColorMode,
         summaryVersion,
         setSummaryVersion,
+        cardSummaryOn,
+        setCardSummaryOn,
         reviewedIds,
         markReviewed,
       }}

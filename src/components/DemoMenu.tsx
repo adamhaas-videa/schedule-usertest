@@ -6,6 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { useAiView } from "@/context/AiViewContext";
 import {
   CARD_COLOR_MODES,
@@ -111,6 +112,40 @@ function VersionSection<T extends string | number>({
   );
 }
 
+function ToggleRow({
+  id,
+  heading,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  heading: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <section className="flex items-start justify-between gap-3 px-1">
+      <label
+        htmlFor={id}
+        className="flex min-w-0 flex-col gap-0.5 cursor-pointer"
+      >
+        <span className="text-sm font-semibold text-foreground">{heading}</span>
+        <span className="text-xs leading-snug text-muted-foreground">
+          {description}
+        </span>
+      </label>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        className="mt-0.5"
+      />
+    </section>
+  );
+}
+
 const PANEL_WIDTH = "!w-[420px] !max-w-[420px]";
 
 type DemoTabId = "cards" | "color" | "summary" | "navigation";
@@ -129,7 +164,8 @@ const DEMO_TABS: { id: DemoTabId; label: string; description: string }[] = [
   {
     id: "summary",
     label: "Package",
-    description: "Prototype chart tiers — summary slideout only",
+    description:
+      "Prototype chart tiers for the summary slideout, plus what the schedule card carries",
   },
   {
     id: "navigation",
@@ -152,6 +188,8 @@ export default function DemoMenu() {
     setCardColorMode,
     summaryVersion,
     setSummaryVersion,
+    cardSummaryOn,
+    setCardSummaryOn,
     navVersion,
     setNavVersion,
     navFooterMode,
@@ -262,12 +300,22 @@ export default function DemoMenu() {
             />
           )}
           {tab === "summary" && (
-            <VersionSection
-              ariaLabel="Patient summary"
-              options={SUMMARY_VERSIONS}
-              value={summaryVersion}
-              onChange={(id: SummaryVersion) => setSummaryVersion(id)}
-            />
+            <>
+              <VersionSection
+                ariaLabel="Patient summary"
+                options={SUMMARY_VERSIONS}
+                value={summaryVersion}
+                onChange={(id: SummaryVersion) => setSummaryVersion(id)}
+              />
+              <div className="h-px bg-border" />
+              <ToggleRow
+                id="demo-card-summary"
+                heading="Patient summary"
+                description="Summary blurb and its divider on the schedule card. Off drops both and opens up the header spacing."
+                checked={cardSummaryOn}
+                onCheckedChange={setCardSummaryOn}
+              />
+            </>
           )}
           {tab === "navigation" && (
             <>

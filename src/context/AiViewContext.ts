@@ -39,6 +39,12 @@ export interface AiViewState {
   summaryVersion: SummaryVersion;
   setSummaryVersion: (version: SummaryVersion) => void;
   /**
+   * Demo-only: whether the Summary actions card carries the Patient Summary
+   * blurb and the divider above it. Off drops both and re-spaces the header.
+   */
+  cardSummaryOn: boolean;
+  setCardSummaryOn: (on: boolean) => void;
+  /**
    * Demo-only: color the Summary actions card chrome from the provider
    * palette or from the appointment/procedure family.
    */
