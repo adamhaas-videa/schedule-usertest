@@ -42,7 +42,7 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
   const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
     DEFAULT_SUMMARY_VERSION
   );
-  const [cardSummaryOn, setCardSummaryOn] = useState(true);
+  const [cardSummaryOn, setCardSummaryOn] = useState(false);
   const [reviewedIds, setReviewedIds] = useState<ReadonlySet<string>>(
     () => new Set()
   );
