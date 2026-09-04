@@ -1,0 +1,4 @@
+# Netlify SPA fallback. React Router owns /schedule and /patient/* on the
+# client, so every deep link and hard refresh must serve index.html (with a
+# 200, not a redirect) instead of Netlify's 404 page.
+/*    /index.html   200
