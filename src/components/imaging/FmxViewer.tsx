@@ -7,7 +7,16 @@ import { useToggleAiOverlay } from "@/context/ImagingToolbarContext";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import { FindingTypesMenu, DisplayThresholdMenu } from "./submenus";
 import ImagingRightPanel from "./ImagingRightPanel";
+import FmxFooter from "./FmxFooter";
 import { WorkflowStudyBar } from "@/components/workflow/WorkflowHeader";
+import {
+  DEFAULT_FMX_SERIES,
+  FMX_BITEWINGS,
+  FMX_BOTTOM_ROW,
+  FMX_TALL_COLUMNS,
+  FMX_TOP_ROW,
+  type FmxSeries,
+} from "@/lib/fmxSeries";
 import {
   PatientToothIcon,
   ClinicalToothIcon,
@@ -79,6 +88,34 @@ function FilmTile({
   );
 }
 
+/** One periapical row of the mount: seven films, the anterior three mounted tall. */
+function PeriapicalRow({
+  slots,
+  aiOn,
+  view,
+  onOpen,
+}: {
+  slots: readonly number[];
+  aiOn: boolean;
+  view: "patient" | "clinical";
+  onOpen: (slot: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-7 gap-2.5">
+      {slots.map((s, i) => (
+        <FilmTile
+          key={s}
+          slot={s}
+          aiOn={aiOn}
+          view={view}
+          tall={FMX_TALL_COLUMNS.has(i)}
+          onOpen={onOpen}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps) {
   const navigate = useNavigate();
   // Patient view is the default when AI is enabled. The selection is held in
@@ -86,7 +123,10 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView } = useAiView();
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
-  const [series, setSeries] = useState<"fmx" | "bw">("fmx");
+  // Footer toggle: the whole mount, or just the bitewings / periapicals.
+  const [series, setSeries] = useState<FmxSeries>(DEFAULT_FMX_SERIES);
+  const showPeriapicals = series !== "bw";
+  const showBitewings = series !== "pa";
 
   const openImage = (slot: number) =>
     navigate(`/patient/${patient.id}/image/${slot}`);
@@ -204,90 +244,60 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
           >
             <div
               ref={chartRef}
-              className="w-[1024px] shrink-0 space-y-10"
+              className={cn(
+                "shrink-0 space-y-10",
+                // The bitewing-only row keeps each film at its mount width:
+                // 4 of the 7 columns plus 3 gaps, so the fit scale enlarges the
+                // films rather than stretching a 4-column grid across 1024px.
+                series === "bw" ? "w-[581px]" : "w-[1024px]"
+              )}
               style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}
             >
-              {/* Row 1 */}
-              <div className="grid grid-cols-7 gap-2.5">
-                {[1, 2, 3, 4, 5, 6, 7].map((s, i) => (
-                  <FilmTile
-                    key={s}
-                    slot={s}
-                    aiOn={aiOn}
-                    view={view}
-                    tall={i === 2 || i === 3 || i === 4}
-                    onOpen={openImage}
-                  />
+              {showPeriapicals && (
+                <PeriapicalRow
+                  slots={FMX_TOP_ROW}
+                  aiOn={aiOn}
+                  view={view}
+                  onOpen={openImage}
+                />
+              )}
+              {showBitewings &&
+                (series === "fmx" ? (
+                  // In the full mount the bitewings flank an empty centre.
+                  <div className="grid grid-cols-7 gap-2.5">
+                    <FilmTile slot={8} aiOn={aiOn} view={view} onOpen={openImage} />
+                    <FilmTile slot={9} aiOn={aiOn} view={view} onOpen={openImage} />
+                    <div className="col-span-3 h-24 rounded-sm border border-dashed border-border" />
+                    <FilmTile slot={10} aiOn={aiOn} view={view} onOpen={openImage} />
+                    <FilmTile slot={11} aiOn={aiOn} view={view} onOpen={openImage} />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {FMX_BITEWINGS.map((s) => (
+                      <FilmTile
+                        key={s}
+                        slot={s}
+                        aiOn={aiOn}
+                        view={view}
+                        onOpen={openImage}
+                      />
+                    ))}
+                  </div>
                 ))}
-              </div>
-              {/* Row 2 — bitewings with empty center */}
-              <div className="grid grid-cols-7 gap-2.5">
-                <FilmTile slot={8} aiOn={aiOn} view={view} onOpen={openImage} />
-                <FilmTile slot={9} aiOn={aiOn} view={view} onOpen={openImage} />
-                <div className="col-span-3 h-24 rounded-sm border border-dashed border-border" />
-                <FilmTile slot={10} aiOn={aiOn} view={view} onOpen={openImage} />
-                <FilmTile slot={11} aiOn={aiOn} view={view} onOpen={openImage} />
-              </div>
-              {/* Row 3 */}
-              <div className="grid grid-cols-7 gap-2.5">
-                {[12, 13, 14, 15, 16, 17, 18].map((s, i) => (
-                  <FilmTile
-                    key={s}
-                    slot={s}
-                    aiOn={aiOn}
-                    view={view}
-                    tall={i === 2 || i === 3 || i === 4}
-                    onOpen={openImage}
-                  />
-                ))}
-              </div>
+              {showPeriapicals && (
+                <PeriapicalRow
+                  slots={FMX_BOTTOM_ROW}
+                  aiOn={aiOn}
+                  view={view}
+                  onOpen={openImage}
+                />
+              )}
             </div>
           </div>
         </div>
 
         {/* Footer — spans full width, extending over the left toolbar rail */}
-        <div className="shrink-0 h-16 px-3 flex items-center gap-4 border-t border-border bg-card">
-          {/* Sort */}
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 h-10 px-3 rounded-md bg-muted text-muted-foreground text-sm font-medium hover:text-foreground transition-colors cursor-pointer"
-          >
-            <i className="fa-solid fa-arrow-down-wide-short text-xs" aria-hidden />
-            Sort
-          </button>
-
-          {/* FMX / BW */}
-          <div className="inline-flex items-center h-10 p-1 rounded-md bg-muted">
-            {(
-              [
-                { id: "fmx", label: "FMX", count: 18 },
-                { id: "bw", label: "BW", count: 4 },
-              ] as const
-            ).map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setSeries(s.id)}
-                className={cn(
-                  "inline-flex items-center gap-2 h-full px-3 rounded-[2px] text-sm font-medium transition-colors cursor-pointer",
-                  series === s.id
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {s.label}
-                <span
-                  className={cn(
-                    "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold",
-                    series === s.id ? "bg-muted text-foreground" : "bg-background text-muted-foreground"
-                  )}
-                >
-                  {s.count}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <FmxFooter patient={patient} series={series} onSeriesChange={setSeries} />
       </div>
 
       {/* Right AI panel */}
