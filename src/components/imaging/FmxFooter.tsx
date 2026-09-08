@@ -57,9 +57,15 @@ function StripArrow({
 
 /**
  * FMX viewer footer: visit context on the left, the visit's other captures in
- * the middle, and Sort + the FMX / BW / PA series toggles on the right. Sits
- * inside the `dark imaging-surface` root, so bg-card / border-border resolve
- * to the viewer's #101214 / #27272a.
+ * the middle, and Sort + the FMX / BW / PA / Other series toggles on the
+ * right. Sits inside the `dark imaging-surface` root, so bg-card /
+ * border-border resolve to the viewer's #101214 / #27272a.
+ *
+ * Responsive tiers are container queries on the footer itself (its width is
+ * the viewport minus the right panel, so viewport breakpoints would drift):
+ *   ≥ 900px  thumbnail strip shown; below, the Other toggle is the only way in
+ *   ≥ 760px  disclaimer line shown
+ *   ≥ 560px  Sort label shown (icon-only below)
  */
 export default function FmxFooter({
   patient,
@@ -72,9 +78,10 @@ export default function FmxFooter({
 
   return (
     <TooltipProvider delay={150}>
-      <footer className="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 border-t border-border bg-card px-3">
-        {/* Left — visit context */}
-        <div className="flex min-w-0 flex-col gap-1 text-[10px] leading-none text-muted-foreground">
+      <footer className="@container/footer flex h-16 shrink-0 items-center gap-4 border-t border-border bg-card px-3">
+        {/* Left — visit context. Equal flex share with the right block so the
+            strip sits centred; min-w-0 lets it give way first. */}
+        <div className="flex min-w-0 flex-1 basis-0 flex-col gap-1 text-[10px] leading-none text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap">
               Visit Date: {formatVisitDate(patient.appointmentDate)}
@@ -94,38 +101,53 @@ export default function FmxFooter({
               </TooltipContent>
             </Tooltip>
           </div>
-          <span className="truncate">
+          <span className="hidden truncate @min-[760px]/footer:inline">
             Visualization is intended for patient education.
           </span>
         </div>
 
-        {/* Center — other captures from this visit. The footer spans the 72px
-            toolbar rail, so shift by half of it to centre the strip over the
-            film viewport, as in the design. */}
-        <div className="flex translate-x-9 items-center gap-4">
+        {/* Center — other captures from this visit. Each thumbnail opens the
+            Other series in the grid; hidden on narrow footers, where the
+            Other toggle covers the same ground. */}
+        <div className="hidden shrink-0 items-center gap-4 @min-[900px]/footer:flex">
           <StripArrow direction={-1} onClick={() => scrollStrip(-1)} />
           <div
             ref={stripRef}
             className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]"
           >
             {VISIT_IMAGES.map((img) => (
-              <img
+              <button
                 key={img.id}
-                src={img.src}
-                alt={img.alt}
-                draggable={false}
-                className="h-[42px] w-14 shrink-0 bg-black object-cover"
-              />
+                type="button"
+                onClick={() => onSeriesChange("other")}
+                aria-label={`Show other visit images (${img.alt})`}
+                className={cn(
+                  "h-[42px] w-14 shrink-0 overflow-hidden bg-black transition-shadow cursor-pointer hover:ring-2 hover:ring-deep-teal-400",
+                  series === "other" && "ring-2 ring-deep-teal-400"
+                )}
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  draggable={false}
+                  className="size-full object-cover"
+                />
+              </button>
             ))}
           </div>
           <StripArrow direction={1} onClick={() => scrollStrip(1)} />
         </div>
 
-        {/* Right — sort + series */}
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="ghost" className="text-foreground cursor-pointer">
+        {/* Right — sort + series. min-w-fit keeps the controls intact; the
+            left block absorbs the squeeze. */}
+        <div className="flex min-w-fit flex-1 basis-0 items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            aria-label="Sort"
+            className="text-foreground cursor-pointer"
+          >
             <i className="fa-regular fa-arrows-cross text-base" aria-hidden />
-            Sort
+            <span className="hidden @min-[560px]/footer:inline">Sort</span>
           </Button>
           <div
             role="radiogroup"
@@ -149,7 +171,7 @@ export default function FmxFooter({
                   )}
                 >
                   {s.label}
-                  <CountBadge count={s.slots.length} />
+                  <CountBadge count={s.count} />
                 </Button>
               );
             })}

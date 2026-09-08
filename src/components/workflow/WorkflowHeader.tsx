@@ -9,6 +9,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { XL_UP, useMediaQuery } from "@/lib/useMediaQuery";
 import { computeAge } from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
 import { CLINICAL_TAB_NAV, type ClinicalTab } from "@/types/clinical";
@@ -146,11 +153,21 @@ export default function WorkflowHeader({
 }: WorkflowHeaderProps) {
   const navigate = useNavigate();
   const age = computeAge(patient.dob);
+  const demographics = `Age ${age} • DOB ${patient.dob}`;
+  // Below xl the header can't fit the demographics beside the name (the tab
+  // strip and Start Recording alone take ~610px), so they move into a tooltip
+  // on the name. At xl and up they stay inline and the tooltip is not mounted.
+  const wide = useMediaQuery(XL_UP);
+  const blurClass = privacyMode ? "blur-sm select-none" : "";
+  const nameClass = cn(
+    "min-w-0 truncate text-lg font-medium text-secondary-foreground whitespace-nowrap transition-[filter]",
+    blurClass
+  );
 
   return (
     <div className="shrink-0 flex flex-col">
       <header className="h-[51px] shrink-0 bg-[#fafaf9] border-b border-border flex items-center justify-between pr-4">
-        <div className="flex flex-1 items-center gap-4 min-w-0">
+        <div className="flex flex-1 items-center gap-3 xl:gap-4 min-w-0">
           <div className="w-[72px] shrink-0 flex items-center justify-center">
             <button
               type="button"
@@ -178,22 +195,30 @@ export default function WorkflowHeader({
             <i className="fa-regular fa-angle-left text-base" aria-hidden />
           </Button>
 
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-3 xl:gap-4 min-w-0">
+            {wide ? (
+              <span className={nameClass}>{patient.name}</span>
+            ) : (
+              <TooltipProvider delay={150}>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={<span tabIndex={0} className={nameClass} />}
+                  >
+                    {patient.name}
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start">
+                    <span className={blurClass}>{demographics}</span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <span
               className={cn(
-                "text-lg font-medium text-secondary-foreground whitespace-nowrap transition-[filter]",
-                privacyMode && "blur-sm select-none"
+                "hidden xl:inline text-sm text-muted-foreground whitespace-nowrap leading-none transition-[filter]",
+                blurClass
               )}
             >
-              {patient.name}
-            </span>
-            <span
-              className={cn(
-                "text-sm text-muted-foreground whitespace-nowrap leading-none transition-[filter]",
-                privacyMode && "blur-sm select-none"
-              )}
-            >
-              Age {age} • DOB {patient.dob}
+              {demographics}
             </span>
           </div>
 
@@ -219,7 +244,9 @@ export default function WorkflowHeader({
                   aria-selected={active}
                   onClick={() => navigate(`/patient/${patient.id}/${t.path}`)}
                   className={cn(
-                    "h-7 px-2.5 rounded-[9px] text-[15px] font-medium whitespace-nowrap transition-colors cursor-pointer",
+                    // Below xl the strip tightens (14px, 8px padding) so a long
+                    // patient name keeps its room; xl and up is the Figma spec.
+                    "h-7 px-2 text-sm xl:px-2.5 xl:text-[15px] rounded-[9px] font-medium whitespace-nowrap transition-colors cursor-pointer",
                     active
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"

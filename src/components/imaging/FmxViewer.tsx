@@ -15,6 +15,7 @@ import {
   FMX_BOTTOM_ROW,
   FMX_TALL_COLUMNS,
   FMX_TOP_ROW,
+  VISIT_IMAGES,
   type FmxSeries,
 } from "@/lib/fmxSeries";
 import {
@@ -123,10 +124,11 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView } = useAiView();
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
-  // Footer toggle: the whole mount, or just the bitewings / periapicals.
+  // Footer toggle: the whole mount, one film type, or the visit's other captures.
   const [series, setSeries] = useState<FmxSeries>(DEFAULT_FMX_SERIES);
-  const showPeriapicals = series !== "bw";
-  const showBitewings = series !== "pa";
+  const showPeriapicals = series === "fmx" || series === "pa";
+  const showBitewings = series === "fmx" || series === "bw";
+  const showOther = series === "other";
 
   const openImage = (slot: number) =>
     navigate(`/patient/${patient.id}/image/${slot}`);
@@ -291,6 +293,25 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
                   view={view}
                   onOpen={openImage}
                 />
+              )}
+              {showOther && (
+                // Pano + intraoral photos. These aren't mount slots, so they
+                // have no single-image route yet and render as plain tiles.
+                <div className="grid grid-cols-3 gap-2.5">
+                  {VISIT_IMAGES.map((img) => (
+                    <div
+                      key={img.id}
+                      className="h-56 overflow-hidden rounded-sm bg-black"
+                    >
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        className="size-full object-contain"
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
