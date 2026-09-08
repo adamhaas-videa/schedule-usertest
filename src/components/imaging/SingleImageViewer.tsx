@@ -14,7 +14,8 @@ import {
   ToolsMenu,
 } from "./submenus";
 import ImagingRightPanel from "./ImagingRightPanel";
-import ImageCarousel from "./ImageCarousel";
+import SingleImageFooter from "./SingleImageFooter";
+import { INTRAORAL_PHOTOS } from "@/lib/fmxSeries";
 import { WorkflowStudyBar } from "@/components/workflow/WorkflowHeader";
 import {
   PatientToothIcon,
@@ -31,7 +32,6 @@ interface SingleImageViewerProps {
   onAiToggle: (on: boolean) => void;
   expanded: boolean;
   onToggleExpand: () => void;
-  onSelectSlot: (slot: number) => void;
   onStep: (delta: number) => void;
 }
 
@@ -43,14 +43,13 @@ export default function SingleImageViewer({
   onAiToggle,
   expanded,
   onToggleExpand,
-  onSelectSlot,
   onStep,
 }: SingleImageViewerProps) {
   const navigate = useNavigate();
   // Patient view is the default when AI is enabled. The selection is held in
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
-  const { view, setView } = useAiView();
+  const { view, setView, imagingPanelOpen, setImagingPanelOpen } = useAiView();
   const {
     adjustmentsFor,
     patchAdjustments,
@@ -59,7 +58,14 @@ export default function SingleImageViewer({
   } = useImagingToolbar();
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
   const [zoom, setZoom] = useState(95);
-  const [carouselOpen, setCarouselOpen] = useState(false);
+  // Footer thumbnail selection, keyed to the film it was made on so stepping to
+  // another image drops back to that film's radiograph.
+  const [photoSelection, setPhotoSelection] = useState<{
+    slot: number;
+    photoId: string | null;
+  }>({ slot, photoId: null });
+  const selectedPhotoId =
+    photoSelection.slot === slot ? photoSelection.photoId : null;
   const adj = adjustmentsFor(slot);
 
   useEffect(() => {
@@ -95,18 +101,27 @@ export default function SingleImageViewer({
   const CLINICAL_SET_AVAILABLE = true;
   const paddedSlot = String(slot).padStart(2, "0");
   const patientSrc = `/xrays/slot-${paddedSlot}.png`;
-  const src = !aiOn
+  const filmSrc = !aiOn
     ? `/xrays/ai-off/${slot}.png`
     : view === "clinical" && CLINICAL_SET_AVAILABLE
       ? `/xrays/clinical/slot-${paddedSlot}.png`
       : patientSrc;
+
+  // The footer's thumbnails select between the film on screen and the intraoral
+  // photos of the same area. A photo takes the viewport until the user steps to
+  // another film or picks the film thumbnail again; the AI overlays are film
+  // only, so the toggles don't apply while a photo is up.
+  const selectedPhoto =
+    INTRAORAL_PHOTOS.find((photo) => photo.id === selectedPhotoId) ?? null;
+  const src = selectedPhoto ? selectedPhoto.src : filmSrc;
+  const alt = selectedPhoto ? selectedPhoto.alt : `Radiograph ${slot}`;
 
   const handleImgError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
     // A not-yet-added clinical slot falls back to the patient image.
     const img = e.currentTarget;
-    if (aiOn && view === "clinical" && !img.src.endsWith(patientSrc)) {
+    if (!selectedPhoto && aiOn && view === "clinical" && !img.src.endsWith(patientSrc)) {
       img.src = patientSrc;
     }
   };
@@ -190,7 +205,7 @@ export default function SingleImageViewer({
       <div className="dark imaging-surface flex-1 min-h-0 relative bg-background flex items-center justify-center overflow-hidden">
         <img
           src={src}
-          alt={`Radiograph ${slot}`}
+          alt={alt}
           className={cn(
             "h-full w-full object-contain transition-[transform,filter]",
             adj.magnify && "cursor-zoom-in"
@@ -230,7 +245,12 @@ export default function SingleImageViewer({
       {/* Toolbar + viewport stacked above a full-width footer that extends over
           the toolbar rail to the left viewport edge (matches the FMX viewer). */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <WorkflowStudyBar patient={patient} activeTab="xray" />
+        <WorkflowStudyBar
+          patient={patient}
+          activeTab="xray"
+          rightPanelOpen={imagingPanelOpen}
+          onToggleRightPanel={() => setImagingPanelOpen(!imagingPanelOpen)}
+        />
         <div className="flex-1 min-h-0 flex">
           <ImagingToolbar items={toolbarItems} />
 
@@ -248,7 +268,7 @@ export default function SingleImageViewer({
             </Button>
             <img
               src={src}
-              alt={`Radiograph ${slot}`}
+              alt={alt}
               className={cn(
                 "h-full w-full object-contain transition-[transform,filter]",
                 adj.magnify && "cursor-zoom-in"
@@ -271,96 +291,26 @@ export default function SingleImageViewer({
                 </span>
               </div>
             )}
-
-            <ImageCarousel
-              open={carouselOpen}
-              slots={slots}
-              currentSlot={slot}
-              onSelect={(s) => {
-                onSelectSlot(s);
-              }}
-              onClose={() => setCarouselOpen(false)}
-            />
           </div>
         </div>
 
         {/* Footer — spans full width, extending over the left toolbar rail */}
-        <div className="relative shrink-0 h-16 px-4 flex items-center gap-4 border-t border-border bg-card">
-          {/* Findings note */}
-          <div className="hidden xl:flex flex-col leading-tight">
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              11 Findings · 5 Hidden
-              <i className="fa-solid fa-circle-info text-[11px]" aria-hidden />
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Visualization is intended for patient education.
-            </span>
-          </div>
-
-          {/* Image navigation — absolutely centered over the radiograph viewport.
-              The band starts at left-[72px] to skip the toolbar rail (w-[72px]),
-              keeping this group centered on the film regardless of the flanking
-              findings note / zoom controls. The band is pointer-events-none so it
-              doesn't intercept clicks on the controls it overlaps. */}
-          <div className="pointer-events-none absolute inset-y-0 left-[72px] right-0 flex items-center justify-center">
-            <div className="pointer-events-auto flex items-center gap-3">
-              <button type="button" onClick={() => onStep(-1)} aria-label="Previous image" className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer">
-                <i className="fa-regular fa-angle-left" aria-hidden />
-              </button>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                Image {index + 1}/{slots.length}
-              </span>
-              <button type="button" onClick={() => onStep(1)} aria-label="Next image" className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer">
-                <i className="fa-regular fa-angle-right" aria-hidden />
-              </button>
-            </div>
-          </div>
-
-          {/* Zoom + view controls — grouped and pinned to the right */}
-          <div className="ml-auto flex items-center gap-3">
-            {/* Zoom slider */}
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min={25}
-                max={200}
-                value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
-                aria-label="Zoom"
-                className="w-28 accent-deep-teal-400 cursor-pointer"
-              />
-              <span className="w-10 text-xs text-muted-foreground tabular-nums">{zoom}%</span>
-            </div>
-
-            {/* Expand */}
-            <button
-              type="button"
-              onClick={onToggleExpand}
-              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              <i className="fa-regular fa-expand text-xs" aria-hidden />
-              Expand
-            </button>
-
-            {/* Images (carousel) */}
-            <button
-              type="button"
-              onClick={() => setCarouselOpen((v) => !v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md transition-colors cursor-pointer",
-                carouselOpen ? "bg-muted text-foreground" : "text-foreground hover:bg-muted"
-              )}
-            >
-              <i className="fa-regular fa-images text-xs" aria-hidden />
-              Images
-            </button>
-          </div>
-        </div>
+        <SingleImageFooter
+          slot={slot}
+          slots={slots}
+          selectedPhotoId={selectedPhotoId}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          onStep={onStep}
+          onSelectPhoto={(photoId) => setPhotoSelection({ slot, photoId })}
+          onToggleExpand={onToggleExpand}
+        />
       </div>
 
       <ImagingRightPanel
         patient={patient}
         subtitle="Below are the AI analysis results for all images from this visit:"
+        open={imagingPanelOpen}
       />
     </div>
   );

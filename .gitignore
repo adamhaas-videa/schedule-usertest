@@ -26,3 +26,6 @@ dist-ssr
 
 # Conductor machine-local repo settings
 .conductor/settings.local.toml
+
+# Netlify CLI local site link
+.netlify/

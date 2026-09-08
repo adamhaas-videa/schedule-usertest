@@ -122,7 +122,7 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // Patient view is the default when AI is enabled. The selection is held in
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
-  const { view, setView } = useAiView();
+  const { view, setView, imagingPanelOpen, setImagingPanelOpen } = useAiView();
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
   // Footer toggle: the whole mount, one film type, or the visit's other captures.
   const [series, setSeries] = useState<FmxSeries>(DEFAULT_FMX_SERIES);
@@ -236,7 +236,12 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
       {/* Left column: study bar + viewer. Right panel is a sibling so it
           extends up to the L1 header. */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <WorkflowStudyBar patient={patient} activeTab="xray" />
+        <WorkflowStudyBar
+          patient={patient}
+          activeTab="xray"
+          rightPanelOpen={imagingPanelOpen}
+          onToggleRightPanel={() => setImagingPanelOpen(!imagingPanelOpen)}
+        />
         <div className="flex-1 min-h-0 flex">
           <ImagingToolbar items={toolbarItems} />
 
@@ -322,7 +327,7 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
       </div>
 
       {/* Right AI panel */}
-      <ImagingRightPanel patient={patient} />
+      <ImagingRightPanel patient={patient} open={imagingPanelOpen} />
     </div>
   );
 }

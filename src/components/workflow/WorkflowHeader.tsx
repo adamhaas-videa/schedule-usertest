@@ -74,9 +74,17 @@ function formatRelative(date: Date, now = new Date()): string {
 export function WorkflowStudyBar({
   patient,
   activeTab,
+  rightPanelOpen,
+  onToggleRightPanel,
 }: {
   patient: Patient;
   activeTab: ClinicalTab;
+  /** Whether the sibling right rail is expanded. Only read when a toggle
+   *  handler is supplied. */
+  rightPanelOpen?: boolean;
+  /** Supplied by surfaces that own a collapsible right rail (the imaging
+   *  viewers). When omitted the collapse control isn't rendered. */
+  onToggleRightPanel?: () => void;
 }) {
   const [studyDate, setStudyDate] = useState(() =>
     parseISODate(patient.appointmentDate)
@@ -140,6 +148,42 @@ export function WorkflowStudyBar({
           {relative}
         </span>
       </div>
+
+      {/* Right-rail collapse. While the rail is open, `-mr-4` cancels the
+          bar's padding so the 20px disc sits flush against the rail's edge, as
+          in the design; collapsed, it keeps the padding rather than kissing the
+          window edge. The `before` box widens the hit target without moving
+          the disc. */}
+      {onToggleRightPanel && (
+        <button
+          type="button"
+          onClick={onToggleRightPanel}
+          aria-expanded={rightPanelOpen}
+          aria-label={rightPanelOpen ? "Collapse AI panel" : "Expand AI panel"}
+          title={rightPanelOpen ? "Collapse AI panel" : "Expand AI panel"}
+          className={cn(
+            "relative ml-auto flex size-5 shrink-0 items-center justify-center rounded-full",
+            rightPanelOpen && "-mr-4",
+            "before:absolute before:-inset-1.5 before:content-['']",
+            // The margin animates alongside the rail so the disc travels with
+            // the edge it belongs to instead of jumping ahead of it.
+            "transition-[margin-right,background-color,color] duration-300 ease-out",
+            "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            dark
+              ? "bg-zinc-950 text-zinc-50 hover:bg-zinc-800"
+              : "bg-foreground text-background hover:opacity-80"
+          )}
+        >
+          <i
+            className={
+              rightPanelOpen
+                ? "fa-regular fa-arrow-right-to-line text-[10px]"
+                : "fa-regular fa-arrow-left-to-line text-[10px]"
+            }
+            aria-hidden
+          />
+        </button>
+      )}
     </div>
   );
 }

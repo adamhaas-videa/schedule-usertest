@@ -20,6 +20,12 @@ export interface AiViewState {
   privacyMode: boolean;
   setPrivacyMode: (on: boolean) => void;
   /**
+   * Whether the imaging right rail (odontogram + AI Summary) is expanded.
+   * Held here so a collapse survives FMX ↔ single image navigation.
+   */
+  imagingPanelOpen: boolean;
+  setImagingPanelOpen: (open: boolean) => void;
+  /**
    * Which patient-chart demo version is selected. Shared so the schedule
    * header dropdown and the /patient/:id/chart tab stay in sync.
    */

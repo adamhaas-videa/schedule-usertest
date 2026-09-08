@@ -123,8 +123,15 @@ export default function FmxFooter({
                 onClick={() => onSeriesChange("other")}
                 aria-label={`Show other visit images (${img.alt})`}
                 className={cn(
-                  "h-[42px] w-14 shrink-0 overflow-hidden bg-black transition-shadow cursor-pointer hover:ring-2 hover:ring-deep-teal-400",
-                  series === "other" && "ring-2 ring-deep-teal-400"
+                  // Inset outline rather than `ring-*`: the strip is a scroll
+                  // container (overflow-x-auto forces overflow-y to match), so
+                  // it clips a ring's top and bottom against the content edge
+                  // and leaves only the left/right segments showing in the gaps
+                  // between thumbnails. Outlines paint above child content, so
+                  // this sits on the image rather than under it.
+                  "h-[42px] w-14 shrink-0 overflow-hidden bg-black cursor-pointer hover:outline-2 hover:-outline-offset-2 hover:outline-deep-teal-400",
+                  series === "other" &&
+                    "outline-2 -outline-offset-2 outline-deep-teal-400"
                 )}
               >
                 <img

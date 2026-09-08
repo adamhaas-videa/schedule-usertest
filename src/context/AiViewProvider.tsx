@@ -26,6 +26,7 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
   const [aiOn, setAiOn] = useState(true);
   const [view, setView] = useState<AiView>("patient");
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [imagingPanelOpen, setImagingPanelOpen] = useState(true);
   const [chartVersion, setChartVersion] = useState<ChartVersion>(
     DEFAULT_CHART_VERSION
   );
@@ -65,6 +66,8 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
         setView,
         privacyMode,
         setPrivacyMode,
+        imagingPanelOpen,
+        setImagingPanelOpen,
         chartVersion,
         setChartVersion,
         navVersion,
