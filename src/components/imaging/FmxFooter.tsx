@@ -57,13 +57,14 @@ function StripArrow({
 
 /**
  * FMX viewer footer: visit context on the left, the visit's other captures in
- * the middle, and Sort + the FMX / BW / PA / Other series toggles on the
- * right. Sits inside the `dark imaging-surface` root, so bg-card /
+ * the middle, and Sort + the FMX / BW / PA series toggles on the right.
+ * Other joins the toggles only when the thumbnail strip is hidden. Sits inside the `dark imaging-surface` root, so bg-card /
  * border-border resolve to the viewer's #101214 / #27272a.
  *
  * Responsive tiers are container queries on the footer itself (its width is
  * the viewport minus the right panel, so viewport breakpoints would drift):
- *   ≥ 900px  thumbnail strip shown; below, the Other toggle is the only way in
+ *   ≥ 900px  thumbnail strip shown and the Other toggle hidden — the strip is
+ *             the way into that series; below, the toggle takes over for it
  *   ≥ 760px  disclaimer line shown
  *   ≥ 560px  Sort label shown (icon-only below)
  */
@@ -166,6 +167,9 @@ export default function FmxFooter({
                   onClick={() => onSeriesChange(s.id)}
                   className={cn(
                     "text-foreground cursor-pointer",
+                    // Other duplicates the thumbnail strip, so it only earns a
+                    // slot on footers too narrow to show the strip.
+                    s.id === "other" && "@min-[900px]/footer:hidden",
                     selected &&
                       "border-input bg-white/[0.08] text-accent-foreground hover:bg-white/[0.12] hover:text-accent-foreground"
                   )}
