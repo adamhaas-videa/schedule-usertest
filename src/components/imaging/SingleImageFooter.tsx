@@ -41,6 +41,19 @@ const TALL_SLOTS: ReadonlySet<number> = new Set(
   )
 );
 
+/* Strip geometry. Thumbnails are 40px tall at their asset's true aspect, so a
+ * posterior film comes out 53px wide, a tall anterior 30px, the pano 53px and
+ * an intraoral photo 56px. Widths are applied inline rather than as utilities so
+ * the window below is derived from the same numbers. */
+const THUMB_GAP_PX = 4;
+const THUMB_W_PX = { film: 53, anterior: 30, pano: 53, photo: 56 } as const;
+
+/** The strip shows at most this many thumbnails; the rest scroll. */
+const MAX_VISIBLE_THUMBS = 6;
+const STRIP_MAX_W_PX =
+  MAX_VISIBLE_THUMBS * THUMB_W_PX.film +
+  (MAX_VISIBLE_THUMBS - 1) * THUMB_GAP_PX;
+
 function NavArrow({
   direction,
   onClick,
@@ -73,13 +86,13 @@ function NavArrow({
 function Thumbnail({
   src,
   label,
-  widthClass,
+  widthPx,
   active,
   onClick,
 }: {
   src: string;
   label: string;
-  widthClass: string;
+  widthPx: number;
   active: boolean;
   onClick: () => void;
 }) {
@@ -90,6 +103,7 @@ function Thumbnail({
       aria-label={label}
       aria-current={active ? "true" : undefined}
       data-active={active}
+      style={{ width: widthPx }}
       className={cn(
         // The active image is ringed with an inset outline, not `ring-*`: the
         // strip is a scroll container (overflow-x-auto forces overflow-y to
@@ -98,7 +112,6 @@ function Thumbnail({
         // thumbnails. Outlines paint above child content, so this sits on the
         // image rather than under it.
         "h-10 shrink-0 overflow-hidden bg-black transition-opacity cursor-pointer",
-        widthClass,
         active
           ? "outline-2 -outline-offset-2 outline-deep-teal-400"
           : "opacity-50 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
@@ -123,10 +136,10 @@ function Thumbnail({
  *
  * The strip carries the whole study — all 18 mount films, then the visit's pano
  * and intraoral photos — and any of them can be selected straight into the
- * viewport. That's more than fits, so it scrolls, the active thumbnail is kept
- * in view, and the flanking arrows page it the way the FMX footer's strip does.
- * The FMX footer shows only the non-FMX captures, since its grid already has
- * the films.
+ * viewport. Six show at a time and the rest scroll: the active thumbnail is
+ * kept in view, and the flanking arrows page it the way the FMX footer's strip
+ * does. The FMX footer shows only the non-FMX captures, since its grid already
+ * has the films.
  *
  * Responsive tiers are container queries on the footer itself (its width is the
  * viewport minus the right panel, which collapses, so viewport breakpoints would
@@ -147,8 +160,14 @@ export default function SingleImageFooter({
 }: SingleImageFooterProps) {
   const index = slots.indexOf(slot);
   const stripRef = useRef<HTMLDivElement>(null);
-  const scrollStrip = (direction: -1 | 1) =>
-    stripRef.current?.scrollBy({ left: direction * 180, behavior: "smooth" });
+  const scrollStrip = (direction: -1 | 1) => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    // Page by the visible window, less one thumbnail so there's overlap to
+    // orient against.
+    const page = Math.max(strip.clientWidth - THUMB_W_PX.film, THUMB_W_PX.film);
+    strip.scrollBy({ left: direction * page, behavior: "smooth" });
+  };
 
   // The study runs past the strip's width, so follow the selection — stepping
   // through films has to walk the strip along with it.
@@ -188,11 +207,9 @@ export default function SingleImageFooter({
           </span>
         </div>
 
-        {/* Center — the film stepper, then the study. Takes the space the
-            flanking blocks don't need, so the strip shows as many thumbnails as
-            the footer allows. Films use the plain patient assets: the AI
-            overlays aren't legible at 40px, so the strip stays independent of
-            the AI / view toggles. */}
+        {/* Center — the film stepper, then the study. Films use the plain
+            patient assets: the AI overlays aren't legible at 40px, so the strip
+            stays independent of the AI / view toggles. */}
         <div className="flex min-w-0 flex-1 items-center justify-center gap-8">
           <div className="flex shrink-0 items-center justify-center gap-4">
             <NavArrow direction={-1} onClick={() => onStep(-1)} />
@@ -205,7 +222,10 @@ export default function SingleImageFooter({
             <NavArrow direction={1} onClick={() => onStep(1)} />
           </div>
 
-          <div className="hidden min-w-0 items-center gap-4 @min-[900px]/footer:flex">
+          <div
+            className="hidden min-w-0 items-center @min-[900px]/footer:flex"
+            style={{ gap: THUMB_GAP_PX }}
+          >
             <StripArrow
               direction={-1}
               label="Scroll thumbnails left"
@@ -213,14 +233,17 @@ export default function SingleImageFooter({
             />
             <div
               ref={stripRef}
-              className="flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+              className="flex min-w-0 items-center overflow-x-auto [scrollbar-width:none]"
+              style={{ gap: THUMB_GAP_PX, maxWidth: STRIP_MAX_W_PX }}
             >
               {slots.map((s) => (
                 <Thumbnail
                   key={`film-${s}`}
                   src={`/xrays/slot-${String(s).padStart(2, "0")}.png`}
                   label={`Radiograph ${s}`}
-                  widthClass={TALL_SLOTS.has(s) ? "w-[30px]" : "w-[53px]"}
+                  widthPx={
+                    TALL_SLOTS.has(s) ? THUMB_W_PX.anterior : THUMB_W_PX.film
+                  }
                   active={selectedVisitImageId === null && s === slot}
                   onClick={() => onSelectFilm(s)}
                 />
@@ -230,7 +253,7 @@ export default function SingleImageFooter({
                   key={image.id}
                   src={image.src}
                   label={image.alt}
-                  widthClass={image.kind === "pano" ? "w-[53px]" : "w-14"}
+                  widthPx={THUMB_W_PX[image.kind]}
                   active={selectedVisitImageId === image.id}
                   onClick={() => onSelectVisitImage(image.id)}
                 />
