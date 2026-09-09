@@ -15,7 +15,7 @@ import {
 } from "./submenus";
 import ImagingRightPanel from "./ImagingRightPanel";
 import SingleImageFooter from "./SingleImageFooter";
-import { INTRAORAL_PHOTOS } from "@/lib/fmxSeries";
+import { VISIT_IMAGES } from "@/lib/fmxSeries";
 import { WorkflowStudyBar } from "@/components/workflow/WorkflowHeader";
 import {
   PatientToothIcon,
@@ -32,6 +32,7 @@ interface SingleImageViewerProps {
   onAiToggle: (on: boolean) => void;
   expanded: boolean;
   onToggleExpand: () => void;
+  onSelectSlot: (slot: number) => void;
   onStep: (delta: number) => void;
 }
 
@@ -43,6 +44,7 @@ export default function SingleImageViewer({
   onAiToggle,
   expanded,
   onToggleExpand,
+  onSelectSlot,
   onStep,
 }: SingleImageViewerProps) {
   const navigate = useNavigate();
@@ -59,13 +61,13 @@ export default function SingleImageViewer({
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
   const [zoom, setZoom] = useState(95);
   // Footer thumbnail selection, keyed to the film it was made on so stepping to
-  // another image drops back to that film's radiograph.
-  const [photoSelection, setPhotoSelection] = useState<{
+  // another film drops back to that film's radiograph.
+  const [visitImageSelection, setVisitImageSelection] = useState<{
     slot: number;
-    photoId: string | null;
-  }>({ slot, photoId: null });
-  const selectedPhotoId =
-    photoSelection.slot === slot ? photoSelection.photoId : null;
+    imageId: string | null;
+  }>({ slot, imageId: null });
+  const selectedVisitImageId =
+    visitImageSelection.slot === slot ? visitImageSelection.imageId : null;
   const adj = adjustmentsFor(slot);
 
   useEffect(() => {
@@ -107,21 +109,21 @@ export default function SingleImageViewer({
       ? `/xrays/clinical/slot-${paddedSlot}.png`
       : patientSrc;
 
-  // The footer's thumbnails select between the film on screen and the intraoral
-  // photos of the same area. A photo takes the viewport until the user steps to
-  // another film or picks the film thumbnail again; the AI overlays are film
-  // only, so the toggles don't apply while a photo is up.
-  const selectedPhoto =
-    INTRAORAL_PHOTOS.find((photo) => photo.id === selectedPhotoId) ?? null;
-  const src = selectedPhoto ? selectedPhoto.src : filmSrc;
-  const alt = selectedPhoto ? selectedPhoto.alt : `Radiograph ${slot}`;
+  // The footer's strip holds the whole study, so a non-film capture — the pano
+  // or an intraoral photo — can take the viewport. It holds until the user
+  // steps to another film or picks a film thumbnail; the AI overlays are film
+  // only, so the toggles don't apply while a capture is up.
+  const selectedVisitImage =
+    VISIT_IMAGES.find((image) => image.id === selectedVisitImageId) ?? null;
+  const src = selectedVisitImage ? selectedVisitImage.src : filmSrc;
+  const alt = selectedVisitImage ? selectedVisitImage.alt : `Radiograph ${slot}`;
 
   const handleImgError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
     // A not-yet-added clinical slot falls back to the patient image.
     const img = e.currentTarget;
-    if (!selectedPhoto && aiOn && view === "clinical" && !img.src.endsWith(patientSrc)) {
+    if (!selectedVisitImage && aiOn && view === "clinical" && !img.src.endsWith(patientSrc)) {
       img.src = patientSrc;
     }
   };
@@ -298,11 +300,19 @@ export default function SingleImageViewer({
         <SingleImageFooter
           slot={slot}
           slots={slots}
-          selectedPhotoId={selectedPhotoId}
+          selectedVisitImageId={selectedVisitImageId}
           zoom={zoom}
           onZoomChange={setZoom}
           onStep={onStep}
-          onSelectPhoto={(photoId) => setPhotoSelection({ slot, photoId })}
+          onSelectFilm={(next) => {
+            // Clearing the capture is keyed to the film being selected, so
+            // picking the current film's own thumbnail also drops back to it.
+            setVisitImageSelection({ slot: next, imageId: null });
+            if (next !== slot) onSelectSlot(next);
+          }}
+          onSelectVisitImage={(imageId) =>
+            setVisitImageSelection({ slot, imageId })
+          }
           onToggleExpand={onToggleExpand}
         />
       </div>

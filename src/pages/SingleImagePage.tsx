@@ -67,6 +67,7 @@ export default function SingleImagePage() {
         onAiToggle={setAiOn}
         expanded={expanded}
         onToggleExpand={() => setExpanded((v) => !v)}
+        onSelectSlot={goToSlot}
         onStep={(delta) => {
           // Cyclic navigation: stepping past the last image wraps to the first
           // (18 → 1) and stepping back from the first wraps to the last (1 → 18).

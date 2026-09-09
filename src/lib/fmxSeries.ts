@@ -39,14 +39,6 @@ export const VISIT_IMAGES: readonly VisitImage[] = [
   },
 ];
 
-/** The visit's intraoral photos — the pano is a radiograph, so it isn't one.
- *  These are the captures that accompany a film in the single-image footer.
- *  The mock holds one set for the whole visit; real data would key them to the
- *  film's tooth or region. */
-export const INTRAORAL_PHOTOS: readonly VisitImage[] = VISIT_IMAGES.filter(
-  (image) => image.kind === "photo"
-);
-
 /** Which images the FMX viewer shows: the whole mount, one film type, or the
  *  visit's other captures. */
 export type FmxSeries = "fmx" | "bw" | "pa" | "other";

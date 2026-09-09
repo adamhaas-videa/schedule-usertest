@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -9,9 +10,10 @@ import {
   FMX_BOTTOM_ROW,
   FMX_TALL_COLUMNS,
   FMX_TOP_ROW,
-  INTRAORAL_PHOTOS,
+  VISIT_IMAGES,
 } from "@/lib/fmxSeries";
 import { cn } from "@/lib/utils";
+import StripArrow from "./StripArrow";
 
 /** Zoom slider bounds, shared with the viewer that owns the zoom state. */
 export const ZOOM_MIN = 25;
@@ -20,12 +22,13 @@ export const ZOOM_MAX = 200;
 interface SingleImageFooterProps {
   slot: number;
   slots: number[];
-  /** Photo shown in the viewport, or null while the radiograph is shown. */
-  selectedPhotoId: string | null;
+  /** Visit capture shown in the viewport, or null while a film is shown. */
+  selectedVisitImageId: string | null;
   zoom: number;
   onZoomChange: (zoom: number) => void;
   onStep: (delta: number) => void;
-  onSelectPhoto: (photoId: string | null) => void;
+  onSelectFilm: (slot: number) => void;
+  onSelectVisitImage: (imageId: string) => void;
   onToggleExpand: () => void;
 }
 
@@ -66,18 +69,18 @@ function NavArrow({
   );
 }
 
-/** Shared shell so the film and photo thumbnails size and select identically. */
+/** Shared shell so films and visit captures size and select identically. */
 function Thumbnail({
   src,
   label,
   widthClass,
-  selected,
+  active,
   onClick,
 }: {
   src: string;
   label: string;
   widthClass: string;
-  selected: boolean;
+  active: boolean;
   onClick: () => void;
 }) {
   return (
@@ -85,23 +88,20 @@ function Thumbnail({
       type="button"
       onClick={onClick}
       aria-label={label}
-      aria-pressed={selected}
+      aria-current={active ? "true" : undefined}
+      data-active={active}
       className={cn(
-        // Every thumbnail stays at full brightness: this is a selector between
-        // the film and its photos, not a carousel, so the carousel's dimming of
-        // the inactive frames doesn't apply. The selected one is ringed instead.
-        //
-        // The ring is an inset outline, not `ring-*`. The strip is a scroll
-        // container (overflow-x-auto forces overflow-y to match), so it clips a
-        // ring's top and bottom against the 40px content edge and leaves only
-        // the left/right segments showing in the gaps between thumbnails. An
-        // inset outline stays inside the button, and outlines paint above child
-        // content, so it sits on the image rather than under it.
-        "h-10 shrink-0 overflow-hidden bg-black cursor-pointer",
+        // The active image is ringed with an inset outline, not `ring-*`: the
+        // strip is a scroll container (overflow-x-auto forces overflow-y to
+        // match), so it clips a ring's top and bottom against the content edge
+        // and leaves only the left/right segments showing in the gaps between
+        // thumbnails. Outlines paint above child content, so this sits on the
+        // image rather than under it.
+        "h-10 shrink-0 overflow-hidden bg-black transition-opacity cursor-pointer",
         widthClass,
-        selected
+        active
           ? "outline-2 -outline-offset-2 outline-deep-teal-400"
-          : "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          : "opacity-50 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
       )}
     >
       <img
@@ -116,14 +116,17 @@ function Thumbnail({
 
 /**
  * Single-image viewer footer: the findings note on the left, the image stepper
- * plus the current film and its intraoral photos in the middle, and zoom +
- * Expand on the right. Spans the full viewer width, extending under the toolbar
- * rail. Sits inside the `dark imaging-surface` root, so bg-card / border-border
- * resolve to the viewer's #101214 / #27272a.
+ * plus the study's thumbnail strip in the middle, and zoom + Expand on the
+ * right. Spans the full viewer width, extending under the toolbar rail. Sits
+ * inside the `dark imaging-surface` root, so bg-card / border-border resolve to
+ * the viewer's #101214 / #27272a.
  *
- * The thumbnails are a selector between the film on screen and the photos taken
- * of the same area — not a carousel of the study. Stepping through the 18 films
- * is the stepper's job; the FMX footer's strip is what browses the mount.
+ * The strip carries the whole study — all 18 mount films, then the visit's pano
+ * and intraoral photos — and any of them can be selected straight into the
+ * viewport. That's more than fits, so it scrolls, the active thumbnail is kept
+ * in view, and the flanking arrows page it the way the FMX footer's strip does.
+ * The FMX footer shows only the non-FMX captures, since its grid already has
+ * the films.
  *
  * Responsive tiers are container queries on the footer itself (its width is the
  * viewport minus the right panel, which collapses, so viewport breakpoints would
@@ -134,21 +137,32 @@ function Thumbnail({
 export default function SingleImageFooter({
   slot,
   slots,
-  selectedPhotoId,
+  selectedVisitImageId,
   zoom,
   onZoomChange,
   onStep,
-  onSelectPhoto,
+  onSelectFilm,
+  onSelectVisitImage,
   onToggleExpand,
 }: SingleImageFooterProps) {
   const index = slots.indexOf(slot);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const scrollStrip = (direction: -1 | 1) =>
+    stripRef.current?.scrollBy({ left: direction * 180, behavior: "smooth" });
+
+  // The study runs past the strip's width, so follow the selection — stepping
+  // through films has to walk the strip along with it.
+  useEffect(() => {
+    stripRef.current
+      ?.querySelector<HTMLElement>('[data-active="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [slot, selectedVisitImageId]);
 
   return (
     <TooltipProvider delay={150}>
-      <footer className="@container/footer flex h-16 shrink-0 items-center justify-between gap-4 border-t border-border bg-card px-3">
-        {/* Left — findings note. min-w-0 lets it give way first as the footer
-            narrows; the stepper and zoom controls stay intact. */}
-        <div className="flex min-w-0 flex-col gap-1 text-[10px] leading-none text-muted-foreground">
+      <footer className="@container/footer flex h-16 shrink-0 items-center gap-4 border-t border-border bg-card px-3">
+        {/* Left — findings note. */}
+        <div className="flex shrink-0 flex-col gap-1 text-[10px] leading-none text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5 whitespace-nowrap">
               <span>11 Findings</span>
@@ -174,13 +188,12 @@ export default function SingleImageFooter({
           </span>
         </div>
 
-        {/* Center — the film stepper, then the current film and the photos of
-            the same area. Films use the plain patient assets: the AI overlays
-            aren't legible at 40px, so the strip stays independent of the AI /
-            view toggles. It scrolls if a region ever carries enough photos to
-            overflow — reuse the FMX footer's StripArrow if that stops being
-            rare enough to handle with a scroll. */}
-        <div className="flex shrink-0 items-center gap-8">
+        {/* Center — the film stepper, then the study. Takes the space the
+            flanking blocks don't need, so the strip shows as many thumbnails as
+            the footer allows. Films use the plain patient assets: the AI
+            overlays aren't legible at 40px, so the strip stays independent of
+            the AI / view toggles. */}
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-8">
           <div className="flex shrink-0 items-center justify-center gap-4">
             <NavArrow direction={-1} onClick={() => onStep(-1)} />
             <span className="flex items-center gap-1 text-sm leading-none text-zinc-300">
@@ -192,29 +205,47 @@ export default function SingleImageFooter({
             <NavArrow direction={1} onClick={() => onStep(1)} />
           </div>
 
-          <div className="hidden shrink-0 items-center gap-1 overflow-x-auto [scrollbar-width:none] @min-[900px]/footer:flex">
-            <Thumbnail
-              src={`/xrays/slot-${String(slot).padStart(2, "0")}.png`}
-              label={`Radiograph ${slot}`}
-              widthClass={TALL_SLOTS.has(slot) ? "w-[30px]" : "w-[53px]"}
-              selected={selectedPhotoId === null}
-              onClick={() => onSelectPhoto(null)}
+          <div className="hidden min-w-0 items-center gap-4 @min-[900px]/footer:flex">
+            <StripArrow
+              direction={-1}
+              label="Scroll thumbnails left"
+              onClick={() => scrollStrip(-1)}
             />
-            {INTRAORAL_PHOTOS.map((photo) => (
-              <Thumbnail
-                key={photo.id}
-                src={photo.src}
-                label={photo.alt}
-                widthClass="w-14"
-                selected={selectedPhotoId === photo.id}
-                onClick={() => onSelectPhoto(photo.id)}
-              />
-            ))}
+            <div
+              ref={stripRef}
+              className="flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none]"
+            >
+              {slots.map((s) => (
+                <Thumbnail
+                  key={`film-${s}`}
+                  src={`/xrays/slot-${String(s).padStart(2, "0")}.png`}
+                  label={`Radiograph ${s}`}
+                  widthClass={TALL_SLOTS.has(s) ? "w-[30px]" : "w-[53px]"}
+                  active={selectedVisitImageId === null && s === slot}
+                  onClick={() => onSelectFilm(s)}
+                />
+              ))}
+              {VISIT_IMAGES.map((image) => (
+                <Thumbnail
+                  key={image.id}
+                  src={image.src}
+                  label={image.alt}
+                  widthClass={image.kind === "pano" ? "w-[53px]" : "w-14"}
+                  active={selectedVisitImageId === image.id}
+                  onClick={() => onSelectVisitImage(image.id)}
+                />
+              ))}
+            </div>
+            <StripArrow
+              direction={1}
+              label="Scroll thumbnails right"
+              onClick={() => scrollStrip(1)}
+            />
           </div>
         </div>
 
-        {/* Right — zoom, then Expand. min-w-fit keeps the controls intact. */}
-        <div className="flex min-w-fit items-center gap-2">
+        {/* Right — zoom, then Expand. */}
+        <div className="flex shrink-0 items-center gap-2">
           <div className="flex h-4 items-center gap-2 border-r border-zinc-600 pr-4">
             <input
               type="range"

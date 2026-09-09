@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { Patient } from "@/data/mockPatients";
 import { FMX_SERIES, VISIT_IMAGES, type FmxSeries } from "@/lib/fmxSeries";
+import StripArrow from "./StripArrow";
 import { cn } from "@/lib/utils";
 
 interface FmxFooterProps {
@@ -30,34 +31,9 @@ function CountBadge({ count }: { count: number }) {
   );
 }
 
-function StripArrow({
-  direction,
-  onClick,
-}: {
-  direction: -1 | 1;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={direction < 0 ? "Previous visit images" : "Next visit images"}
-      className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
-    >
-      <i
-        className={cn(
-          "text-base leading-none",
-          direction < 0 ? "fa-regular fa-angle-left" : "fa-regular fa-angle-right"
-        )}
-        aria-hidden
-      />
-    </button>
-  );
-}
-
 /**
  * FMX viewer footer: visit context on the left, the visit's other captures in
- * the middle, and Sort + the FMX / BW / PA series toggles on the right.
+ * the middle, and the FMX / BW / PA series toggles then Sort on the right.
  * Other joins the toggles only when the thumbnail strip is hidden. Sits inside the `dark imaging-surface` root, so bg-card /
  * border-border resolve to the viewer's #101214 / #27272a.
  *
@@ -111,7 +87,11 @@ export default function FmxFooter({
             Other series in the grid; hidden on narrow footers, where the
             Other toggle covers the same ground. */}
         <div className="hidden shrink-0 items-center gap-4 @min-[900px]/footer:flex">
-          <StripArrow direction={-1} onClick={() => scrollStrip(-1)} />
+          <StripArrow
+            direction={-1}
+            label="Previous visit images"
+            onClick={() => scrollStrip(-1)}
+          />
           <div
             ref={stripRef}
             className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]"
@@ -143,20 +123,16 @@ export default function FmxFooter({
               </button>
             ))}
           </div>
-          <StripArrow direction={1} onClick={() => scrollStrip(1)} />
+          <StripArrow
+            direction={1}
+            label="Next visit images"
+            onClick={() => scrollStrip(1)}
+          />
         </div>
 
-        {/* Right — sort + series. min-w-fit keeps the controls intact; the
+        {/* Right — series, then sort. min-w-fit keeps the controls intact; the
             left block absorbs the squeeze. */}
         <div className="flex min-w-fit flex-1 basis-0 items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            aria-label="Sort"
-            className="text-foreground cursor-pointer"
-          >
-            <i className="fa-regular fa-arrows-cross text-base" aria-hidden />
-            <span className="hidden @min-[560px]/footer:inline">Sort</span>
-          </Button>
           <div
             role="radiogroup"
             aria-label="Image series"
@@ -187,6 +163,14 @@ export default function FmxFooter({
               );
             })}
           </div>
+          <Button
+            variant="ghost"
+            aria-label="Sort"
+            className="text-foreground cursor-pointer"
+          >
+            <i className="fa-regular fa-arrows-cross text-base" aria-hidden />
+            <span className="hidden @min-[560px]/footer:inline">Sort</span>
+          </Button>
         </div>
       </footer>
     </TooltipProvider>
