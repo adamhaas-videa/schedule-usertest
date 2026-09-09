@@ -33,7 +33,7 @@ function CountBadge({ count }: { count: number }) {
 
 /**
  * FMX viewer footer: visit context on the left, the visit's other captures in
- * the middle, and the FMX / BW / PA series toggles then Sort on the right.
+ * the middle, and the FMX / Series toggles then Sort on the right.
  * Other joins the toggles only when the thumbnail strip is hidden. Sits inside the `dark imaging-surface` root, so bg-card /
  * border-border resolve to the viewer's #101214 / #27272a.
  *

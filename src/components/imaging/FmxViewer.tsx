@@ -124,9 +124,10 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView, imagingPanelOpen, setImagingPanelOpen } = useAiView();
   const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
-  // Footer toggle: the whole mount, one film type, or the visit's other captures.
+  // Footer toggle: the whole mount, the bitewing series, or the visit's other
+  // captures. Only the full mount carries the periapical rows.
   const [series, setSeries] = useState<FmxSeries>(DEFAULT_FMX_SERIES);
-  const showPeriapicals = series === "fmx" || series === "pa";
+  const showPeriapicals = series === "fmx";
   const showBitewings = series === "fmx" || series === "bw";
   const showOther = series === "other";
 

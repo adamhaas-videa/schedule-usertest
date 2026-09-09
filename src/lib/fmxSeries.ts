@@ -39,9 +39,9 @@ export const VISIT_IMAGES: readonly VisitImage[] = [
   },
 ];
 
-/** Which images the FMX viewer shows: the whole mount, one film type, or the
- *  visit's other captures. */
-export type FmxSeries = "fmx" | "bw" | "pa" | "other";
+/** Which images the FMX viewer shows: the whole mount, the bitewing series, or
+ *  the visit's other captures. */
+export type FmxSeries = "fmx" | "bw" | "other";
 
 export interface FmxSeriesMeta {
   id: FmxSeries;
@@ -59,12 +59,11 @@ export const FMX_SERIES: readonly FmxSeriesMeta[] = [
     title: "Full mouth series",
     count: FMX_TOP_ROW.length + FMX_BITEWINGS.length + FMX_BOTTOM_ROW.length,
   },
-  { id: "bw", label: "BW", title: "Bitewings", count: FMX_BITEWINGS.length },
   {
-    id: "pa",
-    label: "PA",
-    title: "Periapicals",
-    count: FMX_TOP_ROW.length + FMX_BOTTOM_ROW.length,
+    id: "bw",
+    label: "Series",
+    title: "Bitewings",
+    count: FMX_BITEWINGS.length,
   },
   {
     id: "other",
