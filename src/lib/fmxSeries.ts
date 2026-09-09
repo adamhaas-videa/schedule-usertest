@@ -14,8 +14,6 @@ export interface VisitImage {
   id: string;
   src: string;
   alt: string;
-  /** Pano is still a radiograph; "photo" is an intraoral digital photo. */
-  kind: "pano" | "photo";
 }
 
 export const VISIT_IMAGES: readonly VisitImage[] = [
@@ -23,19 +21,16 @@ export const VISIT_IMAGES: readonly VisitImage[] = [
     id: "pano",
     src: "/xrays/visit/pano.png",
     alt: "Panoramic radiograph",
-    kind: "pano",
   },
   {
     id: "photo-01",
     src: "/xrays/visit/photo-01.png",
     alt: "Intraoral photo, upper arch",
-    kind: "photo",
   },
   {
     id: "photo-02",
     src: "/xrays/visit/photo-02.png",
     alt: "Intraoral photo, anterior teeth",
-    kind: "photo",
   },
 ];
 

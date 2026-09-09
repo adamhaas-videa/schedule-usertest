@@ -6,12 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  FMX_BOTTOM_ROW,
-  FMX_TALL_COLUMNS,
-  FMX_TOP_ROW,
-  VISIT_IMAGES,
-} from "@/lib/fmxSeries";
+import { VISIT_IMAGES } from "@/lib/fmxSeries";
 import { cn } from "@/lib/utils";
 import StripArrow from "./StripArrow";
 
@@ -32,26 +27,22 @@ interface SingleImageFooterProps {
   onToggleExpand: () => void;
 }
 
-/** The three anterior films in each periapical row are mounted tall, so their
- *  thumbnails are narrower than the posteriors' in the 40px-tall strip. Derived
- *  from the mount definition so it stays right if the rows change. */
-const TALL_SLOTS: ReadonlySet<number> = new Set(
-  [FMX_TOP_ROW, FMX_BOTTOM_ROW].flatMap((row) =>
-    row.filter((_, column) => FMX_TALL_COLUMNS.has(column))
-  )
-);
-
-/* Strip geometry. Thumbnails are 40px tall at their asset's true aspect, so a
- * posterior film comes out 53px wide, a tall anterior 30px, the pano 53px and
- * an intraoral photo 56px. Widths are applied inline rather than as utilities so
- * the window below is derived from the same numbers. */
+/* Strip geometry. Every thumbnail gets the same cell so a fixed window holds a
+ * fixed count: the study mixes aspect ratios (posterior films are 4:3, the tall
+ * anterior films are mounted portrait, the photos are wider again), and at their
+ * true widths six cells' worth of room fits seven or eight of the narrow ones.
+ * The cell is sized to a posterior film, the majority case, and the images are
+ * object-contain, so a portrait film letterboxes on the black cell rather than
+ * being cropped. Applied inline so the window and the cells share one number.
+ *
+ * The window is an exact multiple of the cell pitch less one cell, which keeps
+ * every arrow page — and every scrollIntoView with inline: "nearest" — landing
+ * on a cell boundary, so six are always fully shown with none clipped. */
 const THUMB_GAP_PX = 4;
-const THUMB_W_PX = { film: 53, anterior: 30, pano: 53, photo: 56 } as const;
-
-/** The strip shows at most this many thumbnails; the rest scroll. */
+const THUMB_CELL_W_PX = 53;
 const MAX_VISIBLE_THUMBS = 6;
 const STRIP_MAX_W_PX =
-  MAX_VISIBLE_THUMBS * THUMB_W_PX.film +
+  MAX_VISIBLE_THUMBS * THUMB_CELL_W_PX +
   (MAX_VISIBLE_THUMBS - 1) * THUMB_GAP_PX;
 
 function NavArrow({
@@ -86,13 +77,11 @@ function NavArrow({
 function Thumbnail({
   src,
   label,
-  widthPx,
   active,
   onClick,
 }: {
   src: string;
   label: string;
-  widthPx: number;
   active: boolean;
   onClick: () => void;
 }) {
@@ -103,7 +92,7 @@ function Thumbnail({
       aria-label={label}
       aria-current={active ? "true" : undefined}
       data-active={active}
-      style={{ width: widthPx }}
+      style={{ width: THUMB_CELL_W_PX }}
       className={cn(
         // The active image is ringed with an inset outline, not `ring-*`: the
         // strip is a scroll container (overflow-x-auto forces overflow-y to
@@ -121,7 +110,7 @@ function Thumbnail({
         src={src}
         alt=""
         draggable={false}
-        className="size-full object-cover"
+        className="size-full object-contain"
       />
     </button>
   );
@@ -165,7 +154,10 @@ export default function SingleImageFooter({
     if (!strip) return;
     // Page by the visible window, less one thumbnail so there's overlap to
     // orient against.
-    const page = Math.max(strip.clientWidth - THUMB_W_PX.film, THUMB_W_PX.film);
+    const page = Math.max(
+      strip.clientWidth - THUMB_CELL_W_PX,
+      THUMB_CELL_W_PX
+    );
     strip.scrollBy({ left: direction * page, behavior: "smooth" });
   };
 
@@ -174,7 +166,14 @@ export default function SingleImageFooter({
   useEffect(() => {
     stripRef.current
       ?.querySelector<HTMLElement>('[data-active="true"]')
-      ?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      ?.scrollIntoView({
+        block: "nearest",
+        // "nearest" moves the minimum distance, which from an aligned window is
+        // always a whole number of cells — "center" would leave it off-lattice
+        // and clip a thumbnail at each edge.
+        inline: "nearest",
+        behavior: "smooth",
+      });
   }, [slot, selectedVisitImageId]);
 
   return (
@@ -241,9 +240,6 @@ export default function SingleImageFooter({
                   key={`film-${s}`}
                   src={`/xrays/slot-${String(s).padStart(2, "0")}.png`}
                   label={`Radiograph ${s}`}
-                  widthPx={
-                    TALL_SLOTS.has(s) ? THUMB_W_PX.anterior : THUMB_W_PX.film
-                  }
                   active={selectedVisitImageId === null && s === slot}
                   onClick={() => onSelectFilm(s)}
                 />
@@ -253,7 +249,6 @@ export default function SingleImageFooter({
                   key={image.id}
                   src={image.src}
                   label={image.alt}
-                  widthPx={THUMB_W_PX[image.kind]}
                   active={selectedVisitImageId === image.id}
                   onClick={() => onSelectVisitImage(image.id)}
                 />
