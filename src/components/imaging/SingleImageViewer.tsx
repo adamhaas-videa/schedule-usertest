@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useAiView } from "@/context/AiViewContext";
-import { useImagingToolbar, useToggleAiOverlay } from "@/context/ImagingToolbarContext";
+import { useAiView, type AiView } from "@/context/AiViewContext";
+import { useImagingToolbar, useAiOverlayControls } from "@/context/ImagingToolbarContext";
 import { imageFilter, imageTransform } from "@/lib/imagingToolbar";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import {
@@ -58,7 +58,15 @@ export default function SingleImageViewer({
     resetAdjustments,
     qualityFindings,
   } = useImagingToolbar();
-  const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
+  const { toggle: toggleAi, enable: enableAi } = useAiOverlayControls(
+    aiOn,
+    onAiToggle
+  );
+  // Picking a view while AI is off turns it on, so both sets stay one click away.
+  const selectView = (next: AiView) => {
+    enableAi();
+    setView(next);
+  };
   const [zoom, setZoom] = useState(95);
   // Footer thumbnail selection, keyed to the film it was made on so stepping to
   // another film drops back to that film's radiograph.
@@ -137,7 +145,6 @@ export default function SingleImageViewer({
     },
     {
       kind: "ai-cluster",
-      toggleEnabled: aiOn,
       ai: {
         key: "ai",
         label: aiOn ? "AI On" : "AI Off",
@@ -156,13 +163,13 @@ export default function SingleImageViewer({
         label: "Patient",
         renderIcon: (state) => <PatientToothIcon state={state} className="size-5" />,
         active: aiOn && view === "patient",
-        onClick: () => setView("patient"),      },
+        onClick: () => selectView("patient"),      },
       clinical: {
         key: "clinical-view",
         label: "Clinical",
         renderIcon: (state) => <ClinicalToothIcon state={state} className="size-5" />,
         active: aiOn && view === "clinical",
-        onClick: () => setView("clinical"),      },
+        onClick: () => selectView("clinical"),      },
     },
     {
       key: "elements",

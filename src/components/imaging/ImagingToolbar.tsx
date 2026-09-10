@@ -29,8 +29,6 @@ export interface AiClusterEntry {
   ai: ToolbarItem;
   patient: ToolbarItem;
   clinical: ToolbarItem;
-  /** When false, the Patient/Clinical toggle is dimmed and non-interactive. */
-  toggleEnabled: boolean;
 }
 
 export type ToolbarEntry = ToolbarItem | AiClusterEntry;
@@ -136,8 +134,9 @@ function ToolbarButton({
 /**
  * Canva-style vertical imaging toolbar. The AI / Patient / Clinical items render
  * inside a unified bordered wrapper (matching Figma 65:1090): AI on top, then a
- * nested black wrapper holding the Patient ⇄ Clinical toggle. The toggle dims
- * and disables when AI is off, since the two image sets only exist under AI.
+ * nested black wrapper holding the Patient ⇄ Clinical toggle. The toggle stays
+ * live while AI is off — picking a view turns the overlay on — so neither of
+ * them reads as selected until AI is on.
  */
 export default function ImagingToolbar({ items }: { items: ToolbarEntry[] }) {
   const { openMenu, setOpenMenu } = useImagingToolbar();
@@ -163,12 +162,7 @@ export default function ImagingToolbar({ items }: { items: ToolbarEntry[] }) {
               className="flex w-[56px] flex-col items-center gap-2 rounded-md border border-[#17282d] p-1 pt-2"
             >
               {renderItem(entry.ai)}
-              <div
-                className={cn(
-                  "flex w-full flex-col items-center gap-3 rounded-md bg-black py-1.5 transition-opacity",
-                  !entry.toggleEnabled && "pointer-events-none opacity-40"
-                )}
-              >
+              <div className="flex w-full flex-col items-center gap-3 rounded-md bg-black py-1.5">
                 {renderItem(entry.patient)}
                 {renderItem(entry.clinical)}
               </div>

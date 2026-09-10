@@ -137,19 +137,31 @@ export function useImagingToolbar() {
   return ctx;
 }
 
-/** L1 AI toggle: Off clears every Element; On restores the last non-empty set. */
-export function useToggleAiOverlay(
+/**
+ * L1 AI controls.
+ *
+ * `toggle` backs the AI button: Off clears every Element, On restores the last
+ * non-empty set. `enable` is the idempotent On half of it, for the Patient /
+ * Clinical buttons — those stay selectable while AI is off and turn it on, so
+ * either image set is reachable without a trip through the AI button.
+ */
+export function useAiOverlayControls(
   aiOn: boolean,
   onAiToggle: (on: boolean) => void
 ) {
   const { restoreFindings, turnFindingsOff } = useImagingToolbar();
-  return () => {
-    if (aiOn) {
-      turnFindingsOff();
-      onAiToggle(false);
-    } else {
-      restoreFindings();
-      onAiToggle(true);
-    }
+  const enable = () => {
+    if (aiOn) return;
+    restoreFindings();
+    onAiToggle(true);
   };
+  const toggle = () => {
+    if (!aiOn) {
+      enable();
+      return;
+    }
+    turnFindingsOff();
+    onAiToggle(false);
+  };
+  return { toggle, enable };
 }

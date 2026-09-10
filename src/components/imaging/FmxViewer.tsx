@@ -2,8 +2,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
-import { useAiView } from "@/context/AiViewContext";
-import { useToggleAiOverlay } from "@/context/ImagingToolbarContext";
+import { useAiView, type AiView } from "@/context/AiViewContext";
+import { useAiOverlayControls } from "@/context/ImagingToolbarContext";
 import ImagingToolbar, { type ToolbarEntry } from "./ImagingToolbar";
 import { FindingTypesMenu, DisplayThresholdMenu } from "./submenus";
 import ImagingRightPanel from "./ImagingRightPanel";
@@ -123,7 +123,15 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.
   const { view, setView, imagingPanelOpen, setImagingPanelOpen } = useAiView();
-  const toggleAi = useToggleAiOverlay(aiOn, onAiToggle);
+  const { toggle: toggleAi, enable: enableAi } = useAiOverlayControls(
+    aiOn,
+    onAiToggle
+  );
+  // Picking a view while AI is off turns it on, so both sets stay one click away.
+  const selectView = (next: AiView) => {
+    enableAi();
+    setView(next);
+  };
   // Footer toggle: the whole mount, the bitewing series, or the visit's other
   // captures. Only the full mount carries the periapical rows.
   const [series, setSeries] = useState<FmxSeries>(DEFAULT_FMX_SERIES);
@@ -188,7 +196,6 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
     },
     {
       kind: "ai-cluster",
-      toggleEnabled: aiOn,
       ai: {
         key: "ai",
         label: aiOn ? "AI On" : "AI Off",
@@ -207,13 +214,13 @@ export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps)
         label: "Patient",
         renderIcon: (state) => <PatientToothIcon state={state} className="size-5" />,
         active: aiOn && view === "patient",
-        onClick: () => setView("patient"),      },
+        onClick: () => selectView("patient"),      },
       clinical: {
         key: "clinical-view",
         label: "Clinical",
         renderIcon: (state) => <ClinicalToothIcon state={state} className="size-5" />,
         active: aiOn && view === "clinical",
-        onClick: () => setView("clinical"),      },
+        onClick: () => selectView("clinical"),      },
     },
     {
       key: "elements",
