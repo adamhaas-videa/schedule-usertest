@@ -1,14 +1,8 @@
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import videaBrandmark from "@/assets/icons/videa-brandmark.svg";
 import PrivacyToggle from "@/components/PrivacyToggle";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import VisitPicker from "./VisitPicker";
 import {
   Tooltip,
   TooltipContent,
@@ -41,36 +35,6 @@ const STUDY_LABEL: Record<ClinicalTab, string> = {
   chart: "Summary from",
 };
 
-function parseISODate(iso: string): Date {
-  const [year, month, day] = iso.split("-").map(Number);
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
-}
-
-function formatShortDate(date: Date): string {
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yy = String(date.getFullYear()).slice(-2);
-  return `${mm}/${dd}/${yy}`;
-}
-
-function formatRelative(date: Date, now = new Date()): string {
-  const months =
-    (now.getFullYear() - date.getFullYear()) * 12 +
-    (now.getMonth() - date.getMonth());
-  if (months <= 0) {
-    const days = Math.round((now.getTime() - date.getTime()) / 86_400_000);
-    if (days <= 0) return "Today";
-    if (days === 1) return "1 day ago";
-    if (days < 14) return `${days} days ago`;
-    const weeks = Math.round(days / 7);
-    return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
-  }
-  if (months === 1) return "1 month ago";
-  if (months < 12) return `${months} months ago`;
-  const years = Math.round(months / 12);
-  return years === 1 ? "1 year ago" : `${years} years ago`;
-}
-
 export function WorkflowStudyBar({
   patient,
   activeTab,
@@ -86,10 +50,6 @@ export function WorkflowStudyBar({
    *  viewers). When omitted the collapse control isn't rendered. */
   onToggleRightPanel?: () => void;
 }) {
-  const [studyDate, setStudyDate] = useState(() =>
-    parseISODate(patient.appointmentDate)
-  );
-  const relative = useMemo(() => formatRelative(studyDate), [studyDate]);
   const dark = activeTab === "xray";
 
   return (
@@ -101,53 +61,12 @@ export function WorkflowStudyBar({
           : "bg-card border-b border-border"
       )}
     >
-      <div className="flex items-center gap-2.5">
-        <i
-          className={cn(
-            "fa-regular fa-calendar-days text-base",
-            dark ? "text-zinc-400" : "text-muted-foreground"
-          )}
-          aria-hidden
-        />
-        <Popover>
-          <PopoverTrigger
-            className={cn(
-              "flex items-center gap-1.5 text-sm cursor-pointer hover:opacity-80 outline-none",
-              dark ? "text-zinc-50" : "text-foreground"
-            )}
-          >
-            <span>
-              {STUDY_LABEL[activeTab]} {formatShortDate(studyDate)}
-            </span>
-            <i className="fa-regular fa-angle-down text-base" aria-hidden />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={studyDate}
-              onSelect={(date) => {
-                if (date) setStudyDate(date);
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-        <span
-          className={cn(
-            "text-sm",
-            dark ? "text-zinc-400" : "text-muted-foreground"
-          )}
-        >
-          ·
-        </span>
-        <span
-          className={cn(
-            "text-sm",
-            dark ? "text-zinc-400" : "text-muted-foreground"
-          )}
-        >
-          {relative}
-        </span>
-      </div>
+      <VisitPicker
+        patient={patient}
+        activeTab={activeTab}
+        label={STUDY_LABEL[activeTab]}
+        dark={dark}
+      />
 
       {/* Right-rail collapse. While the rail is open, `-mr-4` cancels the
           bar's padding so the 20px disc sits flush against the rail's edge, as
