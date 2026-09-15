@@ -1,4 +1,9 @@
-import { useState } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import videaLogoHoriz from "@/assets/icons/videa-horizontal-logo.svg";
 import videaLogoVert from "@/assets/icons/videa-vert-logo.svg";
@@ -15,7 +20,10 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAiView } from "@/context/AiViewContext";
-import { getNavEntries } from "@/lib/navVersions";
+import {
+  NAV_FOOTER_FOLD_BELOW_HEIGHT,
+  getNavEntries,
+} from "@/lib/navVersions";
 import { type ProductNavItem } from "./products";
 
 export const SIDEBAR_EXPANDED_WIDTH = 220;
@@ -170,6 +178,76 @@ function FooterRow({
   );
 }
 
+/**
+ * Vertical space the footer needs beyond the practice switcher when Help,
+ * Learning Center, and Settings render as rows: the footer's own padding
+ * (p-2 expanded, pb-4 collapsed — 16px either way), three h-9 rows separated
+ * by gap-1, and the footer gap between that group and the switcher (gap-2
+ * expanded, gap-1 collapsed). Keep in step with FooterRow and the footer
+ * container's classes below.
+ */
+const FOOTER_PADDING_Y = 16;
+const UTILITY_ROW_HEIGHT = 36;
+const UTILITY_ROW_GAP = 4;
+
+function utilityRowsHeight(collapsed: boolean) {
+  const rows = footerNav.length;
+  return (
+    rows * UTILITY_ROW_HEIGHT +
+    (rows - 1) * UTILITY_ROW_GAP +
+    (collapsed ? 4 : 8)
+  );
+}
+
+/**
+ * Whether the utility rows fit in the footer without crowding the nav. Below
+ * NAV_FOOTER_FOLD_BELOW_HEIGHT they never do. Above it, every input is
+ * measured from parts that render in both footer states (rail, header, nav
+ * content, practice switcher), so the answer never depends on the state it
+ * drives and cannot flip-flop at the boundary.
+ */
+function useUtilityRowsFit(
+  railRef: RefObject<HTMLElement | null>,
+  headerRef: RefObject<HTMLDivElement | null>,
+  navContentRef: RefObject<HTMLDivElement | null>,
+  accountRef: RefObject<HTMLDivElement | null>,
+  collapsed: boolean
+) {
+  const [fits, setFits] = useState(true);
+
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    const header = headerRef.current;
+    const navContent = navContentRef.current;
+    const account = accountRef.current;
+    if (!rail || !header || !navContent || !account) return;
+
+    const measure = () => {
+      const railHeight = rail.clientHeight;
+      if (railHeight < NAV_FOOTER_FOLD_BELOW_HEIGHT) {
+        setFits(false);
+        return;
+      }
+      const required =
+        header.offsetHeight +
+        navContent.offsetHeight +
+        FOOTER_PADDING_Y +
+        utilityRowsHeight(collapsed) +
+        account.offsetHeight;
+      setFits(required <= railHeight);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(rail);
+    observer.observe(navContent);
+    observer.observe(account);
+    return () => observer.disconnect();
+  }, [railRef, headerRef, navContentRef, accountRef, collapsed]);
+
+  return fits;
+}
+
 function PracticeAvatar() {
   return (
     <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-periwinkle-200 text-sm font-semibold leading-5 text-deep-teal-700">
@@ -314,7 +392,21 @@ export default function AppSidebar({
   const location = useLocation();
   const { navVersion, navFooterMode } = useAiView();
   const navEntries = getNavEntries(navVersion);
-  const utilitiesInMenu = navFooterMode === "minimal";
+
+  const railRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const navContentRef = useRef<HTMLDivElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const utilityRowsFit = useUtilityRowsFit(
+    railRef,
+    headerRef,
+    navContentRef,
+    accountRef,
+    collapsed
+  );
+  const utilitiesInMenu =
+    navFooterMode === "minimal" ||
+    (navFooterMode === "auto" && !utilityRowsFit);
 
   const toggle = () => {
     const next = !collapsed;
@@ -324,6 +416,7 @@ export default function AppSidebar({
 
   return (
     <aside
+      ref={railRef}
       className="relative flex flex-col h-screen shrink-0 bg-sidebar border-r border-border transition-[width] duration-200 ease-in-out"
       style={{
         width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH,
@@ -331,6 +424,7 @@ export default function AppSidebar({
     >
       {/* Header / logo */}
       <div
+        ref={headerRef}
         className={cn(
           "flex items-center shrink-0 h-14 overflow-hidden transition-all duration-200 ease-in-out",
           collapsed ? "justify-center px-2" : "px-4"
@@ -351,7 +445,10 @@ export default function AppSidebar({
           collapsed ? "px-2" : "px-3"
         )}
       >
-        <div className="relative z-20 flex flex-col gap-1 pt-2">
+        <div
+          ref={navContentRef}
+          className="relative z-20 flex shrink-0 flex-col gap-1 pt-2"
+        >
           {navEntries.map((entry) => {
             if (entry.type === "label") {
               if (collapsed) return null;
@@ -410,7 +507,15 @@ export default function AppSidebar({
             ))}
           </div>
         )}
-        <AccountMenu collapsed={collapsed} utilitiesInMenu={utilitiesInMenu} />
+        <div
+          ref={accountRef}
+          className={cn("flex w-full flex-col", collapsed && "items-center")}
+        >
+          <AccountMenu
+            collapsed={collapsed}
+            utilitiesInMenu={utilitiesInMenu}
+          />
+        </div>
       </div>
 
       {/* Full-surface overlay — clicking chrome (logo, padding, empty space)
