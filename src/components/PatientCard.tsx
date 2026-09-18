@@ -311,6 +311,8 @@ function FullCard({
   //   V3: Images / Note / Perio revealed on hover/focus; name → summary drawer
   //   V4: no buttons; whole card → Images tab (name is not separately clickable)
   //   V5: no buttons; whole card → Images tab; name → summary drawer
+  //   V6: V1 plus the odontogram inline on 60-minute-and-longer cards
+  //   V7: V1 plus the odontogram in a hover flyout beside the column
   const showActions = cardVersion === 2 || cardVersion === 3;
   // V2 keeps actions always-on only for the patient currently in the chair;
   // every other card (upcoming, ready, completed, etc.) reveals them on hover.
@@ -332,7 +334,7 @@ function FullCard({
     onOpenClinical(patient, "xray");
   };
 
-  if (cardVersion === 1) {
+  if (cardVersion === 1 || cardVersion === 6 || cardVersion === 7) {
     return (
       <SummaryActionsCard
         patient={patient}
@@ -340,6 +342,9 @@ function FullCard({
         summaryVersion={summaryVersion}
         cardColorMode={cardColorMode}
         showSummary={cardSummaryOn}
+        odontogram={
+          cardVersion === 6 ? "inline" : cardVersion === 7 ? "flyout" : "none"
+        }
         reviewed={reviewed}
         onOpenClinical={onOpenClinical}
         onSelectPatient={onSelectPatient}

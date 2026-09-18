@@ -1,7 +1,7 @@
 // Demo-only concept switcher for the schedule patient card. Lets us showcase
 // several iterative interaction models on the same mock data during a video.
 // This is a prototype affordance, not a product setting.
-export type CardVersion = 1 | 2 | 3 | 4 | 5;
+export type CardVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface CardVersionMeta {
   id: CardVersion;
@@ -45,6 +45,20 @@ export const CARD_VERSIONS: CardVersionMeta[] = [
     title: "Card \u2192 Images, name \u2192 Summary",
     description:
       "No buttons on the card. Clicking the card opens the Images tab; clicking the name opens the summary slideout.",
+  },
+  {
+    id: 6,
+    label: "V6",
+    title: "Enhanced with Daily Dashboard",
+    description:
+      "V1 plus the Daily Dashboard odontogram inline: on a 60-minute or longer appointment it fills the space under the insurance row, scaled to the column and still hoverable per tooth. Dropped on 30-minute cards, which have no room for it.",
+  },
+  {
+    id: 7,
+    label: "V7",
+    title: "Enhanced with Daily Dashboard \u2014 flyout",
+    description:
+      "V1 plus a teeth icon beside the perio chip. Hovering it floats the odontogram out beside the column \u2014 AI opportunity counts over the full chart \u2014 so every card carries it, 30-minute ones included.",
   },
 ];
 

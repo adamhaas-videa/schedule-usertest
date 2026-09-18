@@ -10,29 +10,21 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DENSITY,
+  Q1,
+  Q2,
+  Q3,
+  Q4,
+  type Arch,
+  type OdontogramDensity,
+  type OdontogramMetrics,
+  type ToothSpec,
+} from "@/lib/odontogram";
 import { cn } from "@/lib/utils";
 
-// Tooth silhouettes and condition marks exported from the odontogram component
-// in Figma (file E2QYvtQcNIpQNI9AubstEf). Each silhouette is shared by the two
-// teeth of the same type in an arch — the file name records which universal
-// numbers use it. Do not hand-edit these: re-export from Figma instead.
-import tooth0116 from "@/assets/odontogram/tooth-01-16.svg";
-import tooth0215 from "@/assets/odontogram/tooth-02-15.svg";
-import tooth0314 from "@/assets/odontogram/tooth-03-14.svg";
-import tooth0413 from "@/assets/odontogram/tooth-04-13.svg";
-import tooth0512 from "@/assets/odontogram/tooth-05-12.svg";
-import tooth0611 from "@/assets/odontogram/tooth-06-11.svg";
-import tooth0710 from "@/assets/odontogram/tooth-07-10.svg";
-import tooth0809 from "@/assets/odontogram/tooth-08-09.svg";
-import tooth17 from "@/assets/odontogram/tooth-17.svg";
-import tooth1831 from "@/assets/odontogram/tooth-18-31.svg";
-import tooth1930 from "@/assets/odontogram/tooth-19-30.svg";
-import tooth2029 from "@/assets/odontogram/tooth-20-29.svg";
-import tooth2128 from "@/assets/odontogram/tooth-21-28.svg";
-import tooth2227 from "@/assets/odontogram/tooth-22-27.svg";
-import tooth2326 from "@/assets/odontogram/tooth-23-26.svg";
-import tooth2425 from "@/assets/odontogram/tooth-24-25.svg";
-import tooth32 from "@/assets/odontogram/tooth-32.svg";
+// Condition overlays, exported from the same Figma file as the silhouettes in
+// `@/lib/odontogram`. Do not hand-edit these: re-export from Figma instead.
 import markCrownUpper from "@/assets/odontogram/mark-crown-upper.svg";
 import markCrownLower from "@/assets/odontogram/mark-crown-lower.svg";
 import markFilling from "@/assets/odontogram/mark-filling.svg";
@@ -42,61 +34,6 @@ import markImplantPost from "@/assets/odontogram/mark-implant-post.svg";
 import markImplantAbutment from "@/assets/odontogram/mark-implant-abutment.svg";
 import markImplantThread from "@/assets/odontogram/mark-implant-thread.svg";
 import markRootCanal from "@/assets/odontogram/mark-root-canal.svg";
-
-type Arch = "upper" | "lower";
-
-interface ToothSpec {
-  n: number;
-  w: number;
-  h: number;
-  src: string;
-}
-
-// Box sizes come straight from the Figma odontogram so the arches keep their
-// crown-height silhouette (molars short and wide, canines tall and narrow).
-const Q1: ToothSpec[] = [
-  { n: 1, w: 21.014, h: 31.521, src: tooth0116 },
-  { n: 2, w: 22.515, h: 34.523, src: tooth0215 },
-  { n: 3, w: 22.529, h: 35.307, src: tooth0314 },
-  { n: 4, w: 14.37, h: 41.882, src: tooth0413 },
-  { n: 5, w: 14.581, h: 45.517, src: tooth0512 },
-  { n: 6, w: 12.775, h: 50.743, src: tooth0611 },
-  { n: 7, w: 11.835, h: 46.185, src: tooth0710 },
-  { n: 8, w: 13.558, h: 49.097, src: tooth0809 },
-];
-
-const Q2: ToothSpec[] = [
-  { n: 9, w: 13.558, h: 49.097, src: tooth0809 },
-  { n: 10, w: 11.835, h: 46.185, src: tooth0710 },
-  { n: 11, w: 12.775, h: 50.743, src: tooth0611 },
-  { n: 12, w: 14.581, h: 45.517, src: tooth0512 },
-  { n: 13, w: 14.37, h: 41.882, src: tooth0413 },
-  { n: 14, w: 22.529, h: 35.307, src: tooth0314 },
-  { n: 15, w: 22.515, h: 34.523, src: tooth0215 },
-  { n: 16, w: 21.014, h: 31.521, src: tooth0116 },
-];
-
-const Q4: ToothSpec[] = [
-  { n: 32, w: 23.363, h: 37.126, src: tooth32 },
-  { n: 31, w: 22.581, h: 39.352, src: tooth1831 },
-  { n: 30, w: 22.874, h: 41.036, src: tooth1930 },
-  { n: 29, w: 14.932, h: 45.729, src: tooth2029 },
-  { n: 28, w: 13.965, h: 44.364, src: tooth2128 },
-  { n: 27, w: 12.329, h: 46.378, src: tooth2227 },
-  { n: 26, w: 9.693, h: 43.175, src: tooth2326 },
-  { n: 25, w: 9.728, h: 42.509, src: tooth2425 },
-];
-
-const Q3: ToothSpec[] = [
-  { n: 24, w: 9.728, h: 42.509, src: tooth2425 },
-  { n: 23, w: 9.693, h: 43.175, src: tooth2326 },
-  { n: 22, w: 12.329, h: 46.378, src: tooth2227 },
-  { n: 21, w: 13.965, h: 44.364, src: tooth2128 },
-  { n: 20, w: 14.932, h: 45.729, src: tooth2029 },
-  { n: 19, w: 22.874, h: 41.036, src: tooth1930 },
-  { n: 18, w: 22.581, h: 39.352, src: tooth1831 },
-  { n: 17, w: 23.363, h: 37.126, src: tooth17 },
-];
 
 interface MarkLayer {
   src: string;
@@ -331,18 +268,27 @@ function Quadrant({
   marks,
   unscheduled,
   arch,
+  metrics,
 }: {
   teeth: ToothSpec[];
   marks: Map<number, ToothMark>;
   unscheduled: Map<number, UnscheduledTx>;
   arch: Arch;
+  metrics: OdontogramMetrics;
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-px flex-1 gap-[11.257px] rounded-[2px] border-[1.5px] border-zinc-200 p-[10.507px]",
+        "flex min-w-px flex-1 border-zinc-200",
         arch === "upper" ? "items-end" : "h-full items-start"
       )}
+      style={{
+        gap: metrics.toothGap,
+        padding: metrics.pad,
+        borderRadius: metrics.radius,
+        borderWidth: metrics.border,
+        borderStyle: "solid",
+      }}
     >
       {teeth.map((spec) => (
         <Tooth
@@ -360,6 +306,7 @@ function Quadrant({
 interface OdontogramProps {
   findings: ToothFinding[];
   unscheduledTx?: UnscheduledTx[];
+  density?: OdontogramDensity;
   className?: string;
 }
 
@@ -369,8 +316,10 @@ interface OdontogramProps {
 export default function Odontogram({
   findings,
   unscheduledTx = [],
+  density = "default",
   className,
 }: OdontogramProps) {
+  const metrics = DENSITY[density];
   const marks = new Map<number, ToothMark>();
   for (const { tooth, mark } of findings) marks.set(tooth, mark);
 
@@ -386,36 +335,47 @@ export default function Odontogram({
   return (
     <TooltipProvider delay={100}>
       <div
-        className={cn("flex w-full flex-col gap-[3px]", className)}
+        className={cn("flex w-full flex-col", className)}
+        style={{ gap: metrics.quadGap }}
         role="img"
         aria-label={`Odontogram: ${summary}`}
       >
-        <div className="flex h-[71.757px] w-full items-center gap-[3px]">
+        <div
+          className="flex w-full items-center"
+          style={{ height: metrics.upperRow, gap: metrics.quadGap }}
+        >
           <Quadrant
             teeth={Q1}
             marks={marks}
             unscheduled={unscheduled}
             arch="upper"
+            metrics={metrics}
           />
           <Quadrant
             teeth={Q2}
             marks={marks}
             unscheduled={unscheduled}
             arch="upper"
+            metrics={metrics}
           />
         </div>
-        <div className="flex h-[69.796px] w-full items-center gap-[3px]">
+        <div
+          className="flex w-full items-center"
+          style={{ height: metrics.lowerRow, gap: metrics.quadGap }}
+        >
           <Quadrant
             teeth={Q4}
             marks={marks}
             unscheduled={unscheduled}
             arch="lower"
+            metrics={metrics}
           />
           <Quadrant
             teeth={Q3}
             marks={marks}
             unscheduled={unscheduled}
             arch="lower"
+            metrics={metrics}
           />
         </div>
       </div>

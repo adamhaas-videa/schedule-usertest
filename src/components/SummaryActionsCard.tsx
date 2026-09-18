@@ -11,8 +11,13 @@ import type { Patient, Insurance, ConditionAlertSeverity } from "@/data/mockPati
 import { computeAge } from "@/data/mockPatients";
 import {
   buildCardSummary,
+  buildPatientSummary,
   getCardMedicalAlerts,
 } from "@/data/patientSummary";
+import {
+  InlineCardOdontogram,
+  OdontogramFlyout,
+} from "@/components/CardOdontogram";
 import type { ClinicalTab } from "@/types/clinical";
 import {
   formatTreatmentHeader,
@@ -423,6 +428,13 @@ export interface SummaryActionsCardProps {
   cardColorMode: CardColorMode;
   /** Demo toggle: render the Patient Summary blurb and the divider above it. */
   showSummary: boolean;
+  /**
+   * Where the Daily Dashboard odontogram goes, if anywhere.
+   *   none    — V1
+   *   inline  — V6: in the card body, 60-minute appointments and longer
+   *   flyout  — V7: behind a chip beside the perio chip, on every card
+   */
+  odontogram?: "none" | "inline" | "flyout";
   reviewed: boolean;
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient?: (patient: Patient) => void;
@@ -436,6 +448,7 @@ export default function SummaryActionsCard({
   summaryVersion,
   cardColorMode,
   showSummary,
+  odontogram = "none",
   reviewed,
   onOpenClinical,
   onSelectPatient,
@@ -462,6 +475,15 @@ export default function SummaryActionsCard({
   const treatment = formatTreatmentHeader(patient);
   const medical = getCardMedicalAlerts(patient);
   const blurb = buildCardSummary(patient);
+  // V6 needs the hour-long card's spare height for the chart, so 45-minute and
+  // 30-minute cards keep the V1 layout. V7 hangs off a chip, so every card
+  // carries it.
+  const showInlineOdontogram = odontogram === "inline" && isTall;
+  const showOdontogramFlyout = odontogram === "flyout";
+  const chartSummary =
+    showInlineOdontogram || showOdontogramFlyout
+      ? buildPatientSummary(patient)
+      : null;
   const nameClass = privacyMode ? "blur-sm select-none" : "";
 
   const openSummary = () => {
@@ -493,6 +515,9 @@ export default function SummaryActionsCard({
         label="Perio health"
         tooltip={perioLabel}
       />
+      {chartSummary && showOdontogramFlyout && (
+        <OdontogramFlyout summary={chartSummary} patientName={patient.name} />
+      )}
       {isSmall && showInsurance && patient.insurance && (
         <StatusChip
           tone={insuranceTone(patient.insurance.status)}
@@ -586,29 +611,44 @@ export default function SummaryActionsCard({
 
           {!isSmall && (
             <>
-              {showSummary && (
+              {chartSummary && showInlineOdontogram ? (
+                // V6: the chart takes the body slot outright. There is not
+                // enough height on a 60-minute card for it and the summary
+                // blurb, and the chart is the whole point of this version.
                 <>
-                  <div className={roomy ? "py-2.5" : "py-1.5"}>
+                  <div className={roomy ? "py-2" : "py-1.5"}>
                     <div className="h-px w-full bg-border" />
                   </div>
-                  <div
-                    className={cn(
-                      "flex min-h-0 flex-1 flex-col gap-1",
-                      isCompleted && "opacity-60"
-                    )}
-                  >
-                    <p className="text-[10px] uppercase leading-none text-muted-foreground">
-                      Patient Summary
-                    </p>
-                    <TruncatedSummary
-                      text={blurb}
-                      onMore={(e) => {
-                        e.stopPropagation();
-                        openSummary();
-                      }}
-                    />
-                  </div>
+                  <InlineCardOdontogram
+                    summary={chartSummary}
+                    className={cn(isCompleted && "opacity-60")}
+                  />
                 </>
+              ) : (
+                showSummary && (
+                  <>
+                    <div className={roomy ? "py-2.5" : "py-1.5"}>
+                      <div className="h-px w-full bg-border" />
+                    </div>
+                    <div
+                      className={cn(
+                        "flex min-h-0 flex-1 flex-col gap-1",
+                        isCompleted && "opacity-60"
+                      )}
+                    >
+                      <p className="text-[10px] uppercase leading-none text-muted-foreground">
+                        Patient Summary
+                      </p>
+                      <TruncatedSummary
+                        text={blurb}
+                        onMore={(e) => {
+                          e.stopPropagation();
+                          openSummary();
+                        }}
+                      />
+                    </div>
+                  </>
+                )
               )}
               {/* mt-auto pins the footer to the card's bottom edge when the
                   summary (the only flex-1 row) is toggled off. */}

@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Odontogram from "@/components/Odontogram";
+import Chiclet from "@/components/OpportunityChiclet";
 import type { ClinicalTab } from "@/types/clinical";
 import type { Patient } from "@/data/mockPatients";
 import { buildPatientSummary } from "@/data/patientSummary";
@@ -42,19 +43,6 @@ function Section({
       <SectionLabel>{label}</SectionLabel>
       {children}
     </div>
-  );
-}
-
-// Outline count chiclet — "2 Curodont", "1 Crown". Shared by the AI opportunity
-// and recommendation rows so both read as the same kind of object.
-function Chiclet({ children }: { children: React.ReactNode }) {
-  return (
-    <Badge
-      variant="outline"
-      className="bg-background font-medium text-foreground"
-    >
-      {children}
-    </Badge>
   );
 }
 
