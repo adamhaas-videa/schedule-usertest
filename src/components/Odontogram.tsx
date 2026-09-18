@@ -280,7 +280,8 @@ function Quadrant({
     <div
       className={cn(
         "flex min-w-px flex-1 border-zinc-200",
-        arch === "upper" ? "items-end" : "h-full items-start"
+        arch === "upper" ? "items-end" : "h-full items-start",
+        metrics.spread && "justify-between"
       )}
       style={{
         gap: metrics.toothGap,

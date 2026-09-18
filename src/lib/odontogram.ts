@@ -94,6 +94,12 @@ export interface OdontogramMetrics {
   radius: number;
   upperRow: number;
   lowerRow: number;
+  /**
+   * Distribute slack between the teeth when a quadrant is laid out wider than
+   * its natural width, instead of leaving it at the end of the row. Lets the
+   * card fill its width with the teeth sized by the height it has to spare.
+   */
+  spread: boolean;
   /** Natural size of the whole chart, for a fit-to-box transform. */
   width: number;
   height: number;
@@ -119,6 +125,7 @@ export const DENSITY: Record<OdontogramDensity, OdontogramMetrics> = {
     // what the slideout has always rendered.
     upperRow: 71.757,
     lowerRow: 69.796,
+    spread: false,
     width: chartWidth(11.257, 10.507, 3),
     height: 71.757 + 3 + 69.796 + 3,
   },
@@ -130,6 +137,7 @@ export const DENSITY: Record<OdontogramDensity, OdontogramMetrics> = {
     radius: 3,
     upperRow: UPPER_TOOTH_HEIGHT + 2 * 3.5 + 2 * 1.5,
     lowerRow: LOWER_TOOTH_HEIGHT + 2 * 3.5 + 2 * 1.5,
+    spread: true,
     width: chartWidth(2, 3.5, 2.5),
     height:
       UPPER_TOOTH_HEIGHT +

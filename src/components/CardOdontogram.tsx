@@ -15,48 +15,65 @@ import { cn } from "@/lib/utils";
 function ScaleToFit({
   naturalWidth,
   naturalHeight,
+  fillWidth = false,
   className,
   style,
   children,
 }: {
   naturalWidth: number;
   naturalHeight: number;
+  /**
+   * Lay the subtree out wider than its natural width — by exactly as much as
+   * the transform then shrinks it — so it ends up spanning the box edge to
+   * edge. Only useful for a subtree that absorbs the extra width (the compact
+   * odontogram spreads its teeth); anything else would just gain a right
+   * margin. Without it the subtree keeps its aspect and centers.
+   */
+  fillWidth?: boolean;
   className?: string;
   style?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
-  // 0 until measured: the card's wrapper sets content-visibility:auto, so an
-  // off-screen card has no layout box yet and would otherwise flash the chart
-  // at full size before the first measurement lands.
-  const [scale, setScale] = useState(0);
+  // scale 0 until measured: the card's wrapper sets content-visibility:auto, so
+  // an off-screen card has no layout box yet and would otherwise flash the
+  // chart at full size before the first measurement lands.
+  const [fit, setFit] = useState({ scale: 0, width: naturalWidth });
 
   useLayoutEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const fit = () => {
+    const measure = () => {
       // clientWidth/Height, not getBoundingClientRect: the V7 flyout scales
       // itself while it animates open, and a rect read mid-transition would
       // lock the chart in at the animation's scale.
-      const { clientWidth: width, clientHeight: height } = el;
-      if (width <= 0 || height <= 0) return;
-      const next = Math.min(width / naturalWidth, height / naturalHeight);
-      setScale((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
+      const { clientWidth: boxWidth, clientHeight: boxHeight } = el;
+      if (boxWidth <= 0 || boxHeight <= 0) return;
+      const scale = Math.min(boxWidth / naturalWidth, boxHeight / naturalHeight);
+      // scale is at most boxWidth/naturalWidth, so this is never narrower than
+      // the natural width — it only ever adds slack for the teeth to spread
+      // into, and is exactly naturalWidth whenever width is the binding limit.
+      const width = fillWidth ? boxWidth / scale : naturalWidth;
+      setFit((prev) =>
+        Math.abs(prev.scale - scale) < 0.001 && Math.abs(prev.width - width) < 0.5
+          ? prev
+          : { scale, width }
+      );
     };
-    fit();
-    const observer = new ResizeObserver(fit);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [naturalWidth, naturalHeight]);
+  }, [naturalWidth, naturalHeight, fillWidth]);
 
   return (
     <div ref={boxRef} className={cn("relative", className)} style={style}>
       <div
         className="absolute top-1/2 left-1/2"
         style={{
-          width: naturalWidth,
+          width: fit.width,
           height: naturalHeight,
-          transform: `translate(-50%, -50%) scale(${scale})`,
+          transform: `translate(-50%, -50%) scale(${fit.scale})`,
         }}
       >
         {children}
@@ -69,8 +86,9 @@ const COMPACT = DENSITY.compact;
 const FULL = DENSITY.default;
 
 /**
- * V6 — the odontogram inline on the card, filling whatever height is left
- * between the insurance row and the action bar.
+ * V6 — the odontogram inline on the card. Spans the card's full content width;
+ * the teeth are sized by whatever height is left between the insurance row and
+ * the action bar, and spread to fill the rest.
  */
 export function InlineCardOdontogram({
   summary,
@@ -83,6 +101,7 @@ export function InlineCardOdontogram({
     <ScaleToFit
       naturalWidth={COMPACT.width}
       naturalHeight={COMPACT.height}
+      fillWidth
       className={cn("min-h-0 flex-1 overflow-hidden", className)}
     >
       <Odontogram
