@@ -121,23 +121,38 @@ const CHART_WIDTH = FLYOUT_WIDTH - FLYOUT_PAD * 2;
 const CHART_HEIGHT = (FULL.height * CHART_WIDTH) / FULL.width;
 
 /**
- * V7 — a teeth chip beside the perio chip. Hovering (or focusing) it floats the
- * AI opportunities section out beside the column: counts over the full chart,
- * the same pairing the summary slideout shows.
+ * V7 — a teeth chip beside the perio chip. Hovering (or focusing) it unfurls
+ * the AI opportunities section out of the card's own edge: counts over the full
+ * chart, the same pairing the summary slideout shows.
+ *
+ * The flyout anchors to the card rather than to the chip, and is drawn as a
+ * continuation of it — same surface, same outline, same corner radius, with the
+ * shared edge's border and rounding dropped so the two read as one shape. The
+ * open transition is a clip-path wipe pinned to that shared edge, so the panel
+ * emerges from under the card instead of landing on top of it, and its shadow
+ * is clipped flush on that side so none of it spills back over the card.
  */
 export function OdontogramFlyout({
   summary,
   patientName,
+  anchorRef,
+  borderColor,
+  onOpenChange,
 }: {
   summary: PatientSummary;
   patientName: string;
+  /** The card, so the panel hangs off its edge and lines up with its top. */
+  anchorRef: React.RefObject<HTMLDivElement | null>;
+  /** The card's appointment-tone outline; undefined on a completed card. */
+  borderColor?: string;
+  onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <PreviewCard.Root>
+    <PreviewCard.Root onOpenChange={onOpenChange}>
       <PreviewCard.Trigger
         // Quick to open so it feels like a hover affordance rather than a
-        // preview link, but slow enough to close that you can cross the gap
-        // into the flyout and hover a tooth.
+        // preview link, but slow enough to close that you can cross into the
+        // flyout and hover a tooth.
         delay={120}
         closeDelay={200}
         aria-label={`AI opportunities for ${patientName}`}
@@ -154,35 +169,42 @@ export function OdontogramFlyout({
       </PreviewCard.Trigger>
       <PreviewCard.Portal>
         <PreviewCard.Positioner
+          anchor={anchorRef}
           side="inline-end"
-          align="center"
-          sideOffset={10}
+          align="start"
+          // Overlap the card's 1.5px outline so the two surfaces meet with no
+          // seam between them.
+          sideOffset={-2}
           collisionPadding={12}
-          // Above the now-line (z-20) and the card's own bottom-pinned action
-          // strip, and out of the operatory column's paint containment.
+          // Above the now-line (z-20) and the cards' own bottom-pinned action
+          // strips, and out of the operatory column's paint containment.
           className="isolate z-50"
         >
           <PreviewCard.Popup
             onClick={(event: React.MouseEvent) => event.stopPropagation()}
-            style={{ width: FLYOUT_WIDTH }}
+            style={{ width: FLYOUT_WIDTH, borderColor }}
             className={cn(
-              "flex origin-(--transform-origin) flex-col gap-2 rounded-xl bg-popover p-3 text-popover-foreground",
-              "ring-1 ring-foreground/10 outline-hidden",
-              // Wide, soft spread so the flyout reads as floating well above
-              // the grid rather than sitting on the next column.
+              "flex flex-col gap-2 border-[1.5px] bg-card p-3 text-card-foreground outline-hidden",
+              borderColor ? undefined : "border-border",
+              // Card chrome, minus the edge it shares with the card.
+              "rounded-[10px]",
+              "data-[side=inline-end]:rounded-l-none data-[side=inline-end]:border-l-0",
+              "data-[side=inline-start]:rounded-r-none data-[side=inline-start]:border-r-0",
+              // Wide, soft spread so the card-plus-flyout reads as floating
+              // above the neighbouring columns.
               "shadow-[0_24px_60px_-12px_rgb(0_0_0/0.28),0_8px_24px_-8px_rgb(0_0_0/0.18)]",
-              // Grows out of the chip rather than popping: `transition` in
-              // Tailwind v4 covers opacity, translate and scale, which is what
-              // the data-starting/ending-style pairs below move. Positioner
-              // reports a logical side because `side` is logical, so the slide
-              // direction follows the flip.
-              "transition duration-200 ease-out",
+              // The unfurl. The shared edge keeps a 0 inset so the clip sits
+              // flush against the card — that both hides the panel under the
+              // card at rest and trims the shadow on that side. The other three
+              // insets stay negative to leave the shadow room to spread.
+              "transition-[clip-path,opacity] duration-200 ease-out",
               "data-starting-style:opacity-0 data-ending-style:opacity-0",
-              "data-starting-style:scale-[0.97] data-ending-style:scale-[0.97]",
-              "data-[side=inline-end]:data-starting-style:-translate-x-2",
-              "data-[side=inline-end]:data-ending-style:-translate-x-2",
-              "data-[side=inline-start]:data-starting-style:translate-x-2",
-              "data-[side=inline-start]:data-ending-style:translate-x-2"
+              "data-[side=inline-end]:[clip-path:inset(-64px_-64px_-64px_0)]",
+              "data-[side=inline-end]:data-starting-style:[clip-path:inset(-64px_100%_-64px_0)]",
+              "data-[side=inline-end]:data-ending-style:[clip-path:inset(-64px_100%_-64px_0)]",
+              "data-[side=inline-start]:[clip-path:inset(-64px_0_-64px_-64px)]",
+              "data-[side=inline-start]:data-starting-style:[clip-path:inset(-64px_0_-64px_100%)]",
+              "data-[side=inline-start]:data-ending-style:[clip-path:inset(-64px_0_-64px_100%)]"
             )}
           >
             <div className="text-[12px] leading-none text-muted-foreground uppercase">

@@ -480,6 +480,10 @@ export default function SummaryActionsCard({
   // carries it.
   const showInlineOdontogram = odontogram === "inline" && isTall;
   const showOdontogramFlyout = odontogram === "flyout";
+  // The V7 flyout hangs off the card, so it needs the card element to anchor
+  // to, and the card lifts while it is open so the pair reads as one object.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [flyoutOpen, setFlyoutOpen] = useState(false);
   const chartSummary =
     showInlineOdontogram || showOdontogramFlyout
       ? buildPatientSummary(patient)
@@ -516,7 +520,13 @@ export default function SummaryActionsCard({
         tooltip={perioLabel}
       />
       {chartSummary && showOdontogramFlyout && (
-        <OdontogramFlyout summary={chartSummary} patientName={patient.name} />
+        <OdontogramFlyout
+          summary={chartSummary}
+          patientName={patient.name}
+          anchorRef={cardRef}
+          borderColor={isCompleted ? undefined : tone.border}
+          onOpenChange={setFlyoutOpen}
+        />
       )}
       {isSmall && showInsurance && patient.insurance && (
         <StatusChip
@@ -532,10 +542,17 @@ export default function SummaryActionsCard({
   return (
     <TooltipProvider delay={150}>
       <div
+        ref={cardRef}
         className={cn(
           "group/card @container/card relative flex h-full flex-col overflow-hidden rounded-[10px] border-[1.5px] bg-card transition-colors cursor-pointer",
           "hover:bg-stone-50 dark:hover:bg-foreground/[0.07]",
           isCompleted && "border-border",
+          // An outer shadow here would be clipped square by the column
+          // wrapper's content-visibility paint containment, so the lift is the
+          // hover surface plus an inset ring — the flyout carries the shadow
+          // for the pair.
+          flyoutOpen &&
+            "bg-stone-50 inset-ring-2 inset-ring-foreground/5 dark:bg-foreground/[0.07]",
           className
         )}
         style={isCompleted ? undefined : { borderColor: tone.border }}
@@ -614,16 +631,13 @@ export default function SummaryActionsCard({
               {chartSummary && showInlineOdontogram ? (
                 // V6: the chart takes the body slot outright. There is not
                 // enough height on a 60-minute card for it and the summary
-                // blurb, and the chart is the whole point of this version.
-                <>
-                  <div className={roomy ? "py-2" : "py-1.5"}>
-                    <div className="h-px w-full bg-border" />
-                  </div>
-                  <InlineCardOdontogram
-                    summary={chartSummary}
-                    className={cn(isCompleted && "opacity-60")}
-                  />
-                </>
+                // blurb, and the chart is the whole point of this version. No
+                // rule above it — the arches read as their own block, and the
+                // line only crowded them.
+                <InlineCardOdontogram
+                  summary={chartSummary}
+                  className={cn("mt-2", isCompleted && "opacity-60")}
+                />
               ) : (
                 showSummary && (
                   <>
