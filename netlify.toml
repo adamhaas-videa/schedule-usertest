@@ -1,0 +1,22 @@
+# Build settings for the Netlify site (schedule-poc). Only used once the site
+# is connected to this GitHub repo — a manual `netlify deploy --dir=dist`
+# uploads an already-built folder and ignores everything here.
+#
+# The SPA fallback deliberately lives in `public/_redirects`, not in a
+# [[redirects]] block: Vite copies it into `dist/`, so it applies to manual
+# uploads too. Adding it here as well would only apply to Git builds.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Match the local toolchain; Vite 7 needs 20.19+ and the repo is on 22.
+  NODE_VERSION = "22"
+
+# Every branch gets a deploy preview, so a feature branch can be reviewed
+# without touching the production demo.
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.branch-deploy]
+  command = "npm run build"
