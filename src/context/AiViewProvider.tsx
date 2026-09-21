@@ -1,22 +1,16 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { AiViewContext, type AiView } from "./AiViewContext";
-import {
-  DEFAULT_CARD_COLOR_MODE,
-  DEFAULT_CARD_VERSION,
-  type CardColorMode,
-  type CardVersion,
-} from "@/lib/cardVersions";
+import { type CardColorMode, type CardVersion } from "@/lib/cardVersions";
 import { DEFAULT_CHART_VERSION, type ChartVersion } from "@/lib/chartVersions";
-import {
-  DEFAULT_NAV_FOOTER_MODE,
-  DEFAULT_NAV_VERSION,
-  type NavFooterMode,
-  type NavVersion,
-} from "@/lib/navVersions";
-import {
-  DEFAULT_SUMMARY_VERSION,
-  type SummaryVersion,
-} from "@/lib/summaryVersions";
+import { type NavFooterMode, type NavVersion } from "@/lib/navVersions";
+import { type SummaryVersion } from "@/lib/summaryVersions";
+import { readDemoSelectionFromLocation } from "@/lib/demoUrl";
+
+// User-test build: the six demo dimensions are seeded from the `/x/<tokens>`
+// or `/t/<preset>` head of the URL that opened the app, so a participant's
+// first paint is already the condition they were sent to. Read once at module
+// load — DemoScope owns every change after that.
+const INITIAL_DEMO = readDemoSelectionFromLocation();
 
 /**
  * Holds AI view mode, privacy, and demo versions for the whole app.
@@ -30,20 +24,24 @@ export function AiViewProvider({ children }: { children: ReactNode }) {
   const [chartVersion, setChartVersion] = useState<ChartVersion>(
     DEFAULT_CHART_VERSION
   );
-  const [navVersion, setNavVersion] = useState<NavVersion>(DEFAULT_NAV_VERSION);
+  const [navVersion, setNavVersion] = useState<NavVersion>(
+    INITIAL_DEMO.navVersion
+  );
   const [navFooterMode, setNavFooterMode] = useState<NavFooterMode>(
-    DEFAULT_NAV_FOOTER_MODE
+    INITIAL_DEMO.navFooterMode
   );
   const [cardVersion, setCardVersion] = useState<CardVersion>(
-    DEFAULT_CARD_VERSION
+    INITIAL_DEMO.cardVersion
   );
   const [cardColorMode, setCardColorMode] = useState<CardColorMode>(
-    DEFAULT_CARD_COLOR_MODE
+    INITIAL_DEMO.cardColorMode
   );
   const [summaryVersion, setSummaryVersion] = useState<SummaryVersion>(
-    DEFAULT_SUMMARY_VERSION
+    INITIAL_DEMO.summaryVersion
   );
-  const [cardSummaryOn, setCardSummaryOn] = useState(false);
+  const [cardSummaryOn, setCardSummaryOn] = useState(
+    INITIAL_DEMO.cardSummaryOn
+  );
   const [reviewedIds, setReviewedIds] = useState<ReadonlySet<string>>(
     () => new Set()
   );

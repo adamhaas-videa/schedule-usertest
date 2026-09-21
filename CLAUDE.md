@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## This is the user-test fork
+
+A fork of `adamhaas-videa/schedule` for running moderated user tests on a public
+Netlify URL. `upstream` points at the original; there is no `origin` shared with it.
+The internal demo at `schedule-poc.netlify.app` builds from the ORIGINAL repo's
+`main` and must never be touched from here.
+
+Three deliberate differences from upstream — do not "fix" them back:
+
+1. **The clock is pinned, not live.** `FIXED_NOW_MINUTES` in `src/lib/timeline.ts`
+   is 8:00 AM and `useNowMinutes()` returns it without ticking, so every
+   participant sees an identical board. Upstream tracks the wall clock.
+2. **The app is mounted under a `/x/<tokens>` permutation head.** `src/lib/demoUrl.ts`
+   owns the token vocabulary and the named presets; `src/components/DemoScope.tsx`
+   holds the route table and the two-way sync between the URL and `AiViewProvider`.
+   `AiViewProvider` seeds itself from the URL at module load so the first paint is
+   already the right condition.
+   Because of the head, **never call `useNavigate`/`useLocation` directly for app
+   routes** — use `useAppNavigate()` / `useAppPathname()` from `src/lib/useAppNavigate.ts`,
+   which add and strip the head. A raw `navigate("/schedule")` escapes the permutation.
+   Child routes inside `DemoScope` are written relative (`schedule`, not `/schedule`).
+3. **The demo menu has a fifth "Links" tab** listing the named conditions.
+
+Menu changes rewrite the URL with `replace` (no history entry); preset jumps use a
+normal push, so Back/Forward step between conditions. That asymmetry is intentional.
+
 ## Commands
 
 - `npm run dev` — start the Vite dev server with HMR

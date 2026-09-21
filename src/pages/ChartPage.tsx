@@ -1,4 +1,5 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import { getPatientById } from "@/lib/patients";
 import { useAiView } from "@/context/AiViewContext";
@@ -6,7 +7,7 @@ import { CHART_VERSIONS } from "@/lib/chartVersions";
 
 export default function ChartPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const patient = getPatientById(id);
   const { privacyMode, setPrivacyMode, chartVersion } = useAiView();
   const meta =

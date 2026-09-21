@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import type { Patient } from "@/data/mockPatients";
 import { cn } from "@/lib/utils";
 import { useAiView, type AiView } from "@/context/AiViewContext";
@@ -118,7 +118,7 @@ function PeriapicalRow({
 }
 
 export default function FmxViewer({ patient, aiOn, onAiToggle }: FmxViewerProps) {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   // Patient view is the default when AI is enabled. The selection is held in
   // shared context so it persists across the whole imaging experience —
   // toggling AI off then on, and navigating FMX ↔ single image ↔ back.

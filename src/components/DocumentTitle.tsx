@@ -1,10 +1,10 @@
 import { useLayoutEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { titleForPath } from "@/lib/documentTitle";
+import { useAppPathname } from "@/lib/useAppNavigate";
 
 /** Sets `document.title` from the current route (`Videa Schedule`, `Videa Images`, …). */
 export default function DocumentTitle() {
-  const { pathname } = useLocation();
+  const pathname = useAppPathname();
 
   useLayoutEffect(() => {
     document.title = titleForPath(pathname);

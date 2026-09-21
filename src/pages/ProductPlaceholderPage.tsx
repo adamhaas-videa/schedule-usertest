@@ -2,7 +2,7 @@ import DemoMenu from "@/components/DemoMenu";
 import { PRODUCT_ITEMS, isNavItem } from "@/components/navigation/products";
 import { useAiView } from "@/context/AiViewContext";
 import { findNavItemByPath } from "@/lib/navVersions";
-import { useLocation } from "react-router-dom";
+import { useAppPathname } from "@/lib/useAppNavigate";
 import UpsellPage from "@/pages/UpsellPage";
 
 function labelForPath(path: string): string {
@@ -11,18 +11,18 @@ function labelForPath(path: string): string {
 }
 
 export default function ProductPlaceholderPage() {
-  const location = useLocation();
+  const pathname = useAppPathname();
   const { navVersion } = useAiView();
-  const navItem = findNavItemByPath(navVersion, location.pathname);
+  const navItem = findNavItemByPath(navVersion, pathname);
 
   if (navItem?.locked) {
     return <UpsellPage item={navItem} />;
   }
 
   const catalogItem = Object.values(PRODUCT_ITEMS).find(
-    (entry) => isNavItem(entry) && entry.path === location.pathname
+    (entry) => isNavItem(entry) && entry.path === pathname
   );
-  const label = navItem?.label ?? catalogItem?.label ?? labelForPath(location.pathname);
+  const label = navItem?.label ?? catalogItem?.label ?? labelForPath(pathname);
 
   return (
     <div className="flex flex-col h-full min-h-0">

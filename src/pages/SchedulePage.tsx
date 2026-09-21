@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, useRef } from "react";
 import { useNowMinutes } from "@/lib/useNowMinutes";
-import { useNavigate } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import L1Header from "@/components/layout/L1Header";
 import L2Header from "@/components/layout/L2Header";
 import OperatoryGrid from "@/components/OperatoryGrid";
@@ -26,7 +26,7 @@ const INITIAL_FILTERS: ScheduleFilters = {
 };
 
 export default function SchedulePage() {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const { privacyMode, setPrivacyMode, cardVersion, summaryVersion } =
     useAiView();
   const [selectedDate, setSelectedDate] = useState(new Date());

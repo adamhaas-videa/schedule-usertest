@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import { getPatientById } from "@/lib/patients";
 import { cn } from "@/lib/utils";
@@ -81,7 +82,7 @@ function TemplateRow({
 
 export default function VoiceNotesPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const patient = getPatientById(id);
   const { privacyMode, setPrivacyMode } = useAiView();
   const [selected, setSelected] = useState<Record<string, boolean>>({});

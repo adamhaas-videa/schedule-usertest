@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import SingleImageViewer from "@/components/imaging/SingleImageViewer";
 import { getPatientById } from "@/lib/patients";
@@ -9,7 +10,7 @@ const SLOTS = Array.from({ length: 18 }, (_, i) => i + 1);
 
 export default function SingleImagePage() {
   const { id, slot } = useParams<{ id: string; slot: string }>();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const patient = getPatientById(id);
   const { aiOn, setAiOn, privacyMode, setPrivacyMode } = useAiView();
   const [expanded, setExpanded] = useState(false);

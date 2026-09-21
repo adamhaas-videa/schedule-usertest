@@ -4,7 +4,7 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useAppNavigate, useAppPathname } from "@/lib/useAppNavigate";
 import videaLogoHoriz from "@/assets/icons/videa-horizontal-logo.svg";
 import videaLogoVert from "@/assets/icons/videa-vert-logo.svg";
 import { Button } from "@/components/ui/button";
@@ -388,8 +388,8 @@ export default function AppSidebar({
 }: AppSidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const collapsed = controlledCollapsed ?? internalCollapsed;
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useAppNavigate();
+  const pathname = useAppPathname();
   const { navVersion, navFooterMode } = useAiView();
   const navEntries = getNavEntries(navVersion);
 
@@ -469,8 +469,8 @@ export default function AppSidebar({
               );
             }
             const active =
-              location.pathname === entry.path ||
-              location.pathname.startsWith(entry.path + "/");
+              pathname === entry.path ||
+              pathname.startsWith(entry.path + "/");
             return (
               <NavRow
                 key={entry.key}

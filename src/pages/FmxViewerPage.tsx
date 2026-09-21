@@ -1,4 +1,5 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import FmxViewer from "@/components/imaging/FmxViewer";
 import { getPatientById } from "@/lib/patients";
@@ -6,7 +7,7 @@ import { useAiView } from "@/context/AiViewContext";
 
 export default function FmxViewerPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const patient = getPatientById(id);
   const { aiOn, setAiOn, privacyMode, setPrivacyMode } = useAiView();
 

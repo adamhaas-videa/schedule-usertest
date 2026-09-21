@@ -1,4 +1,6 @@
-# Build settings for the Netlify site (schedule-poc). Only used once the site
+# Build settings for the USER-TEST Netlify site, built from this fork. The
+# internal demo (schedule-poc) is a separate site on the original repo and is
+# not affected by anything here. Only used once the site
 # is connected to this GitHub repo — a manual `netlify deploy --dir=dist`
 # uploads an already-built folder and ignores everything here.
 #

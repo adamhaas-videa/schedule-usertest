@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
-import { getNowMinutes } from "@/lib/timeline";
+import { FIXED_NOW_MINUTES } from "@/lib/timeline";
 
-/** Local clock in minutes since midnight. Updates when the minute rolls over. */
+/**
+ * Clock in minutes since midnight. User-test build: pinned to
+ * `FIXED_NOW_MINUTES` rather than ticking, so the schedule never shifts under a
+ * participant mid-session. Kept as a hook so call sites are unchanged from the
+ * internal build and the two can be diffed cleanly.
+ */
 export function useNowMinutes(): number {
-  const [nowMinutes, setNowMinutes] = useState(getNowMinutes);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setNowMinutes((prev) => {
-        const next = getNowMinutes();
-        return next === prev ? prev : next;
-      });
-    }, 1_000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  return nowMinutes;
+  return FIXED_NOW_MINUTES;
 }

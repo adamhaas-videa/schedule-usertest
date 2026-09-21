@@ -35,11 +35,24 @@ export function formatHour(hour: number): string {
 
 export const READY_FOR_CHAIR_WINDOW_MIN = 15;
 
+/**
+ * User-test build: the clock is pinned instead of tracking wall time, so every
+ * participant opens an identical board no matter when they run the session.
+ * This single constant drives the now-line, the grid's initial scroll, and the
+ * in-chair / completed / ready-for-chair statuses derived in `mockPatients.ts`.
+ *
+ * At 8:00 AM the day has not started moving yet: six patients are in the chair,
+ * nothing is completed, and nothing is inside the ready-for-chair window. Nudge
+ * it later (8:30 gives 5 in-chair and 3 completed; 10:45 gives 7 and 14) if a
+ * test needs a board with history on it.
+ */
+export const FIXED_NOW_MINUTES = 8 * 60;
+
 /** Minutes since local midnight, used for the calendar now-line and appointment status. */
-export function getNowMinutes(date = new Date()): number {
-  return date.getHours() * 60 + date.getMinutes();
+export function getNowMinutes(): number {
+  return FIXED_NOW_MINUTES;
 }
 
 export function getCurrentHour(): number {
-  return Math.floor(getNowMinutes() / 60);
+  return Math.floor(FIXED_NOW_MINUTES / 60);
 }

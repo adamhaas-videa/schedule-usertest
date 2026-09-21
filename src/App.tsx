@@ -1,15 +1,39 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { AiViewProvider } from "@/context/AiViewProvider";
 import { ImagingToolbarProvider } from "@/context/ImagingToolbarContext";
 import DocumentTitle from "@/components/DocumentTitle";
-import AppLayout from "@/components/navigation/AppLayout";
-import SchedulePage from "@/pages/SchedulePage";
-import ProductPlaceholderPage from "@/pages/ProductPlaceholderPage";
-import FmxViewerPage from "@/pages/FmxViewerPage";
-import SingleImagePage from "@/pages/SingleImagePage";
-import VoiceNotesPage from "@/pages/VoiceNotesPage";
-import VoicePerioPage from "@/pages/VoicePerioPage";
-import ChartPage from "@/pages/ChartPage";
+import DemoScope from "@/components/DemoScope";
+import {
+  DEFAULT_DEMO_SELECTION,
+  DEMO_PREFIX,
+  PRESET_PREFIX,
+  encodeDemo,
+  findPreset,
+} from "@/lib/demoUrl";
+
+/**
+ * `/t/<preset>` — the short link handed to a test participant. Resolves the
+ * named condition and bounces onto the canonical `/x/<tokens>` form so the
+ * address bar spells the permutation out from then on. An unknown name falls
+ * back to the default rather than 404ing, so a mistyped link still works.
+ */
+function PresetRedirect() {
+  const params = useParams<{ preset: string; "*": string }>();
+  const selection = findPreset(params.preset)?.selection ?? DEFAULT_DEMO_SELECTION;
+  const rest = params["*"] ? `/${params["*"]}` : "/schedule";
+  return <Navigate to={`${DEMO_PREFIX}/${encodeDemo(selection)}${rest}`} replace />;
+}
+
+/**
+ * Anything without a permutation head — `/`, a bare `/schedule`, an old
+ * `/patient/…` bookmark — gets the default one, keeping the path it asked for.
+ */
+function DefaultRedirect() {
+  const { pathname, search, hash } = useLocation();
+  const path = pathname === "/" ? "/schedule" : pathname;
+  const head = `${DEMO_PREFIX}/${encodeDemo(DEFAULT_DEMO_SELECTION)}`;
+  return <Navigate to={`${head}${path}${search}${hash}`} replace />;
+}
 
 export default function App() {
   return (
@@ -17,26 +41,9 @@ export default function App() {
       <ImagingToolbarProvider>
         <DocumentTitle />
         <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<Navigate to="/schedule" replace />} />
-            <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/voice-notes" element={<ProductPlaceholderPage />} />
-            <Route path="/autoverify" element={<ProductPlaceholderPage />} />
-            <Route path="/clean-claims" element={<ProductPlaceholderPage />} />
-            <Route path="/recall" element={<ProductPlaceholderPage />} />
-            <Route path="/referrals" element={<ProductPlaceholderPage />} />
-            <Route path="/ambient-intel" element={<ProductPlaceholderPage />} />
-            <Route path="/insights" element={<ProductPlaceholderPage />} />
-            <Route path="/engagement" element={<ProductPlaceholderPage />} />
-          </Route>
-
-          <Route path="/patient/:id/xray" element={<FmxViewerPage />} />
-          <Route path="/patient/:id/image/:slot" element={<SingleImagePage />} />
-          <Route path="/patient/:id/voice-notes" element={<VoiceNotesPage />} />
-          <Route path="/patient/:id/perio" element={<VoicePerioPage />} />
-          <Route path="/patient/:id/chart" element={<ChartPage />} />
-
-          <Route path="*" element={<Navigate to="/schedule" replace />} />
+          <Route path={`${DEMO_PREFIX}/:tokens/*`} element={<DemoScope />} />
+          <Route path={`${PRESET_PREFIX}/:preset/*`} element={<PresetRedirect />} />
+          <Route path="*" element={<DefaultRedirect />} />
         </Routes>
       </ImagingToolbarProvider>
     </AiViewProvider>

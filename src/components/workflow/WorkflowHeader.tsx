@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import videaBrandmark from "@/assets/icons/videa-brandmark.svg";
 import PrivacyToggle from "@/components/PrivacyToggle";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ export default function WorkflowHeader({
   onPrivacyToggle,
   showStudyBar = true,
 }: WorkflowHeaderProps) {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const age = computeAge(patient.dob);
   const demographics = `Age ${age} • DOB ${patient.dob}`;
   // Below xl the header can't fit the demographics beside the name (the tab

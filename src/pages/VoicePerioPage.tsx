@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useAppNavigate } from "@/lib/useAppNavigate";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import { getPatientById } from "@/lib/patients";
 import { cn } from "@/lib/utils";
@@ -103,7 +104,7 @@ function MeasureCell({ v }: { v: string }) {
 
 export default function VoicePerioPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const patient = getPatientById(id);
   const { privacyMode, setPrivacyMode } = useAiView();
   const [mobility, setMobility] = useState(0);

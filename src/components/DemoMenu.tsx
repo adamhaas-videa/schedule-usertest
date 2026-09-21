@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -21,6 +22,13 @@ import {
   type NavVersion,
 } from "@/lib/navVersions";
 import { SUMMARY_VERSIONS, type SummaryVersion } from "@/lib/summaryVersions";
+import {
+  DEMO_PRESETS,
+  PRESET_PREFIX,
+  demoUrl,
+  encodeDemo,
+  type DemoSelection,
+} from "@/lib/demoUrl";
 import { cn } from "@/lib/utils";
 
 interface VersionOption<T extends string | number> {
@@ -148,7 +156,7 @@ function ToggleRow({
 
 const PANEL_WIDTH = "!w-[420px] !max-w-[420px]";
 
-type DemoTabId = "cards" | "color" | "summary" | "navigation";
+type DemoTabId = "cards" | "color" | "summary" | "navigation" | "links";
 
 const DEMO_TABS: { id: DemoTabId; label: string; description: string }[] = [
   {
@@ -172,7 +180,118 @@ const DEMO_TABS: { id: DemoTabId; label: string; description: string }[] = [
     label: "Navigation",
     description: "Product-suite order and grouping — whole app",
   },
+  {
+    id: "links",
+    label: "Links",
+    description:
+      "Named conditions to send a participant, and the link for whatever is on screen right now",
+  },
 ];
+
+/**
+ * User-test build. The address bar already spells out the live permutation;
+ * this panel is the shortcut — jump between named conditions, and copy the
+ * short `/t/<name>` link to paste into a test script.
+ */
+function LinksPanel({ selection }: { selection: DemoSelection }) {
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState<string | null>(null);
+  const current = encodeDemo(selection);
+
+  async function copy(path: string, key: string) {
+    const absolute = `${window.location.origin}${path}`;
+    try {
+      await navigator.clipboard.writeText(absolute);
+      setCopied(key);
+      window.setTimeout(() => setCopied((k) => (k === key ? null : k)), 1600);
+    } catch {
+      // Clipboard can be blocked; the link is written out below regardless.
+    }
+  }
+
+  return (
+    <>
+      <section className="flex flex-col gap-2">
+        <div className="px-1">
+          <h3 className="text-sm font-semibold text-foreground">
+            This screen
+          </h3>
+          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+            The permutation currently on screen, as a link.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-2">
+          <code className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+            /x/{current}/schedule
+          </code>
+          <button
+            type="button"
+            onClick={() => copy(demoUrl(selection), "current")}
+            className="shrink-0 cursor-pointer rounded-md bg-secondary px-2 py-1 text-[11px] font-medium text-secondary-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            {copied === "current" ? "Copied" : "Copy"}
+          </button>
+        </div>
+      </section>
+      <div className="h-px bg-border" />
+      <section className="flex flex-col gap-2">
+        <div className="px-1">
+          <h3 className="text-sm font-semibold text-foreground">
+            Named conditions
+          </h3>
+          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+            Click to switch. Copy gives the short link to hand a participant.
+          </p>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          {DEMO_PRESETS.map((preset) => {
+            const active = encodeDemo(preset.selection) === current;
+            const short = `${PRESET_PREFIX}/${preset.slug}`;
+            return (
+              <div
+                key={preset.slug}
+                className={cn(
+                  "flex items-start gap-2 rounded-lg px-2 py-2 transition-colors",
+                  active ? "bg-accent" : "hover:bg-muted"
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => navigate(demoUrl(preset.selection))}
+                  className="flex min-w-0 flex-1 cursor-pointer flex-col gap-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded"
+                >
+                  <span className="flex items-center gap-1.5 text-[13px] font-medium leading-tight text-foreground">
+                    {preset.title}
+                    {active && (
+                      <i
+                        className="fa-solid fa-check text-primary text-[10px]"
+                        aria-hidden
+                      />
+                    )}
+                  </span>
+                  <span className="text-[12px] leading-snug text-muted-foreground">
+                    {preset.description}
+                  </span>
+                  <code className="mt-0.5 text-[11px] text-muted-foreground">
+                    {short}
+                  </code>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => copy(short, preset.slug)}
+                  aria-label={`Copy link for ${preset.title}`}
+                  className="mt-0.5 shrink-0 cursor-pointer rounded-md bg-secondary px-2 py-1 text-[11px] font-medium text-secondary-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  {copied === preset.slug ? "Copied" : "Copy"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </>
+  );
+}
 
 export default function DemoMenu() {
   const [open, setOpen] = useState(false);
@@ -316,6 +435,18 @@ export default function DemoMenu() {
                 onCheckedChange={setCardSummaryOn}
               />
             </>
+          )}
+          {tab === "links" && (
+            <LinksPanel
+              selection={{
+                cardVersion,
+                cardColorMode,
+                summaryVersion,
+                cardSummaryOn,
+                navVersion,
+                navFooterMode,
+              }}
+            />
           )}
           {tab === "navigation" && (
             <>
