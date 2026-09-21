@@ -1,9 +1,13 @@
 export type ScheduleView = "list" | "calendar";
 export type ClinicalTab = "xray" | "voice" | "perio" | "chart";
 
+import type { AppointmentKind } from "@/lib/appointmentColors";
+
 export interface ScheduleFilters {
   providers: string[];
   operatories: number[];
+  /** Procedure kinds to keep. Empty means every kind, like the other two. */
+  treatments: AppointmentKind[];
 }
 
 export const CLINICAL_TAB_PATH: Record<ClinicalTab, string> = {

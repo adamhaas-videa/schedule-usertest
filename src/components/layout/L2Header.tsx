@@ -6,6 +6,8 @@ import ProviderMultiSelect, {
   type ProviderOption,
 } from "@/components/ProviderMultiSelect";
 import OperatoryMultiSelect from "@/components/OperatoryMultiSelect";
+import TreatmentMultiSelect from "@/components/TreatmentMultiSelect";
+import { getAppointmentKind, type AppointmentKind } from "@/lib/appointmentColors";
 import type { Patient } from "@/data/mockPatients";
 import { ALL_OPERATORIES, DENTISTS, HYGIENISTS } from "@/data/mockPatients";
 import type { ScheduleFilters, ScheduleView } from "@/types/clinical";
@@ -21,6 +23,8 @@ interface L2HeaderProps {
   viewMode: ScheduleView;
   onViewModeChange: (mode: ScheduleView) => void;
   onSelectPatient: (patient: Patient) => void;
+  /** Today's appointments, for the per-kind counts in the treatment filter. */
+  patients: Patient[];
 }
 
 function formatDate(date: Date): string {
@@ -47,9 +51,23 @@ export default function L2Header({
   viewMode,
   onViewModeChange,
   onSelectPatient,
+  patients,
 }: L2HeaderProps) {
   const filtersActive =
-    filters.providers.length > 0 || filters.operatories.length > 0;
+    filters.providers.length > 0 ||
+    filters.operatories.length > 0 ||
+    filters.treatments.length > 0;
+
+  // Counted off the unfiltered day, so a kind's count doesn't collapse to zero
+  // the moment you filter by a provider who isn't doing that work.
+  const treatmentCounts = patients.reduce<Partial<Record<AppointmentKind, number>>>(
+    (acc, p) => {
+      const kind = getAppointmentKind(p.procedure);
+      acc[kind] = (acc[kind] ?? 0) + 1;
+      return acc;
+    },
+    {}
+  );
 
   const providerOptions: ProviderOption[] = (() => {
     const seen = new Set<string>();
@@ -143,12 +161,21 @@ export default function L2Header({
           onChange={(ops) => onFiltersChange({ ...filters, operatories: ops })}
         />
 
+        <TreatmentMultiSelect
+          selected={filters.treatments}
+          counts={treatmentCounts}
+          onChange={(kinds) =>
+            onFiltersChange({ ...filters, treatments: kinds })
+          }
+        />
+
         {filtersActive && (
           <button
             onClick={() =>
               onFiltersChange({
                 providers: [],
                 operatories: [],
+                treatments: [],
               })
             }
             className="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"

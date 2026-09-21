@@ -86,6 +86,47 @@ const KIND_PATTERNS: [RegExp, AppointmentKind][] = [
   ],
 ];
 
+/** Display names for the kinds, used by the schedule's treatment filter. */
+export const APPOINTMENT_KIND_LABELS: Record<AppointmentKind, string> = {
+  filling: "Fillings",
+  onlay: "Onlays & inlays",
+  crown: "Crowns, bridges & veneers",
+  endo: "Root canals",
+  extraction: "Extractions",
+  prophy: "Prophylaxis & maintenance",
+  srp: "Scaling & root planing",
+  implant: "Implants",
+  prosthetic: "Dentures & appliances",
+  exam: "Exams & consults",
+};
+
+export const APPOINTMENT_FAMILY_LABELS: Record<AppointmentFamily, string> = {
+  restorative: "Restorative",
+  hygiene: "Hygiene",
+  prosthetic: "Prosthetic",
+  visit: "Visit",
+};
+
+/**
+ * Kinds grouped by family, in the same order the color walk runs (lightest to
+ * most definitive within restorative), so the filter list reads in the same
+ * order as the board's color spectrum.
+ */
+export const APPOINTMENT_KIND_GROUPS: {
+  family: AppointmentFamily;
+  kinds: AppointmentKind[];
+}[] = [
+  { family: "restorative", kinds: ["filling", "onlay", "crown", "endo", "extraction"] },
+  { family: "hygiene", kinds: ["prophy", "srp"] },
+  { family: "prosthetic", kinds: ["implant", "prosthetic"] },
+  { family: "visit", kinds: ["exam"] },
+];
+
+/** The swatch a kind shows in the filter, matching its card chrome. */
+export function getKindColor(kind: AppointmentKind): ProviderColor {
+  return BY_KIND[kind];
+}
+
 export function getAppointmentKind(procedure: string): AppointmentKind {
   return KIND_PATTERNS.find(([re]) => re.test(procedure))?.[1] ?? "exam";
 }
