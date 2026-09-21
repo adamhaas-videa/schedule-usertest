@@ -59,6 +59,32 @@ git log --oneline upstream/main..HEAD     # what this fork added
 git cherry-pick <sha>                      # take one commit
 ```
 
+## Deploying
+
+The site is **https://videa-schedule-test.netlify.app** (Netlify project
+`videa-schedule-test`), Git-connected to this repo. **A push to `main` deploys on
+its own** — `npm run build` into `dist`, per `netlify.toml`.
+
+`allowed_branches` is `["main"]`, so no other branch builds and no deploy previews
+are produced. That is deliberate: the site has no password and no SSO, so a branch
+preview would put in-progress work on a public URL. To preview a branch, add it in
+the Netlify UI under Site configuration → Build & deploy → Branches, or merge it.
+
+The connection is self-managed (a repo deploy key plus a webhook to
+`api.netlify.com/hooks/github`), not the Netlify GitHub App. If builds ever stop
+firing, check the webhook's recent deliveries:
+
+```sh
+gh api repos/adamhaas-videa/schedule-usertest/hooks
+netlify api listSiteDeploys --data '{"site_id":"b51d6702-03d0-474e-a3ed-478e48f7204c","per_page":5}'
+```
+
+A manual upload still works and supersedes the Git build:
+
+```sh
+npm run build && netlify deploy --prod --dir=dist
+```
+
 ## Commands
 
 - `npm run dev` — Vite dev server with HMR
