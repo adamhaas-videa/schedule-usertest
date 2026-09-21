@@ -19,10 +19,12 @@ import {
   type ScheduleView,
 } from "@/types/clinical";
 import { useAiView } from "@/context/AiViewContext";
+import { getAppointmentKind } from "@/lib/appointmentColors";
 
 const INITIAL_FILTERS: ScheduleFilters = {
   providers: [],
   operatories: [],
+  treatments: [],
 };
 
 export default function SchedulePage() {
@@ -71,6 +73,12 @@ export default function SchedulePage() {
       ) {
         return false;
       }
+      if (
+        filters.treatments.length > 0 &&
+        !filters.treatments.includes(getAppointmentKind(p.procedure))
+      ) {
+        return false;
+      }
       return true;
     });
   }, [patients, filters]);
@@ -113,6 +121,7 @@ export default function SchedulePage() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onSelectPatient={handleSelectPatient}
+        patients={patients}
       />
       <main className="flex-1 bg-background overflow-hidden">
         {viewMode === "list" ? (
