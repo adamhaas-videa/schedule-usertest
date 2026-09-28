@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -12,7 +12,15 @@ import Odontogram from "@/components/Odontogram";
 import Chiclet from "@/components/OpportunityChiclet";
 import type { ClinicalTab } from "@/types/clinical";
 import type { Patient } from "@/data/mockPatients";
+import {
+  buildPastVisitMenu,
+  buildPastVisits,
+  countSameDay,
+  type PastVisit,
+  type VisitWorkItem,
+} from "@/data/patientSummary";
 import { buildPatientSummary } from "@/data/patientSummary";
+import VisitPicker from "@/components/workflow/VisitPicker";
 import { getProviderColor } from "@/lib/providerColors";
 import { getSummaryVersion, type SummaryVersion } from "@/lib/summaryVersions";
 import { cn } from "@/lib/utils";
@@ -55,6 +63,93 @@ function toothPrefix(patient: Patient): string | null {
   return null;
 }
 
+/**
+ * One line of completed work. Same-day rows carry the badge — the section
+ * exists to make the gap between what was booked and what was done visible at
+ * a glance, so that marker is the thing that has to read first.
+ *
+ * "Same-day", not "Unscheduled": the panel's Unscheduled Tx list further down
+ * means treatment that is still NOT done, which is the opposite of this.
+ */
+function WorkRow({ item }: { item: VisitWorkItem }) {
+  return (
+    <div className="flex items-start gap-2">
+      <i
+        className={cn(
+          "fa-regular fa-check mt-[3px] text-[11px]",
+          item.planned ? "text-muted-foreground" : "text-deep-teal-700"
+        )}
+        aria-hidden
+      />
+      <span className="flex-1 text-sm leading-5 text-foreground">
+        {item.tooth ? (
+          <span className="font-medium">#{item.tooth} </span>
+        ) : null}
+        {item.label}
+      </span>
+      {!item.planned && (
+        <Badge
+          variant="secondary"
+          className="mt-px shrink-0 bg-accent text-deep-teal-700"
+        >
+          Same-day
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+function WorkGroup({
+  label,
+  items,
+}: {
+  label: string;
+  items: VisitWorkItem[];
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[11px] leading-none text-muted-foreground uppercase">
+        {label}
+      </div>
+      <div className="flex flex-col gap-1">
+        {items.map((item) => (
+          <WorkRow key={`${item.tooth ?? ""}${item.label}`} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PastVisitDetail({ visit }: { visit: PastVisit }) {
+  const sameDay = countSameDay(visit);
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <div className="flex flex-col gap-1">
+        <div className="text-[11px] leading-none text-muted-foreground uppercase">
+          Scheduled for
+        </div>
+        <div className="text-sm leading-5 font-medium text-foreground">
+          {visit.plannedProcedure}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {visit.providerName}
+        </div>
+      </div>
+      <div className="h-px bg-border" />
+      <WorkGroup label="Clinical work" items={visit.clinical} />
+      <WorkGroup label="Hygiene" items={visit.hygiene} />
+      {sameDay > 0 && (
+        <div className="text-[12px] leading-4 text-muted-foreground">
+          {sameDay === 1
+            ? "1 procedure was diagnosed and treated in the chair, off the schedule."
+            : `${sameDay} procedures were diagnosed and treated in the chair, off the schedule.`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface PatientSummaryPanelProps {
   patient: Patient | null;
   open: boolean;
@@ -81,6 +176,18 @@ export default function PatientSummaryPanel({
   const [taskState, setTaskState] = useState<
     Record<string, "done" | "dismissed">
   >({});
+  // Keyed by patient so stepping to the next one opens on their latest visit
+  // rather than holding a date that belongs to somebody else's history.
+  const [visitDates, setVisitDates] = useState<Record<string, number>>({});
+
+  const pastVisits = useMemo(
+    () => (patient ? buildPastVisits(patient) : []),
+    [patient]
+  );
+  const pastVisitMenu = useMemo(
+    () => buildPastVisitMenu(pastVisits),
+    [pastVisits]
+  );
 
   if (!patient) return null;
 
@@ -96,6 +203,11 @@ export default function PatientSummaryPanel({
   const visibleTasks = summary.tasks.filter(
     (task) => taskState[`${patient.id}:${task.id}`] !== "dismissed"
   );
+
+  const pickedDate = visitDates[patient.id];
+  const selectedVisit =
+    pastVisits.find((visit) => visit.date.getTime() === pickedDate) ??
+    pastVisits[0];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -229,15 +341,23 @@ export default function PatientSummaryPanel({
             </div>
           </div>
 
-          <Section label="Last appointment">
-            <div className="text-sm text-foreground">
-              {summary.lastAppointment.date} •{" "}
-              {summary.lastAppointment.procedure}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {summary.lastAppointment.providerName}
-            </div>
-          </Section>
+          {selectedVisit && (
+            <Section label="Past visits">
+              <VisitPicker
+                patient={patient}
+                activeTab="chart"
+                menu={pastVisitMenu}
+                value={selectedVisit.date}
+                onSelect={(date) =>
+                  setVisitDates((prev) => ({
+                    ...prev,
+                    [patient.id]: date.getTime(),
+                  }))
+                }
+              />
+              <PastVisitDetail visit={selectedVisit} />
+            </Section>
+          )}
 
           {sections.voiceNoteSummary && (
             <Section label="Last voice note">

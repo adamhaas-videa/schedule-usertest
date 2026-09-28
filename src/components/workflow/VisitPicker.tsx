@@ -9,17 +9,26 @@ import {
   parseISODate,
   type Visit,
   type VisitChip,
+  type VisitMenu,
 } from "@/lib/visitHistory";
 import { cn } from "@/lib/utils";
 
 interface VisitPickerProps {
   patient: Patient;
   activeTab: ClinicalTab;
-  /** Trigger prefix from the study bar — "Images from", "Chart from", … */
-  label: string;
+  /** Trigger prefix from the study bar — "Images from", "Chart from", …
+   *  Omitted where the surrounding label already says what the dates are. */
+  label?: string;
   /** The imaging bar is dark; the other workflow bars are light. The menu is
    *  portalled out of the surface, so it carries `dark` itself. */
   dark?: boolean;
+  /** Replaces the menu derived from `activeTab`. The summary drawer passes its
+   *  own, because it lists past visits only and chips them differently. */
+  menu?: VisitMenu;
+  /** Controlled selection. Omit and the picker keeps its own, as the study
+   *  bar does — there is nothing above it that needs to know. */
+  value?: Date;
+  onSelect?: (date: Date) => void;
 }
 
 /** Metadata chip under a visit date: "4 BW", "1 note", "Stage 3". */
@@ -123,20 +132,31 @@ export default function VisitPicker({
   activeTab,
   label,
   dark = false,
+  menu: menuProp,
+  value,
+  onSelect,
 }: VisitPickerProps) {
-  const menu = useMemo(
+  const derived = useMemo(
     () => getVisitMenu(patient, activeTab),
     [patient, activeTab]
   );
+  const menu = menuProp ?? derived;
   const loadable = useMemo(
     () => menu.groups.flatMap((g) => g.visits).filter((v) => !v.pending),
     [menu]
   );
 
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(
+  const [internal, setInternal] = useState(
     () => loadable[0]?.date ?? parseISODate(patient.appointmentDate)
   );
+  const selected = value ?? internal;
+
+  const choose = (date: Date) => {
+    setInternal(date);
+    onSelect?.(date);
+    setOpen(false);
+  };
 
   // One date on file is nothing to pick between: the chevron goes and the
   // trigger stops being clickable.
@@ -165,7 +185,8 @@ export default function VisitPicker({
         >
           <i className="fa-regular fa-calendar-days text-base" aria-hidden />
           <span>
-            {label} {formatShortDate(selected)}
+            {label ? `${label} ` : ""}
+            {formatShortDate(selected)}
           </span>
           {enabled && (
             <i
@@ -211,10 +232,7 @@ export default function VisitPicker({
                     visit={visit}
                     current={visit.date.getTime() === selected.getTime()}
                     dark={dark}
-                    onSelect={() => {
-                      setSelected(visit.date);
-                      setOpen(false);
-                    }}
+                    onSelect={() => choose(visit.date)}
                   />
                 ))}
               </div>

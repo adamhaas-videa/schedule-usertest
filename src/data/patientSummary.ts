@@ -18,6 +18,11 @@ import {
   mulberry32,
   type Patient,
 } from "@/data/mockPatients";
+import {
+  formatShortDate,
+  getVisitMenu,
+  type VisitMenu,
+} from "@/lib/visitHistory";
 
 export type ToothMark =
   | "crown"
@@ -386,3 +391,242 @@ export function buildCardSummary(patient: Patient): string {
   return `No new findings this visit. ${perio}.`;
 }
 
+// ---------------------------------------------------------------------------
+// Past visits
+//
+// What actually happened at an earlier appointment, for the summary drawer's
+// visit picker. The point of the section is the gap between the two: what the
+// visit was *booked* as, and what was *done* once the patient was in the chair.
+// Anything done that the booking didn't cover is unscheduled work, and that is
+// what the front desk and the provider both want to see.
+// ---------------------------------------------------------------------------
+
+export interface VisitWorkItem {
+  /** Universal tooth number, where the work was tooth-specific. */
+  tooth?: number;
+  label: string;
+  /**
+   * False when the work wasn't part of what the visit was booked for — added
+   * chairside. These are the rows the section calls out as same-day work.
+   */
+  planned: boolean;
+}
+
+export interface PastVisit {
+  date: Date;
+  /** What the appointment was on the books as. */
+  plannedProcedure: string;
+  providerName: string;
+  /** Restorative and surgical work. */
+  clinical: VisitWorkItem[];
+  /** Hygiene and preventive tasks. */
+  hygiene: VisitWorkItem[];
+}
+
+const HYGIENE_BOOKINGS = [
+  "Prophylaxis & Exam",
+  "Periodontal Maintenance",
+  "Bitewings + Prophy",
+  "Recall Exam & Cleaning",
+] as const;
+
+const CLINICAL_BOOKINGS = [
+  "Composite Filling",
+  "Crown Prep",
+  "Crown Delivery",
+  "Limited Exam",
+  "Endodontic Therapy",
+] as const;
+
+// Hygiene work is charted per visit, not per tooth, so these carry no number.
+const HYGIENE_CORE: Record<string, string> = {
+  "Periodontal Maintenance": "Periodontal maintenance D4910",
+  "Recall Exam & Cleaning": "Adult prophylaxis D1110",
+  "Prophylaxis & Exam": "Adult prophylaxis D1110",
+  "Bitewings + Prophy": "Adult prophylaxis D1110",
+};
+
+const HYGIENE_EXTRAS = [
+  "Fluoride varnish D1206",
+  "Four bitewings D0274",
+  "Oral hygiene instruction D1330",
+  "Periodic oral evaluation D0120",
+] as const;
+
+// The add-on that turns up once the patient is in the chair. Hygiene visits
+// escalate into perio or a small restoration; restorative visits pick up a
+// second tooth or the build-up the prep turned out to need.
+const COMPLETED_RESTORATIVE = [
+  "Resin composite, 2 surface D2392",
+  "Amalgam, 2 surface D2150",
+  "Crown seat & cementation D2920",
+  "Sealant, per tooth D1351",
+] as const;
+
+const HYGIENE_ADDONS = [
+  "Scaling & root planing, UR quadrant D4341",
+  "Scaling & root planing, LR quadrant D4341",
+  "Full mouth debridement D4355",
+  "Arestin, per tooth D4381",
+] as const;
+
+/**
+ * Past visits, newest first, sharing the date spine the Patient Summary tab's
+ * own picker uses so the two never disagree. The first entry in that spine is
+ * today's visit, which isn't past, so it is dropped.
+ *
+ * Completed work is drawn from the patient's own chart findings rather than
+ * invented, so a crown listed as seated here is a crown you can see on the
+ * odontogram. Kept out of `buildPatientSummary` deliberately: it calls that
+ * function, and folding it in would recurse.
+ */
+export function buildPastVisits(patient: Patient): PastVisit[] {
+  const summary = buildPatientSummary(patient);
+  const dates = getVisitMenu(patient, "chart")
+    .groups[0].visits.slice(1)
+    .map((visit) => visit.date);
+
+  // Existing restorations, oldest work assigned to the oldest visit, so the
+  // chart reads as something that accumulated over these appointments.
+  //
+  // Teeth carrying unscheduled treatment are held back: that list is work
+  // diagnosed and NOT yet booked, so the same tooth cannot also appear here as
+  // already completed. Without this the panel contradicts itself in two
+  // sections a few inches apart.
+  const pending = new Set(summary.unscheduledTx.map((tx) => tx.tooth));
+  // Deduped by tooth: `findings` can name the same tooth more than once (a
+  // range and a bare number in the same phrase, say), and a tooth restored
+  // twice across the history reads as a charting error.
+  const usedTeeth = new Set<number>();
+  const restorations = summary.findings.filter((finding) => {
+    if (finding.mark === "incipient" || pending.has(finding.tooth)) return false;
+    if (usedTeeth.has(finding.tooth)) return false;
+    usedTeeth.add(finding.tooth);
+    return true;
+  });
+  let nextRestoration = 0;
+
+  // Some charts are all pending work, leaving nothing completed to draw on.
+  // Fall back to restorations on teeth the chart says nothing about.
+  const spare = ALL_TEETH.filter(
+    (tooth) => !pending.has(tooth) && !taken(summary, tooth)
+  );
+  let nextSpare = 0;
+  const takeWork = (): VisitWorkItem | null => {
+    const finding = restorations[nextRestoration];
+    if (finding) {
+      nextRestoration++;
+      return {
+        tooth: finding.tooth,
+        label: TX_BY_MARK[finding.mark],
+        planned: true,
+      };
+    }
+    const tooth = spare[nextSpare];
+    if (tooth === undefined) return null;
+    nextSpare++;
+    return {
+      tooth,
+      label: COMPLETED_RESTORATIVE[nextSpare % COMPLETED_RESTORATIVE.length],
+      planned: true,
+    };
+  };
+
+  return dates.map((date, index) => {
+    const rand = mulberry32(hashStringToSeed(`${patient.id}-visit-${index}`));
+    const isHygiene = rand() < 0.6;
+    const plannedProcedure = isHygiene
+      ? pick(rand, HYGIENE_BOOKINGS)
+      : pick(rand, CLINICAL_BOOKINGS);
+
+    const hygiene: VisitWorkItem[] = [];
+    const clinical: VisitWorkItem[] = [];
+
+    if (isHygiene) {
+      hygiene.push({
+        label: HYGIENE_CORE[plannedProcedure] ?? "Adult prophylaxis D1110",
+        planned: true,
+      });
+      hygiene.push({ label: pick(rand, HYGIENE_EXTRAS), planned: true });
+      if (rand() < 0.4) {
+        hygiene.push({ label: pick(rand, HYGIENE_EXTRAS), planned: true });
+      }
+      // Hygiene visit that turned into perio therapy — booked for a cleaning,
+      // left having had quadrant SRP.
+      if (rand() < 0.45) {
+        hygiene.push({ label: pick(rand, HYGIENE_ADDONS), planned: false });
+      }
+    } else {
+      const booked = takeWork();
+      if (booked) clinical.push(booked);
+      hygiene.push({ label: "Periodic oral evaluation D0120", planned: true });
+      // A second tooth treated the same day — diagnosed and completed in the
+      // chair rather than rebooked.
+      if (rand() < 0.5) {
+        const extra = takeWork();
+        if (extra && extra.tooth !== booked?.tooth) {
+          clinical.push({ ...extra, planned: false });
+        }
+      }
+    }
+
+    return {
+      date,
+      plannedProcedure,
+      providerName: patient.provider?.name ?? "Unassigned",
+      clinical,
+      hygiene,
+    };
+  });
+}
+
+function taken(summary: PatientSummary, tooth: number): boolean {
+  return summary.findings.some((finding) => finding.tooth === tooth);
+}
+
+/**
+ * Work done at the visit that the booking didn't cover — diagnosed and treated
+ * in the chair. Called "same-day" rather than "unscheduled" throughout: the
+ * panel's Unscheduled Tx list means the opposite thing (diagnosed, still not
+ * booked), and the two sit a few inches apart.
+ */
+export function countSameDay(visit: PastVisit): number {
+  return [...visit.clinical, ...visit.hygiene].filter((item) => !item.planned)
+    .length;
+}
+
+/**
+ * The picker menu for those visits. Chips summarise each one so same-day work
+ * is visible in the list itself, not only after you open a visit — the
+ * accented chip is the whole point of the section.
+ */
+export function buildPastVisitMenu(visits: PastVisit[]): VisitMenu {
+  return {
+    header: `Past visits · ${visits.length}`,
+    groups: [
+      {
+        visits: visits.map((visit) => {
+          const chips: { label: string; accent?: boolean }[] = [];
+          if (visit.clinical.length > 0) {
+            chips.push({
+              label: `${visit.clinical.length} restorative`,
+            });
+          }
+          if (visit.hygiene.length > 0) {
+            chips.push({ label: `${visit.hygiene.length} hygiene` });
+          }
+          const sameDay = countSameDay(visit);
+          if (sameDay > 0) {
+            chips.push({ label: `${sameDay} same-day`, accent: true });
+          }
+          return { date: visit.date, chips };
+        }),
+      },
+    ],
+  };
+}
+
+/** "03/12/26 · Prophylaxis & Exam" — the one-line form used in collapsed copy. */
+export function formatPastVisitLine(visit: PastVisit): string {
+  return `${formatShortDate(visit.date)} · ${visit.plannedProcedure}`;
+}
