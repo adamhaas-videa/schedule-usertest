@@ -25,7 +25,7 @@ function formatVisitDate(iso: string): string {
 
 function CountBadge({ count }: { count: number }) {
   return (
-    <span className="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full border border-white px-px text-[10px] font-semibold leading-none tracking-[-0.3px] text-white tabular-nums">
+    <span className="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-white/[0.06] px-px text-[10px] font-semibold leading-none tracking-[-0.3px] text-white tabular-nums">
       {count}
     </span>
   );
