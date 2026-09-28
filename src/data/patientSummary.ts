@@ -421,6 +421,11 @@ export interface PastVisit {
   clinical: VisitWorkItem[];
   /** Hygiene and preventive tasks. */
   hygiene: VisitWorkItem[];
+  /** Chart and front-desk tasks closed out at the visit — the past-tense
+   *  mirror of the drawer's outstanding Tasks list. */
+  completedTasks: string[];
+  /** The provider's recap for this visit, two sentences like the design. */
+  voiceNote: string;
 }
 
 const HYGIENE_BOOKINGS = [
@@ -570,14 +575,63 @@ export function buildPastVisits(patient: Patient): PastVisit[] {
       }
     }
 
+    const providerName = patient.provider?.name ?? "Unassigned";
+    const allWork = [...clinical, ...hygiene];
+    const has = (re: RegExp) => allWork.some((item) => re.test(item.label));
+
+    // Seeded after the work above so adding these left every earlier visit's
+    // procedures exactly as they were.
+    const completedTasks = ["Medical history reviewed"];
+    if (has(/bitewing/i)) completedTasks.push("Bitewings taken");
+    if (has(/periodontal|scaling|debridement|arestin/i)) {
+      completedTasks.push("Perio charting updated");
+    }
+    if (clinical.length > 0) completedTasks.push("Post-op instructions given");
+    if (!isHygiene && rand() < 0.5) completedTasks.push("Treatment plan presented");
+    if (isHygiene) completedTasks.push("Next recall booked");
+
     return {
       date,
       plannedProcedure,
-      providerName: patient.provider?.name ?? "Unassigned",
+      providerName,
       clinical,
       hygiene,
+      completedTasks,
+      voiceNote: buildVisitNote(providerName, plannedProcedure, allWork, rand),
     };
   });
+}
+
+const NOTE_WATCH = [
+  "Monitoring was flagged on the upper arch and the patient was advised to keep the existing hygiene interval.",
+  "Monitoring was flagged on the lower arch; home care was reviewed with the patient.",
+  "No new symptoms reported; the patient was advised to keep the existing hygiene interval.",
+  "Localized bleeding on probing noted; the patient was coached on interproximal cleaning.",
+] as const;
+
+/** "Resin composite, 2 surface D2392" → "resin composite, 2 surface". */
+function spokenLabel(label: string): string {
+  const plain = label.replace(/\s+D\d{4}$/, "");
+  return plain.charAt(0).toLowerCase() + plain.slice(1);
+}
+
+// What was captured, then what to watch — the same two-sentence shape as the
+// voice-note recap everywhere else. Same-day work leads, because it is the
+// part of the visit nobody reading the booking would expect.
+function buildVisitNote(
+  providerName: string,
+  plannedProcedure: string,
+  work: VisitWorkItem[],
+  rand: () => number
+): string {
+  const sameDay = work.find((item) => !item.planned);
+  const toothWork = work.find((item) => item.planned && item.tooth);
+  const first = sameDay
+    ? `${providerName} recorded a ${plannedProcedure.toLowerCase()} visit that added ${spokenLabel(sameDay.label)}${sameDay.tooth ? ` on #${sameDay.tooth}` : ""} chairside.`
+    : toothWork
+      ? `${providerName} recorded ${spokenLabel(toothWork.label)} on #${toothWork.tooth} completed as planned.`
+      : `${providerName} recorded a routine ${plannedProcedure.toLowerCase()} visit completed as planned.`;
+  return `${first} ${pick(rand, NOTE_WATCH)}`;
 }
 
 function taken(summary: PatientSummary, tooth: number): boolean {

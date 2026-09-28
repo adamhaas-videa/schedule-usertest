@@ -121,32 +121,77 @@ function WorkGroup({
   );
 }
 
-function PastVisitDetail({ visit }: { visit: PastVisit }) {
+/**
+ * Everything the drawer knows about one earlier visit: what it was booked as,
+ * the work and tasks completed, and the provider's recap. Grouped under the
+ * visit picker so switching the date swaps the whole block at once — nothing
+ * here describes today.
+ */
+function PastVisitDetail({
+  visit,
+  showTasks,
+  showVoiceNote,
+}: {
+  visit: PastVisit;
+  showTasks: boolean;
+  showVoiceNote: boolean;
+}) {
   const sameDay = countSameDay(visit);
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border p-3">
-      <div className="flex flex-col gap-1">
-        <div className="text-[11px] leading-none text-muted-foreground uppercase">
-          Scheduled for
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+        <div className="flex flex-col gap-1">
+          <div className="text-[11px] leading-none text-muted-foreground uppercase">
+            Came in for
+          </div>
+          <div className="text-sm leading-5 font-medium text-foreground">
+            {visit.plannedProcedure}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {visit.providerName}
+          </div>
         </div>
-        <div className="text-sm leading-5 font-medium text-foreground">
-          {visit.plannedProcedure}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {visit.providerName}
-        </div>
+        <div className="h-px bg-border" />
+        <WorkGroup label="Clinical work" items={visit.clinical} />
+        <WorkGroup label="Hygiene" items={visit.hygiene} />
+        {sameDay > 0 && (
+          <div className="text-[12px] leading-4 text-muted-foreground">
+            {sameDay === 1
+              ? "1 procedure was diagnosed and treated in the chair, off the schedule."
+              : `${sameDay} procedures were diagnosed and treated in the chair, off the schedule.`}
+          </div>
+        )}
       </div>
-      <div className="h-px bg-border" />
-      <WorkGroup label="Clinical work" items={visit.clinical} />
-      <WorkGroup label="Hygiene" items={visit.hygiene} />
-      {sameDay > 0 && (
-        <div className="text-[12px] leading-4 text-muted-foreground">
-          {sameDay === 1
-            ? "1 procedure was diagnosed and treated in the chair, off the schedule."
-            : `${sameDay} procedures were diagnosed and treated in the chair, off the schedule.`}
-        </div>
+
+      {showTasks && visit.completedTasks.length > 0 && (
+        <Section label="Tasks completed">
+          {visit.completedTasks.map((task) => (
+            <div key={task} className="flex items-center gap-2.5">
+              <i
+                className="fa-solid fa-circle-check text-base text-muted-foreground"
+                aria-hidden
+              />
+              <span className="text-sm text-muted-foreground">{task}</span>
+            </div>
+          ))}
+        </Section>
+      )}
+
+      {showVoiceNote && (
+        <Section label="Clinical voice note">
+          <p className="text-sm leading-5 text-foreground">{visit.voiceNote}</p>
+        </Section>
       )}
     </div>
+  );
+}
+
+/** Top-level grouping in the drawer: Today, then the picked past visit. */
+function GroupHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-sm leading-5 font-semibold text-foreground">
+      {children}
+    </h3>
   );
 }
 
@@ -310,8 +355,12 @@ export default function PatientSummaryPanel({
             </div>
           )}
 
+          <div className="h-px shrink-0 bg-border" />
+
+          <GroupHeading>Today</GroupHeading>
+
           <div className="flex w-full flex-col gap-1.5 rounded-md bg-accent p-3">
-            <SectionLabel>Today</SectionLabel>
+            <SectionLabel>Appointment</SectionLabel>
             <div className="flex flex-col gap-1.5">
               <div className="text-base leading-6 font-medium text-foreground">
                 {tooth ? `${tooth} • ` : ""}
@@ -340,32 +389,6 @@ export default function PatientSummaryPanel({
               </div>
             </div>
           </div>
-
-          {selectedVisit && (
-            <Section label="Past visits">
-              <VisitPicker
-                patient={patient}
-                activeTab="chart"
-                menu={pastVisitMenu}
-                value={selectedVisit.date}
-                onSelect={(date) =>
-                  setVisitDates((prev) => ({
-                    ...prev,
-                    [patient.id]: date.getTime(),
-                  }))
-                }
-              />
-              <PastVisitDetail visit={selectedVisit} />
-            </Section>
-          )}
-
-          {sections.voiceNoteSummary && (
-            <Section label="Last voice note">
-              <p className="text-sm leading-5 text-foreground">
-                {summary.voiceNoteSummary}
-              </p>
-            </Section>
-          )}
 
           {sections.aiOpportunities && (
             <div className="flex flex-col gap-3">
@@ -398,7 +421,7 @@ export default function PatientSummaryPanel({
             <div className="flex items-start gap-3">
               {sections.tasks && (
                 <div className="flex min-w-px flex-1 flex-col gap-1.5">
-                  <SectionLabel>Tasks</SectionLabel>
+                  <SectionLabel>Tasks due</SectionLabel>
                   {visibleTasks.length > 0 ? (
                     visibleTasks.map((task) => {
                       const done =
@@ -468,6 +491,32 @@ export default function PatientSummaryPanel({
                 </div>
               )}
             </div>
+          )}
+
+          {selectedVisit && (
+            <>
+              <div className="h-px shrink-0 bg-border" />
+              <div className="flex flex-col gap-1.5">
+                <GroupHeading>Past visit</GroupHeading>
+                <VisitPicker
+                  patient={patient}
+                  activeTab="chart"
+                  menu={pastVisitMenu}
+                  value={selectedVisit.date}
+                  onSelect={(date) =>
+                    setVisitDates((prev) => ({
+                      ...prev,
+                      [patient.id]: date.getTime(),
+                    }))
+                  }
+                />
+              </div>
+              <PastVisitDetail
+                visit={selectedVisit}
+                showTasks={sections.tasks}
+                showVoiceNote={sections.voiceNoteSummary}
+              />
+            </>
           )}
         </div>
 
