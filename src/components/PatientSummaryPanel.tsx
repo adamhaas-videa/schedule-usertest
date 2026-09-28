@@ -186,12 +186,16 @@ function PastVisitDetail({
   );
 }
 
-/** Top-level grouping in the drawer: Today, then the picked past visit. */
+/** Top-level grouping in the drawer: Today, then the picked past visit. The
+ *  rule runs out from the label, centred on it, and doubles as the divider. */
 function GroupHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-sm leading-5 font-semibold text-foreground">
-      {children}
-    </h3>
+    <div className="flex items-center gap-3 pt-2">
+      <h3 className="shrink-0 text-sm leading-5 font-semibold text-foreground">
+        {children}
+      </h3>
+      <div className="h-px flex-1 bg-border" aria-hidden />
+    </div>
   );
 }
 
@@ -355,8 +359,6 @@ export default function PatientSummaryPanel({
             </div>
           )}
 
-          <div className="h-px shrink-0 bg-border" />
-
           <GroupHeading>Today</GroupHeading>
 
           <div className="flex w-full flex-col gap-1.5 rounded-md bg-accent p-3">
@@ -495,9 +497,8 @@ export default function PatientSummaryPanel({
 
           {selectedVisit && (
             <>
-              <div className="h-px shrink-0 bg-border" />
               <div className="flex flex-col gap-1.5">
-                <GroupHeading>Past visit</GroupHeading>
+                <GroupHeading>Past visits</GroupHeading>
                 <VisitPicker
                   patient={patient}
                   activeTab="chart"
