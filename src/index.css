@@ -40,6 +40,13 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Brand teal as a *foreground* role — link text, teal-on-dark labels.
+   * Distinct from --primary, which is tuned as a fill (white text sits on it).
+   * deep-teal-500 works as a fill in Dark but only reaches 2.99:1 as text, so
+   * text-level uses must resolve through --link, never --primary.
+   * Ported from enamel-design-system. */
+  --color-link: var(--link);
+
   /* Interaction states */
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
@@ -168,6 +175,7 @@
   --popover-foreground: #18181B;
   --primary: #124555;
   --primary-foreground: #FFFFFF;
+  --link: #124555;                   /* deep-teal-700 — 10.12:1 on --background */
   --secondary: #DCE5F9;
   --secondary-foreground: #0A2833;
   --muted: #F4F2F0;
@@ -283,6 +291,7 @@ body {
   --popover-foreground: #FAFAFA;
   --primary: #1F6D7E;
   --primary-foreground: #FFFFFF;
+  --link: #6AABB9;                   /* deep-teal-300 — 6.87:1 on --background, 5.77:1 on --card */
   --secondary: #223C78;
   --secondary-foreground: #F0F4FC;
   --muted: #27272A;
@@ -452,6 +461,7 @@ body {
   --card-foreground: #fafafa;
   --primary: #1f6d7e;
   --primary-foreground: #ffffff;
+  --link: #6aabb9;
   --secondary: #27272a;
   --secondary-foreground: #f0f4fc;
   --muted: #27272a;

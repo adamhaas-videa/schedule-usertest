@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { XL_UP, useMediaQuery } from "@/lib/useMediaQuery";
+import { PREFERS_DARK, XL_UP, useMediaQuery } from "@/lib/useMediaQuery";
 import { computeAge } from "@/data/mockPatients";
 import type { Patient } from "@/data/mockPatients";
 import { CLINICAL_TAB_NAV, type ClinicalTab } from "@/types/clinical";
@@ -121,6 +121,15 @@ export default function WorkflowHeader({
   // strip and Start Recording alone take ~610px), so they move into a tooltip
   // on the name. At xl and up they stay inline and the tooltip is not mounted.
   const wide = useMediaQuery(XL_UP);
+  // The image viewer sits on a near-black surround, so its top bar follows the
+  // OS preference rather than staying light above it. Every other workflow
+  // surface — and the whole schedule — is light whatever the OS says, so this
+  // is scoped to the one tab rather than set on the document root.
+  //
+  // `dark imaging-surface` is the same pair the viewer roots carry, so the bar
+  // resolves to the viewer's exact palette (bg-card #101214, border #27272a)
+  // instead of a second near-black of its own.
+  const darkChrome = useMediaQuery(PREFERS_DARK) && activeTab === "xray";
   const blurClass = privacyMode ? "blur-sm select-none" : "";
   const nameClass = cn(
     "min-w-0 truncate text-lg font-medium text-secondary-foreground whitespace-nowrap transition-[filter]",
@@ -129,7 +138,19 @@ export default function WorkflowHeader({
 
   return (
     <div className="shrink-0 flex flex-col">
-      <header className="h-[51px] shrink-0 bg-[#fafaf9] border-b border-border flex items-center justify-between pr-4">
+      <header
+        className={cn(
+          "h-[51px] shrink-0 border-b flex items-center justify-between pr-4",
+          darkChrome
+            ? // Custom properties resolve on the element that declares them, so
+              // the bar reads its own scope: card #101214, border #27272a.
+              // `text-foreground` is load-bearing — the outline Button sets no
+              // colour of its own and would otherwise inherit body's already
+              // computed light ink, landing near-black on near-black.
+              "dark imaging-surface bg-card border-border text-foreground"
+            : "bg-[#fafaf9] border-border"
+        )}
+      >
         <div className="flex flex-1 items-center gap-3 xl:gap-4 min-w-0">
           <div className="w-[72px] shrink-0 flex items-center justify-center">
             <button
@@ -142,7 +163,12 @@ export default function WorkflowHeader({
               <img
                 src={videaBrandmark}
                 alt="Videa"
-                className="h-8 w-auto shrink-0"
+                // The mark is a single dark teal fill with no light variant, so
+                // on the dark bar it is driven to white rather than swapped.
+                className={cn(
+                  "h-8 w-auto shrink-0",
+                  darkChrome && "brightness-0 invert"
+                )}
               />
             </button>
           </div>
@@ -169,7 +195,11 @@ export default function WorkflowHeader({
                   >
                     {patient.name}
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" align="start">
+                  <TooltipContent
+                    side="bottom"
+                    align="start"
+                    className={cn(darkChrome && "dark imaging-surface")}
+                  >
                     <span className={blurClass}>{demographics}</span>
                   </TooltipContent>
                 </Tooltip>
