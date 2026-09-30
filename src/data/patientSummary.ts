@@ -334,9 +334,18 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
 
 const PERIO_ALERT = /perio|bone loss/i;
 
+/**
+ * Whether an alert is about periodontal health rather than medical history.
+ * The schedule card splits its two status chips on this, and the summary
+ * drawer picks the matching icon from it, so the rule lives in one place.
+ */
+export function isPerioAlert(label: string): boolean {
+  return PERIO_ALERT.test(label);
+}
+
 export function getCardMedicalAlerts(patient: Patient): string[] {
   return buildPatientSummary(patient)
-    .alerts.filter((alert) => !PERIO_ALERT.test(alert.label))
+    .alerts.filter((alert) => !isPerioAlert(alert.label))
     .map((alert) => alert.label);
 }
 
