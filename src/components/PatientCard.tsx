@@ -18,6 +18,9 @@ interface PatientCardProps {
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient?: (patient: Patient) => void;
   cardVersion?: CardVersion;
+  /** Show the operatory beside the appointment time. Provider columns turn it
+   *  on, because there the column says who, not where. */
+  showOperatory?: boolean;
 }
 
 function PerioIcon({ className }: { className?: string }) {
@@ -274,6 +277,7 @@ interface CardChromeProps {
   onSelectPatient?: (patient: Patient) => void;
   cardVersion: CardVersion;
   className?: string;
+  showOperatory?: boolean;
 }
 
 function FullCard({
@@ -283,6 +287,7 @@ function FullCard({
   onSelectPatient,
   cardVersion,
   className,
+  showOperatory = false,
 }: CardChromeProps) {
   const {
     reviewedIds,
@@ -342,6 +347,7 @@ function FullCard({
         summaryVersion={summaryVersion}
         cardColorMode={cardColorMode}
         showSummary={cardSummaryOn}
+        showOperatory={showOperatory}
         odontogram={
           cardVersion === 6 ? "inline" : cardVersion === 7 ? "flyout" : "none"
         }
@@ -431,7 +437,13 @@ function FullCard({
             </span>
           )}
           <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
-            {patient.appointmentTime} <span className="px-1">·</span> Age {age}
+            {patient.appointmentTime}
+            {showOperatory && (
+              <>
+                <span className="px-1">·</span>Op {patient.operatory}
+              </>
+            )}
+            <span className="px-1">·</span> Age {age}
           </span>
         </div>
         <StatusBadge kind={status} />
@@ -487,6 +499,7 @@ function PatientCard({
   onOpenClinical,
   onSelectPatient,
   cardVersion = DEFAULT_CARD_VERSION,
+  showOperatory = false,
 }: PatientCardProps) {
   if (variant === "compact") {
     const status = deriveStatus(patient);
@@ -521,6 +534,7 @@ function PatientCard({
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums">
             {patient.appointmentTime}
+            {showOperatory && ` · Op ${patient.operatory}`}
           </span>
         </div>
       </div>
@@ -534,6 +548,7 @@ function PatientCard({
       onOpenClinical={onOpenClinical}
       onSelectPatient={onSelectPatient}
       cardVersion={cardVersion}
+      showOperatory={showOperatory}
       className={variant === "calendar" ? "h-full" : ""}
     />
   );
