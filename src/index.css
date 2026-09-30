@@ -379,11 +379,19 @@ body {
 }
 
 /* Imaging lightbox: near-black surround for the FMX / single-image viewers.
- * Applied via `class="dark imaging-surface"` on the viewer roots. */
+ * Applied via `class="dark imaging-surface"` on the viewer roots.
+ *
+ * Mirrors `.imaging-surface` in enamel-design-system — keep the two in step
+ * rather than tuning this copy. `--input` is raised to zinc-500 there because
+ * zinc-700, what it resolves to in `.dark`, is only 1.80:1 on #101214, below
+ * the 3:1 WCAG 1.4.11 asks of a control's boundary; an outline button on the
+ * viewer had no perceivable edge. `--border` stays zinc-800: it divides panels
+ * rather than bounding controls. */
 .imaging-surface {
-  --background: #0a0a0a;
+  --background: #0A0A0A;
   --card: #101214;
-  --border: #27272a;
+  --border: #27272A;                 /* zinc-800 — panel dividers, decorative */
+  --input: #71717A;                  /* zinc-500 — control edges, 3.88:1 on --card */
 }
 
 /* Zoom slider in the single-image footer: a 4px muted track with a primary fill
