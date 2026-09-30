@@ -1,6 +1,7 @@
 // Building blocks shared by the patient summary drawer (PatientSummaryPanel)
 // and the full-page Patient Summary tab (ChartPage). Both derive from
 // `buildPatientSummary` / `buildPastVisits`; only the arrangement differs.
+import { ToothbrushSparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Patient } from "@/data/mockPatients";
+import { isPerioAlert } from "@/data/patientSummary";
 import type {
   PatientSummary,
   SummaryTask,
@@ -164,39 +166,44 @@ export function WorkGroup({
   );
 }
 
+/**
+ * The icon for an alert pill, matching the schedule card's two status chips:
+ * the star of life for medical history, the toothbrush for periodontal. Which
+ * one an alert gets is its subject, not its severity — a perio alert stays a
+ * toothbrush whether the reading is Stage 3 or clear.
+ *
+ * Badge pins any svg child to 12px, so only the stroke is set here; it is
+ * heavier than Lucide's default for the same reason as on the card, to hold
+ * its weight beside a solid glyph.
+ */
+function AlertIcon({ label }: { label: string }) {
+  return isPerioAlert(label) ? (
+    <ToothbrushSparkles strokeWidth={2.6} aria-hidden />
+  ) : (
+    <i className="fa-solid fa-star-of-life text-[10px]" aria-hidden />
+  );
+}
+
 export function AlertBadges({ alerts }: { alerts: PatientSummary["alerts"] }) {
   if (alerts.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {alerts.map((alert) =>
-        alert.tone === "error" ? (
-          <Badge
-            key={alert.label}
-            className="border-error-muted-border bg-error-muted text-destructive"
-          >
-            <i
-              className="fa-regular fa-triangle-exclamation text-[10px]"
-              aria-hidden
-            />
-            {alert.label}
-          </Badge>
-        ) : alert.tone === "success" ? (
-          <Badge
-            key={alert.label}
-            className="border-success-muted-border bg-success-muted text-success"
-          >
-            {alert.label}
-          </Badge>
-        ) : (
-          <Badge
-            key={alert.label}
-            className="border-warning-muted-border bg-warning-muted text-warning-emphasis"
-          >
-            <span className="size-1.5 rounded-full bg-warning" />
-            {alert.label}
-          </Badge>
-        )
-      )}
+      {alerts.map((alert) => (
+        <Badge
+          key={alert.label}
+          className={cn(
+            alert.tone === "error" &&
+              "border-error-muted-border bg-error-muted text-destructive",
+            alert.tone === "success" &&
+              "border-success-muted-border bg-success-muted text-success",
+            alert.tone === "warning" &&
+              "border-warning-muted-border bg-warning-muted text-warning-emphasis"
+          )}
+        >
+          <AlertIcon label={alert.label} />
+          {alert.label}
+        </Badge>
+      ))}
     </div>
   );
 }
