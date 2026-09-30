@@ -609,8 +609,8 @@ export default function SummaryActionsCard({
                 {patient.name}
               </p>
               <span className="mt-0.5 text-[11px] leading-[15px] text-zinc-600 tabular-nums whitespace-nowrap">
-                {patient.appointmentTime}
-                {showOperatory ? ` · Op ${patient.operatory}` : ""} · Age {age}
+                {showOperatory ? `Op ${patient.operatory} · ` : ""}
+                {patient.appointmentTime} · Age {age}
               </span>
               {!isSmall && showInsurance && patient.insurance && (
                 <div

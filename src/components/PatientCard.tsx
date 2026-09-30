@@ -437,13 +437,13 @@ function FullCard({
             </span>
           )}
           <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
-            {patient.appointmentTime}
             {showOperatory && (
               <>
-                <span className="px-1">·</span>Op {patient.operatory}
+                Op {patient.operatory}
+                <span className="px-1">·</span>
               </>
             )}
-            <span className="px-1">·</span> Age {age}
+            {patient.appointmentTime} <span className="px-1">·</span> Age {age}
           </span>
         </div>
         <StatusBadge kind={status} />
@@ -533,8 +533,8 @@ function PatientCard({
             {patient.procedure}
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums">
+            {showOperatory && `Op ${patient.operatory} · `}
             {patient.appointmentTime}
-            {showOperatory && ` · Op ${patient.operatory}`}
           </span>
         </div>
       </div>
