@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { ToothbrushSparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Patient, Insurance, ConditionAlertSeverity } from "@/data/mockPatients";
-import { computeAge } from "@/data/mockPatients";
+import { computeAge, isHygieneProcedure } from "@/data/mockPatients";
 import {
   buildCardSummary,
   buildPatientSummary,
@@ -46,7 +47,8 @@ function StatusChip({
   tooltip,
 }: {
   tone: ChipTone;
-  icon: string;
+  /** A Font Awesome class string, or any node for icons FA doesn't carry. */
+  icon: string | React.ReactNode;
   label: string;
   tooltip: string;
 }) {
@@ -60,7 +62,11 @@ function StatusChip({
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <i className={cn(icon, "text-[10px] leading-none")} aria-hidden />
+        {typeof icon === "string" ? (
+          <i className={cn(icon, "text-[10px] leading-none")} aria-hidden />
+        ) : (
+          icon
+        )}
       </TooltipTrigger>
       <TooltipContent side="top">{tooltip}</TooltipContent>
     </Tooltip>
@@ -561,6 +567,7 @@ export default function SummaryActionsCard({
   const showMedical = medical.length > 0;
   const perioLabel = patient.conditionAlert?.label ?? "No bone loss detected";
   const perioChip = perioTone(patient.conditionAlert?.severity);
+  const showPerio = isHygieneProcedure(patient.procedure);
 
   const statusIcons = (
     <div className="flex items-center gap-1 shrink-0">
@@ -573,12 +580,26 @@ export default function SummaryActionsCard({
           tooltip={medical.join(" · ")}
         />
       )}
-      <StatusChip
-        tone={perioChip}
-        icon="fa-solid fa-tooth"
-        label="Perio health"
-        tooltip={perioLabel}
-      />
+      {showPerio && (
+        <StatusChip
+          tone={perioChip}
+          // Lucide, not Font Awesome: FA ships fa-toothbrush and fa-sparkles
+          // separately but has no combined mark. Sized to match the 10px FA
+          // glyphs the other chips render.
+          // Heavier stroke and a touch larger than the 10px FA glyphs beside
+          // it: those are solid fills, so an outline icon at the same size
+          // reads noticeably lighter in the same circle.
+          icon={
+            <ToothbrushSparkles
+              className="size-[12.5px]"
+              strokeWidth={2.6}
+              aria-hidden
+            />
+          }
+          label="Perio health"
+          tooltip={perioLabel}
+        />
+      )}
       {chartSummary && showOdontogramFlyout && (
         <OdontogramFlyout
           summary={chartSummary}
