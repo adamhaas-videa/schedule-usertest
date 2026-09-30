@@ -32,7 +32,7 @@ export function formatRelative(date: Date, now = new Date()): string {
     (now.getMonth() - date.getMonth());
   if (months <= 0) {
     const days = Math.round((now.getTime() - date.getTime()) / 86_400_000);
-    if (days <= 0) return "today";
+    if (days <= 0) return "Today";
     if (days === 1) return "1 day ago";
     if (days < 14) return `${days} days ago`;
     const weeks = Math.round(days / 7);
