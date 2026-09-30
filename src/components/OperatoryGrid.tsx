@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Patient, Provider, ScheduleBlock } from "@/data/mockPatients";
-import {
-  ALL_OPERATORIES,
-  minutesToTime,
-  timeToMinutes,
-  mockBlocks,
-} from "@/data/mockPatients";
+import { ALL_OPERATORIES, minutesToTime, mockBlocks } from "@/data/mockPatients";
 import OperatoryColumn from "./OperatoryColumn";
 import OperatoryHeader from "./OperatoryHeader";
 import ColumnModeMenu, { type ColumnMode } from "./ColumnModeMenu";
@@ -54,16 +49,11 @@ interface GridColumn {
   blocks: ScheduleBlock[];
 }
 
-// In-chair pill shown in a provider column header, mirroring OperatoryHeader.
-function ProviderColumnHeader({
-  provider,
-  activePatientName,
-  onPatientNameClick,
-}: {
-  provider: Provider;
-  activePatientName?: string;
-  onPatientNameClick?: () => void;
-}) {
+/**
+ * Provider column header. Matches OperatoryHeader: it names the column and
+ * nothing else. The in-chair patient is already on their own card just below.
+ */
+function ProviderColumnHeader({ provider }: { provider: Provider }) {
   const color = getProviderColor(provider.id);
   return (
     <div className="w-full h-12 px-3 flex items-center gap-2 text-left">
@@ -87,27 +77,6 @@ function ProviderColumnHeader({
           {provider.role}
         </span>
       </div>
-      {activePatientName && (
-        <button
-          type="button"
-          onClick={onPatientNameClick}
-          disabled={!onPatientNameClick}
-          aria-label={
-            onPatientNameClick ? `Scroll to ${activePatientName}` : undefined
-          }
-          className={cn(
-            "ml-auto inline-flex items-center gap-1.5 h-[21px] px-2 py-1 rounded-full bg-card border border-border max-w-[50%] transition-colors",
-            onPatientNameClick
-              ? "cursor-pointer hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              : "cursor-default"
-          )}
-        >
-          <span className="size-1.5 rounded-full bg-success shrink-0" />
-          <span className="text-[11px] font-medium text-foreground truncate">
-            {activePatientName}
-          </span>
-        </button>
-      )}
     </div>
   );
 }
@@ -126,17 +95,6 @@ export default function OperatoryGrid({
 }: OperatoryGridProps) {
   const [columnMode, setColumnMode] = useState<ColumnMode>("operatory");
 
-  // Scroll the timeline so the given patient's card is centered. Used by the
-  // column header shortcut (click the in-chair patient name).
-  const scrollToPatient = (patient: Patient) => {
-    if (!scrollRef.current) return;
-    const y = TOP_PAD + minutesToY(timeToMinutes(patient.appointmentTime));
-    const halfHeight = scrollRef.current.clientHeight / 2;
-    scrollRef.current.scrollTo({
-      top: Math.max(0, y - halfHeight),
-      behavior: "smooth",
-    });
-  };
 
   const isWithinHours = nowMinutes >= START_MINUTES && nowMinutes <= END_MINUTES;
   const focused = columnMode === "operatory" && selectedOps.length > 0;
@@ -248,9 +206,6 @@ export default function OperatoryGrid({
           <ColumnModeMenu value={columnMode} onChange={setColumnMode} />
         </div>
         {columns.map((col, i) => {
-          const inChairPatient = col.patients.find(
-            (p) => p.status === "in-chair"
-          );
           return (
             <div
               key={col.key}
@@ -270,15 +225,7 @@ export default function OperatoryGrid({
                   }
                 />
               ) : (
-                <ProviderColumnHeader
-                  provider={col.provider!}
-                  activePatientName={inChairPatient?.name}
-                  onPatientNameClick={
-                    inChairPatient
-                      ? () => scrollToPatient(inChairPatient)
-                      : undefined
-                  }
-                />
+                <ProviderColumnHeader provider={col.provider!} />
               )}
             </div>
           );
