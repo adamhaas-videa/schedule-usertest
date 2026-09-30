@@ -7,6 +7,17 @@ export function parseISODate(iso: string): Date {
   return new Date(year, (month ?? 1) - 1, day ?? 1);
 }
 
+/**
+ * The day of the patient's visit — the day the demo is opened. The schedule
+ * lays every mock appointment on the current date, but the records still carry
+ * the fixed `appointmentDate` they were written with, so anything that dates a
+ * visit (the study bar, its history, the summary's "today") anchors here rather
+ * than on that stale field. Otherwise today's visit reads "6 months ago".
+ */
+export function getVisitDate(_patient?: Patient, now = new Date()): Date {
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
 /** 03/12/26 — the form the study bar and every menu row use. */
 export function formatShortDate(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -152,7 +163,7 @@ function toVisits(seeds: readonly VisitSeed[], from: Date): Visit[] {
 }
 
 export function getVisitMenu(patient: Patient, tab: ClinicalTab): VisitMenu {
-  const visits = toVisits(VISITS_BY_TAB[tab], parseISODate(patient.appointmentDate));
+  const visits = toVisits(VISITS_BY_TAB[tab], getVisitDate(patient));
 
   // Notes group the newest visit on its own — "Today" when it really is today,
   // and the rest under "Earlier visits".

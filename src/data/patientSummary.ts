@@ -20,6 +20,7 @@ import {
 } from "@/data/mockPatients";
 import {
   formatShortDate,
+  getVisitDate,
   getVisitMenu,
   type VisitMenu,
 } from "@/lib/visitHistory";
@@ -229,9 +230,8 @@ function formatPhone(rand: () => number): string {
 
 // A visit N months before today's appointment, formatted like the DOB strings
 // already in the mock data (MM/DD/YYYY).
-function formatPastVisit(appointmentDate: string, monthsAgo: number): string {
-  const [year, month, day] = appointmentDate.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
+function formatPastVisit(visitDate: Date, monthsAgo: number): string {
+  const date = new Date(visitDate);
   date.setMonth(date.getMonth() - monthsAgo);
   const mm = (date.getMonth() + 1).toString().padStart(2, "0");
   const dd = date.getDate().toString().padStart(2, "0");
@@ -321,7 +321,7 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
     // Two sentences, per the design: what was captured, then what to watch.
     voiceNoteSummary: `${patient.provider?.name ?? "Provider"} recorded a ${monthsAgo}-month recall exam with no new symptoms reported. Monitoring was flagged on the ${quadrant} arch and the patient was advised to keep the existing hygiene interval.`,
     lastAppointment: {
-      date: formatPastVisit(patient.appointmentDate, monthsAgo),
+      date: formatPastVisit(getVisitDate(patient), monthsAgo),
       procedure: pick(rand, PAST_PROCEDURES),
       providerName: patient.provider?.name ?? "Unassigned",
     },

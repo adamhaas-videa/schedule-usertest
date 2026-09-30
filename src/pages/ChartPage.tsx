@@ -37,8 +37,8 @@ import { getSummaryVersion, type SummarySections } from "@/lib/summaryVersions";
 import {
   formatRelative,
   formatShortDate,
+  getVisitDate,
   isToday,
-  parseISODate,
   type VisitMenu,
 } from "@/lib/visitHistory";
 import { cn } from "@/lib/utils";
@@ -311,7 +311,7 @@ export default function ChartPage() {
   );
   const history = useMemo(() => buildTreatmentHistory(pastVisits), [pastVisits]);
   const todayDate = useMemo(
-    () => (patient ? parseISODate(patient.appointmentDate) : new Date()),
+    () => getVisitDate(patient),
     [patient]
   );
   const todayLabel = isToday(todayDate) ? "Today" : "This visit";

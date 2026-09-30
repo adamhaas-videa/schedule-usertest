@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { Patient } from "@/data/mockPatients";
 import { FMX_SERIES, VISIT_IMAGES, type FmxSeries } from "@/lib/fmxSeries";
+import { getVisitDate } from "@/lib/visitHistory";
 import StripArrow from "./StripArrow";
 import { cn } from "@/lib/utils";
 
@@ -18,9 +19,10 @@ interface FmxFooterProps {
 }
 
 /** "2026-03-12" → "03/12/2026". The study bar shows the same date as MM/DD/YY. */
-function formatVisitDate(iso: string): string {
-  const [year, month, day] = iso.split("-");
-  return `${month}/${day}/${year}`;
+function formatVisitDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${mm}/${dd}/${date.getFullYear()}`;
 }
 
 function CountBadge({ count }: { count: number }) {
@@ -61,7 +63,7 @@ export default function FmxFooter({
         <div className="flex min-w-0 flex-1 basis-0 flex-col gap-1 text-[10px] leading-none text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap">
-              Visit Date: {formatVisitDate(patient.appointmentDate)}
+              Visit Date: {formatVisitDate(getVisitDate(patient))}
             </span>
             <Tooltip>
               <TooltipTrigger
