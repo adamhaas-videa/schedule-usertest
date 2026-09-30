@@ -165,8 +165,16 @@ export function formatTreatmentHeader(patient: Patient): {
     .map((tag) => tag.match(/#\s*(\d{1,2})/)?.[1])
     .find(Boolean);
 
+  // Hygiene carries no prefix. "Full mouth" ate the header on exactly the
+  // procedures with the longest names — PERIODONTAL MAINTENANCE, SCALING &
+  // ROOT PLANING — so the part that identified the appointment was the part
+  // that got truncated.
+  //
+  // The branch stays rather than being deleted: sealants are hygiene but are
+  // tagged with teeth ("sealants #3,14,19,30"), so falling through to the
+  // tooth case below would label a four-tooth visit "#3".
   if (isHygieneProcedure(procedure)) {
-    return { prefix: "Full mouth", procedure };
+    return { prefix: "", procedure };
   }
   if (tooth) return { prefix: `#${tooth}`, procedure };
   return { prefix: "", procedure };
