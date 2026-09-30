@@ -71,10 +71,13 @@ export function Section({
 export function GroupHeading({
   children,
   trailing,
+  action,
 }: {
   children: React.ReactNode;
-  /** Quiet context after the rule's start — the page puts the visit date here. */
+  /** Quiet context beside the label — the page puts the visit date here. */
   trailing?: React.ReactNode;
+  /** Control at the far end of the rule. */
+  action?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 pt-2">
@@ -87,6 +90,7 @@ export function GroupHeading({
         </span>
       )}
       <div className="h-px flex-1 bg-border" aria-hidden />
+      {action}
     </div>
   );
 }

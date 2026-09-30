@@ -238,6 +238,20 @@ function formatPastVisit(appointmentDate: string, monthsAgo: number): string {
   return `${mm}/${dd}/${date.getFullYear()}`;
 }
 
+/** One chiclet per mark type present, counted off the chart itself. */
+export function countOpportunities(
+  findings: ToothFinding[]
+): SummaryOpportunity[] {
+  const counts = new Map<ToothMark, number>();
+  for (const { mark } of findings) {
+    counts.set(mark, (counts.get(mark) ?? 0) + 1);
+  }
+  return OPPORTUNITY_ORDER.filter((mark) => counts.has(mark)).map((mark) => ({
+    label: OPPORTUNITY_LABEL[mark],
+    count: counts.get(mark)!,
+  }));
+}
+
 export function buildPatientSummary(patient: Patient): PatientSummary {
   const rand = mulberry32(hashStringToSeed(`${patient.id}-summary`));
   const age = computeAge(patient.dob);
@@ -275,14 +289,7 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
   const taken = new Set(parsed.map((f) => f.tooth));
   const findings = [...parsed, ...seedBackgroundFindings(rand, taken)];
 
-  // One chiclet per mark type present, counted off the chart itself.
-  const counts = new Map<ToothMark, number>();
-  for (const { mark } of findings) {
-    counts.set(mark, (counts.get(mark) ?? 0) + 1);
-  }
-  const opportunities = OPPORTUNITY_ORDER.filter((mark) => counts.has(mark)).map(
-    (mark) => ({ label: OPPORTUNITY_LABEL[mark], count: counts.get(mark)! })
-  );
+  const opportunities = countOpportunities(findings);
 
   // Treatment diagnosed but not booked: the heavier findings, which is what a
   // front desk would chase.
@@ -683,4 +690,46 @@ export function buildPastVisitMenu(visits: PastVisit[]): VisitMenu {
 /** "03/12/26 · Prophylaxis & Exam" — the one-line form used in collapsed copy. */
 export function formatPastVisitLine(visit: PastVisit): string {
   return `${formatShortDate(visit.date)} · ${visit.plannedProcedure}`;
+}
+
+// ---------------------------------------------------------------------------
+// Treatment history
+//
+// The Patient Summary tab's odontogram draws completed work as its own layer,
+// under the AI opportunities. Only tooth-specific clinical work is charted:
+// hygiene and perio are per-visit, so they stay in the visit read-out.
+// ---------------------------------------------------------------------------
+
+export interface CompletedTreatment {
+  tooth: number;
+  mark: ToothMark;
+  /** The CDT line as the visit read-out prints it. */
+  label: string;
+  date: Date;
+}
+
+/** Chart mark for a completed CDT line — the tooth's shape once it's done. */
+function markForWork(label: string): ToothMark {
+  if (/extract/i.test(label)) return "extraction";
+  if (/implant/i.test(label)) return "implant";
+  if (/buildup|post and core|root canal|endo/i.test(label)) return "root-canal";
+  if (/crown|onlay|inlay|veneer/i.test(label)) return "crown";
+  return "filling";
+}
+
+/** Every tooth-specific procedure across the patient's past visits, oldest
+ *  first, so the chart can be replayed up to any visit date. */
+export function buildTreatmentHistory(visits: PastVisit[]): CompletedTreatment[] {
+  return visits
+    .flatMap((visit) =>
+      visit.clinical
+        .filter((item) => item.tooth !== undefined)
+        .map((item) => ({
+          tooth: item.tooth!,
+          mark: markForWork(item.label),
+          label: item.label,
+          date: visit.date,
+        }))
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 }

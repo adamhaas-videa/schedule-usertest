@@ -139,6 +139,10 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* Odontogram: completed work, drawn under the indigo AI marks. A step up
+     the accent-muted blue so it still reads against the #E4E4E7 tooth fill. */
+  --color-odontogram-completed: #9DB6F0;
+
   /* Deep Teal ramp */
   --color-deep-teal-50: #EDF5F7;
   --color-deep-teal-100: #D0E6EB;
