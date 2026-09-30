@@ -3,6 +3,7 @@ import videaBrandmark from "@/assets/icons/videa-brandmark.svg";
 import PrivacyToggle from "@/components/PrivacyToggle";
 import { Button } from "@/components/ui/button";
 import VisitPicker from "./VisitPicker";
+import type { VisitMenu } from "@/lib/visitHistory";
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +25,19 @@ interface WorkflowHeaderProps {
   /** When false, the L2 study bar is omitted so a sibling right rail can
    *  extend up to L1. Imaging surfaces render `WorkflowStudyBar` themselves. */
   showStudyBar?: boolean;
+  /** Hands the study bar's picker to the page, for surfaces whose content
+   *  follows the picked date. See `StudyPicker`. */
+  studyPicker?: StudyPicker;
+}
+
+/** A page-owned visit picker for the study bar: its own menu, label and
+ *  controlled date. Omitted, the bar derives the menu from the tab and keeps
+ *  the selection to itself. */
+export interface StudyPicker {
+  menu: VisitMenu;
+  label: string;
+  value: Date;
+  onSelect: (date: Date) => void;
 }
 
 const TABS = CLINICAL_TAB_NAV;
@@ -40,9 +54,11 @@ export function WorkflowStudyBar({
   activeTab,
   rightPanelOpen,
   onToggleRightPanel,
+  picker,
 }: {
   patient: Patient;
   activeTab: ClinicalTab;
+  picker?: StudyPicker;
   /** Whether the sibling right rail is expanded. Only read when a toggle
    *  handler is supplied. */
   rightPanelOpen?: boolean;
@@ -64,8 +80,11 @@ export function WorkflowStudyBar({
       <VisitPicker
         patient={patient}
         activeTab={activeTab}
-        label={STUDY_LABEL[activeTab]}
+        label={picker?.label ?? STUDY_LABEL[activeTab]}
         dark={dark}
+        menu={picker?.menu}
+        value={picker?.value}
+        onSelect={picker?.onSelect}
       />
 
       {/* Right-rail collapse. While the rail is open, `-mr-4` cancels the
@@ -113,6 +132,7 @@ export default function WorkflowHeader({
   privacyMode = false,
   onPrivacyToggle,
   showStudyBar = true,
+  studyPicker,
 }: WorkflowHeaderProps) {
   const navigate = useNavigate();
   const age = computeAge(patient.dob);
@@ -259,7 +279,11 @@ export default function WorkflowHeader({
       </header>
 
       {showStudyBar && (
-        <WorkflowStudyBar patient={patient} activeTab={activeTab} />
+        <WorkflowStudyBar
+          patient={patient}
+          activeTab={activeTab}
+          picker={studyPicker}
+        />
       )}
     </div>
   );
