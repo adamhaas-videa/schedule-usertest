@@ -444,6 +444,61 @@ export interface SummaryActionsCardProps {
   showOperatory?: boolean;
 }
 
+/**
+ * The card's treatment header, which doubles as the trigger for the "+N"
+ * detail. The count alone says there is more without saying what, so the list
+ * sits one hover away rather than taking another line on an already dense card.
+ *
+ * The header element IS the trigger rather than a wrapper around it: a wrapper
+ * would either break the card's flex column or, as `display: contents`, give
+ * the tooltip no box to anchor to and send it to the corner of the viewport.
+ * With nothing extra booked it renders as a plain div, so a single-procedure
+ * visit carries no hover affordance suggesting otherwise.
+ */
+function TreatmentHeader({
+  extras,
+  className,
+  style,
+  children,
+}: {
+  extras: string[];
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (extras.length === 0) {
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <TooltipProvider delay={120}>
+      <Tooltip>
+        <TooltipTrigger render={<div className={className} style={style} />}>
+          {children}
+        </TooltipTrigger>
+        {/* TooltipContent is a flex row by default; this stacks. */}
+        <TooltipContent
+          side="top"
+          align="start"
+          className="max-w-[260px] flex-col items-start gap-1 py-2"
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-[0.4px] opacity-70">
+            Also this visit
+          </span>
+          {extras.map((procedure) => (
+            <span key={procedure} className="text-[12px] leading-4">
+              {procedure}
+            </span>
+          ))}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default function SummaryActionsCard({
   patient,
   privacyMode,
@@ -476,6 +531,7 @@ export default function SummaryActionsCard({
   const tone = getCardTone(patient, cardColorMode);
   const age = computeAge(patient.dob);
   const treatment = formatTreatmentHeader(patient);
+  const extraCount = patient.additionalProcedures?.length ?? 0;
   const medical = getCardMedicalAlerts(patient);
   const blurb = buildCardSummary(patient);
   // V6 needs the hour-long card's spare height for the chart, so 45-minute and
@@ -561,7 +617,8 @@ export default function SummaryActionsCard({
         style={isCompleted ? undefined : { borderColor: tone.border }}
         onClick={openSummary}
       >
-        <div
+        <TreatmentHeader
+          extras={patient.additionalProcedures ?? []}
           className={cn(
             "flex h-7 shrink-0 items-center justify-between gap-1.5 border-b px-3",
             isCompleted && "opacity-60"
@@ -581,10 +638,12 @@ export default function SummaryActionsCard({
             ) : null}
             <span>{treatment.procedure}</span>
           </p>
-          <span className="shrink-0 text-[10px] font-semibold leading-[15.5px] tracking-[0.4px] opacity-85 tabular-nums">
-            {patient.durationMinutes} min
-          </span>
-        </div>
+          {extraCount > 0 && (
+            <span className="shrink-0 text-[10px] font-semibold leading-[15.5px] tracking-[0.4px] opacity-85 tabular-nums">
+              +{extraCount}
+            </span>
+          )}
+        </TreatmentHeader>
 
         <div
           className={cn(
