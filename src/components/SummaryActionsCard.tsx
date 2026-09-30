@@ -567,7 +567,8 @@ export default function SummaryActionsCard({
       {showMedical && (
         <StatusChip
           tone="red"
-          icon="fa-solid fa-plus"
+          // Star of life, the medical identifier — a bare plus reads as "add".
+          icon="fa-solid fa-star-of-life"
           label="Medical history"
           tooltip={medical.join(" · ")}
         />
