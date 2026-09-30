@@ -20,6 +20,7 @@ import {
 } from "@/data/mockPatients";
 import {
   formatShortDate,
+  getVisitDate,
   getVisitMenu,
   type VisitMenu,
 } from "@/lib/visitHistory";
@@ -229,13 +230,26 @@ function formatPhone(rand: () => number): string {
 
 // A visit N months before today's appointment, formatted like the DOB strings
 // already in the mock data (MM/DD/YYYY).
-function formatPastVisit(appointmentDate: string, monthsAgo: number): string {
-  const [year, month, day] = appointmentDate.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
+function formatPastVisit(visitDate: Date, monthsAgo: number): string {
+  const date = new Date(visitDate);
   date.setMonth(date.getMonth() - monthsAgo);
   const mm = (date.getMonth() + 1).toString().padStart(2, "0");
   const dd = date.getDate().toString().padStart(2, "0");
   return `${mm}/${dd}/${date.getFullYear()}`;
+}
+
+/** One chiclet per mark type present, counted off the chart itself. */
+export function countOpportunities(
+  findings: ToothFinding[]
+): SummaryOpportunity[] {
+  const counts = new Map<ToothMark, number>();
+  for (const { mark } of findings) {
+    counts.set(mark, (counts.get(mark) ?? 0) + 1);
+  }
+  return OPPORTUNITY_ORDER.filter((mark) => counts.has(mark)).map((mark) => ({
+    label: OPPORTUNITY_LABEL[mark],
+    count: counts.get(mark)!,
+  }));
 }
 
 export function buildPatientSummary(patient: Patient): PatientSummary {
@@ -275,14 +289,7 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
   const taken = new Set(parsed.map((f) => f.tooth));
   const findings = [...parsed, ...seedBackgroundFindings(rand, taken)];
 
-  // One chiclet per mark type present, counted off the chart itself.
-  const counts = new Map<ToothMark, number>();
-  for (const { mark } of findings) {
-    counts.set(mark, (counts.get(mark) ?? 0) + 1);
-  }
-  const opportunities = OPPORTUNITY_ORDER.filter((mark) => counts.has(mark)).map(
-    (mark) => ({ label: OPPORTUNITY_LABEL[mark], count: counts.get(mark)! })
-  );
+  const opportunities = countOpportunities(findings);
 
   // Treatment diagnosed but not booked: the heavier findings, which is what a
   // front desk would chase.
@@ -314,7 +321,7 @@ export function buildPatientSummary(patient: Patient): PatientSummary {
     // Two sentences, per the design: what was captured, then what to watch.
     voiceNoteSummary: `${patient.provider?.name ?? "Provider"} recorded a ${monthsAgo}-month recall exam with no new symptoms reported. Monitoring was flagged on the ${quadrant} arch and the patient was advised to keep the existing hygiene interval.`,
     lastAppointment: {
-      date: formatPastVisit(patient.appointmentDate, monthsAgo),
+      date: formatPastVisit(getVisitDate(patient), monthsAgo),
       procedure: pick(rand, PAST_PROCEDURES),
       providerName: patient.provider?.name ?? "Unassigned",
     },
@@ -683,4 +690,46 @@ export function buildPastVisitMenu(visits: PastVisit[]): VisitMenu {
 /** "03/12/26 · Prophylaxis & Exam" — the one-line form used in collapsed copy. */
 export function formatPastVisitLine(visit: PastVisit): string {
   return `${formatShortDate(visit.date)} · ${visit.plannedProcedure}`;
+}
+
+// ---------------------------------------------------------------------------
+// Treatment history
+//
+// The Patient Summary tab's odontogram draws completed work as its own layer,
+// under the AI opportunities. Only tooth-specific clinical work is charted:
+// hygiene and perio are per-visit, so they stay in the visit read-out.
+// ---------------------------------------------------------------------------
+
+export interface CompletedTreatment {
+  tooth: number;
+  mark: ToothMark;
+  /** The CDT line as the visit read-out prints it. */
+  label: string;
+  date: Date;
+}
+
+/** Chart mark for a completed CDT line — the tooth's shape once it's done. */
+function markForWork(label: string): ToothMark {
+  if (/extract/i.test(label)) return "extraction";
+  if (/implant/i.test(label)) return "implant";
+  if (/buildup|post and core|root canal|endo/i.test(label)) return "root-canal";
+  if (/crown|onlay|inlay|veneer/i.test(label)) return "crown";
+  return "filling";
+}
+
+/** Every tooth-specific procedure across the patient's past visits, oldest
+ *  first, so the chart can be replayed up to any visit date. */
+export function buildTreatmentHistory(visits: PastVisit[]): CompletedTreatment[] {
+  return visits
+    .flatMap((visit) =>
+      visit.clinical
+        .filter((item) => item.tooth !== undefined)
+        .map((item) => ({
+          tooth: item.tooth!,
+          mark: markForWork(item.label),
+          label: item.label,
+          date: visit.date,
+        }))
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 }

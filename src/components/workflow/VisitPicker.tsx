@@ -5,8 +5,8 @@ import type { ClinicalTab } from "@/types/clinical";
 import {
   formatRelative,
   formatShortDate,
+  getVisitDate,
   getVisitMenu,
-  parseISODate,
   type Visit,
   type VisitChip,
   type VisitMenu,
@@ -148,7 +148,7 @@ export default function VisitPicker({
 
   const [open, setOpen] = useState(false);
   const [internal, setInternal] = useState(
-    () => loadable[0]?.date ?? parseISODate(patient.appointmentDate)
+    () => loadable[0]?.date ?? getVisitDate(patient)
   );
   const selected = value ?? internal;
 

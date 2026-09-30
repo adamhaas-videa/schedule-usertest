@@ -40,6 +40,13 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Brand teal as a *foreground* role — link text, teal-on-dark labels.
+   * Distinct from --primary, which is tuned as a fill (white text sits on it).
+   * deep-teal-500 works as a fill in Dark but only reaches 2.99:1 as text, so
+   * text-level uses must resolve through --link, never --primary.
+   * Ported from enamel-design-system. */
+  --color-link: var(--link);
+
   /* Interaction states */
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
@@ -132,6 +139,10 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* Odontogram: completed work, drawn under the indigo AI marks. A step up
+     the accent-muted blue so it still reads against the #E4E4E7 tooth fill. */
+  --color-odontogram-completed: #9DB6F0;
+
   /* Deep Teal ramp */
   --color-deep-teal-50: #EDF5F7;
   --color-deep-teal-100: #D0E6EB;
@@ -168,6 +179,7 @@
   --popover-foreground: #18181B;
   --primary: #124555;
   --primary-foreground: #FFFFFF;
+  --link: #124555;                   /* deep-teal-700 — 10.12:1 on --background */
   --secondary: #DCE5F9;
   --secondary-foreground: #0A2833;
   --muted: #F4F2F0;
@@ -283,6 +295,7 @@ body {
   --popover-foreground: #FAFAFA;
   --primary: #1F6D7E;
   --primary-foreground: #FFFFFF;
+  --link: #6AABB9;                   /* deep-teal-300 — 6.87:1 on --background, 5.77:1 on --card */
   --secondary: #223C78;
   --secondary-foreground: #F0F4FC;
   --muted: #27272A;
@@ -370,11 +383,19 @@ body {
 }
 
 /* Imaging lightbox: near-black surround for the FMX / single-image viewers.
- * Applied via `class="dark imaging-surface"` on the viewer roots. */
+ * Applied via `class="dark imaging-surface"` on the viewer roots.
+ *
+ * Mirrors `.imaging-surface` in enamel-design-system — keep the two in step
+ * rather than tuning this copy. `--input` is raised to zinc-500 there because
+ * zinc-700, what it resolves to in `.dark`, is only 1.80:1 on #101214, below
+ * the 3:1 WCAG 1.4.11 asks of a control's boundary; an outline button on the
+ * viewer had no perceivable edge. `--border` stays zinc-800: it divides panels
+ * rather than bounding controls. */
 .imaging-surface {
-  --background: #0a0a0a;
+  --background: #0A0A0A;
   --card: #101214;
-  --border: #27272a;
+  --border: #27272A;                 /* zinc-800 — panel dividers, decorative */
+  --input: #71717A;                  /* zinc-500 — control edges, 3.88:1 on --card */
 }
 
 /* Zoom slider in the single-image footer: a 4px muted track with a primary fill
@@ -452,6 +473,7 @@ body {
   --card-foreground: #fafafa;
   --primary: #1f6d7e;
   --primary-foreground: #ffffff;
+  --link: #6aabb9;
   --secondary: #27272a;
   --secondary-foreground: #f0f4fc;
   --muted: #27272a;
