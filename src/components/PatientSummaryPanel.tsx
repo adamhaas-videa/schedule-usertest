@@ -8,6 +8,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import Odontogram from "@/components/Odontogram";
 import Chiclet from "@/components/OpportunityChiclet";
 import type { ClinicalTab } from "@/types/clinical";
@@ -39,16 +45,36 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Section({
   label,
+  info,
   children,
   className,
 }: {
   label: string;
+  /** Optional explainer, shown in a tooltip on an info icon beside the label. */
+  info?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <SectionLabel>{label}</SectionLabel>
+      {info ? (
+        <div className="flex items-center gap-1">
+          <SectionLabel>{label}</SectionLabel>
+          <TooltipProvider delay={150}>
+            <Tooltip>
+              <TooltipTrigger
+                aria-label={`About ${label.toLowerCase()}`}
+                className="inline-flex size-4 cursor-default items-center justify-center rounded-full border-0 bg-transparent p-0 text-muted-foreground hover:text-foreground"
+              >
+                <i className="fa-regular fa-circle-info text-[12px] leading-none" aria-hidden />
+              </TooltipTrigger>
+              <TooltipContent side="top">{info}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ) : (
+        <SectionLabel>{label}</SectionLabel>
+      )}
       {children}
     </div>
   );
@@ -178,7 +204,10 @@ function PastVisitDetail({
       )}
 
       {showVoiceNote && (
-        <Section label="Clinical voice note">
+        <Section
+          label="Clinical voice note"
+          info="A quick, friendly recap of the last visit, written by AI from the provider's voice note — or from the clinical note in your practice software when no voice note was recorded."
+        >
           <p className="text-sm leading-5 text-foreground">{visit.voiceNote}</p>
         </Section>
       )}
