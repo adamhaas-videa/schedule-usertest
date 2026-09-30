@@ -20,6 +20,9 @@ interface OperatoryColumnProps {
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient: (patient: Patient) => void;
   cardVersion: CardVersion;
+  /** Stamp the chair on each card. On by default in provider columns, where
+   *  the column no longer tells you which operatory the appointment is in. */
+  showOperatory?: boolean;
 }
 
 const CARD_GAP = 2;
@@ -65,6 +68,7 @@ export default function OperatoryColumn({
   onOpenClinical,
   onSelectPatient,
   cardVersion,
+  showOperatory = false,
 }: OperatoryColumnProps) {
   const sorted = [...patients].sort(
     (a, b) => timeToMinutes(a.appointmentTime) - timeToMinutes(b.appointmentTime)
@@ -159,6 +163,7 @@ export default function OperatoryColumn({
               onOpenClinical={onOpenClinical}
               onSelectPatient={onSelectPatient}
               cardVersion={cardVersion}
+              showOperatory={showOperatory}
             />
           </div>
         );

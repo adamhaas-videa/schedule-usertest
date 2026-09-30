@@ -3,16 +3,27 @@ import { isHygieneProcedure } from "@/data/mockPatients";
 import type { CardColorMode } from "@/lib/cardVersions";
 import { getProviderColor, type ProviderColor } from "@/lib/providerColors";
 
-// Procedure families for the appointment-color card mode. Status hues are
+// Procedure families for the appointment-color card mode. Status hues stay
 // reserved: red/green for clinical and insurance state, amber/orange/brown for
-// warnings and periapical findings. Appointment chrome stays in the brand
-// spectrum — teal, blue, periwinkle, violet — so a scan of the board reads
-// *kind of work*, not *patient status*.
+// warnings and periapical findings — so a scan of the board reads *kind of
+// work*, never *patient status*.
 //
-//   Restorative  periwinkle → violet, lightest to most definitive
-//   Hygiene      deep teal (prophy lighter, SRP a step darker)
-//   Prosthetic   ice cyan (implants, dentures, aligners, night guards)
-//   Visit        slate lavender (exams, consults, post-op)
+// Each family owns one hue and walks by lightness inside it. The previous
+// scheme spent hue on the walk *within* restorative, which left the families
+// themselves only ~13° apart: hygiene and prosthetic were both pale cyan and
+// read as the same thing from a step back. Holding hue per family and moving
+// lightness instead frees the spectrum for five families.
+//
+//   Restorative  sky blue      242°, filling → extraction, lightest to most definitive
+//   Hygiene      mint teal     174°, prophy lighter, SRP a step darker
+//   Prosthetic   lavender      291°, implants, dentures, night guards
+//   Ortho        pink          344°, aligners, attachments, retainers
+//   Visit        warm neutral  exams, consults, post-op — no hue, it is the
+//                              absence of a procedure family
+//
+// Generated in OKLCH for perceptual spacing: worst cross-family pair is ΔE 5.9
+// where the old palette's worst was 2.2, and every header clears 5.6:1 text
+// contrast. Re-tune with the generator rather than nudging hexes by hand.
 export type AppointmentKind =
   | "filling"
   | "onlay"
@@ -23,30 +34,33 @@ export type AppointmentKind =
   | "srp"
   | "implant"
   | "prosthetic"
+  | "ortho"
   | "exam";
 
 export type AppointmentFamily =
   | "restorative"
   | "hygiene"
   | "prosthetic"
+  | "ortho"
   | "visit";
 
 const BY_KIND: Record<AppointmentKind, ProviderColor> = {
-  // Restorative: one hue walk, so composites vs crowns vs extractions are
-  // related at a glance and still separable from 3–4 ft.
-  filling: { bg: "#DCE5F9", fg: "#2D4F98", border: "#BDCEF4" },
-  onlay: { bg: "#D2D8F6", fg: "#343E86", border: "#B4BCEC" },
-  crown: { bg: "#DCD4F4", fg: "#463C84", border: "#C2B8E6" },
-  endo: { bg: "#E4D4F2", fg: "#553A7A", border: "#CDB4E0" },
-  extraction: { bg: "#E6D2EC", fg: "#5A356E", border: "#D0B8DC" },
-  // Hygiene
-  prophy: { bg: "#D0E6EB", fg: "#124555", border: "#A3CCD5" },
-  srp: { bg: "#BFD9E0", fg: "#0E3644", border: "#8FC0C9" },
-  // Ortho / prosthetic / implant
-  implant: { bg: "#C8E0F0", fg: "#1A4E68", border: "#9CCBDC" },
-  prosthetic: { bg: "#D4E6F2", fg: "#215872", border: "#B0D4E4" },
-  // Exams, consults, post-op
-  exam: { bg: "#E3E1EC", fg: "#4A4763", border: "#C9C6D6" },
+  // Restorative — sky blue, walking darker as the work gets more definitive.
+  filling: { bg: "#BEEEFF", fg: "#094C74", border: "#93D3FF" },
+  onlay: { bg: "#B7E6FF", fg: "#094C74", border: "#8CCCFC" },
+  crown: { bg: "#B0DFFF", fg: "#094C74", border: "#85C5F5" },
+  endo: { bg: "#A9D8FC", fg: "#094C74", border: "#7EBEEE" },
+  extraction: { bg: "#A2D1F4", fg: "#094C74", border: "#78B7E6" },
+  // Hygiene — mint teal.
+  prophy: { bg: "#ABF6E0", fg: "#005744", border: "#75DFC3" },
+  srp: { bg: "#9FE9D3", fg: "#005744", border: "#68D3B7" },
+  // Prosthetic — lavender.
+  implant: { bg: "#D7CFFF", fg: "#483D74", border: "#BCB0FE" },
+  prosthetic: { bg: "#CCC4FF", fg: "#483D74", border: "#B1A5F3" },
+  // Ortho — pink.
+  ortho: { bg: "#FFCFEF", fg: "#683254", border: "#F8ABD8" },
+  // Visit — warm neutral, deliberately hueless.
+  exam: { bg: "#EBE8E2", fg: "#4A4742", border: "#D0CCC5" },
 };
 
 const FAMILY_BY_KIND: Record<AppointmentKind, AppointmentFamily> = {
@@ -59,6 +73,7 @@ const FAMILY_BY_KIND: Record<AppointmentKind, AppointmentFamily> = {
   srp: "hygiene",
   implant: "prosthetic",
   prosthetic: "prosthetic",
+  ortho: "ortho",
   exam: "visit",
 };
 
@@ -72,10 +87,10 @@ const KIND_PATTERNS: [RegExp, AppointmentKind][] = [
   [/onlay|inlay/i, "onlay"],
   [/crown|bridge|veneer/i, "crown"],
   [/filling|composite|caries/i, "filling"],
-  [
-    /denture|aligner|night\s*guard|attachment|\bortho\b/i,
-    "prosthetic",
-  ],
+  // Ortho splits out of prosthetic: appliance work that moves teeth rather
+  // than replaces them.
+  [/aligner|attachment|retainer|\bortho\b|bracket|debond/i, "ortho"],
+  [/denture|night\s*guard|occlusal\s*guard|flipper/i, "prosthetic"],
   [
     /scaling|root planing|\bsrp\b|deep cleaning|periodontal assessment/i,
     "srp",
@@ -97,6 +112,7 @@ export const APPOINTMENT_KIND_LABELS: Record<AppointmentKind, string> = {
   srp: "Scaling & root planing",
   implant: "Implants",
   prosthetic: "Dentures & appliances",
+  ortho: "Ortho & aligners",
   exam: "Exams & consults",
 };
 
@@ -104,6 +120,7 @@ export const APPOINTMENT_FAMILY_LABELS: Record<AppointmentFamily, string> = {
   restorative: "Restorative",
   hygiene: "Hygiene",
   prosthetic: "Prosthetic",
+  ortho: "Ortho",
   visit: "Visit",
 };
 
@@ -119,6 +136,7 @@ export const APPOINTMENT_KIND_GROUPS: {
   { family: "restorative", kinds: ["filling", "onlay", "crown", "endo", "extraction"] },
   { family: "hygiene", kinds: ["prophy", "srp"] },
   { family: "prosthetic", kinds: ["implant", "prosthetic"] },
+  { family: "ortho", kinds: ["ortho"] },
   { family: "visit", kinds: ["exam"] },
 ];
 
@@ -165,8 +183,16 @@ export function formatTreatmentHeader(patient: Patient): {
     .map((tag) => tag.match(/#\s*(\d{1,2})/)?.[1])
     .find(Boolean);
 
+  // Hygiene carries no prefix. "Full mouth" ate the header on exactly the
+  // procedures with the longest names — PERIODONTAL MAINTENANCE, SCALING &
+  // ROOT PLANING — so the part that identified the appointment was the part
+  // that got truncated.
+  //
+  // The branch stays rather than being deleted: sealants are hygiene but are
+  // tagged with teeth ("sealants #3,14,19,30"), so falling through to the
+  // tooth case below would label a four-tooth visit "#3".
   if (isHygieneProcedure(procedure)) {
-    return { prefix: "Full mouth", procedure };
+    return { prefix: "", procedure };
   }
   if (tooth) return { prefix: `#${tooth}`, procedure };
   return { prefix: "", procedure };

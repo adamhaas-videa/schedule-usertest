@@ -440,6 +440,8 @@ export interface SummaryActionsCardProps {
   onSelectPatient?: (patient: Patient) => void;
   onReview: (e: React.MouseEvent) => void;
   className?: string;
+  /** Show the operatory beside the appointment time, for provider columns. */
+  showOperatory?: boolean;
 }
 
 export default function SummaryActionsCard({
@@ -448,6 +450,7 @@ export default function SummaryActionsCard({
   summaryVersion,
   cardColorMode,
   showSummary,
+  showOperatory = false,
   odontogram = "none",
   reviewed,
   onOpenClinical,
@@ -606,6 +609,7 @@ export default function SummaryActionsCard({
                 {patient.name}
               </p>
               <span className="mt-0.5 text-[11px] leading-[15px] text-zinc-600 tabular-nums whitespace-nowrap">
+                {showOperatory ? `Op ${patient.operatory} · ` : ""}
                 {patient.appointmentTime} · Age {age}
               </span>
               {!isSmall && showInsurance && patient.insurance && (

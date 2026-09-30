@@ -136,6 +136,7 @@ export default function SchedulePage() {
             patients={filteredPatients}
             privacyMode={privacyMode}
             operatories={filters.operatories}
+            providerFilter={filters.providers}
             onOperatoriesChange={(ops) =>
               setFilters((prev) => ({ ...prev, operatories: ops }))
             }

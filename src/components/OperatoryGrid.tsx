@@ -28,6 +28,11 @@ interface OperatoryGridProps {
   privacyMode: boolean;
   operatories: number[];
   onOperatoriesChange: (ops: number[]) => void;
+  /** Provider ids the schedule is filtered to, empty for all. Provider columns
+   *  need it: the filter keeps a patient when EITHER clinician matches, so the
+   *  columns have to be built on the same rule or a filtered-in patient lands
+   *  under a provider nobody selected. */
+  providerFilter: string[];
   onOpenClinical: (patient: Patient, tab: ClinicalTab) => void;
   onSelectPatient: (patient: Patient) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -117,6 +122,7 @@ export default function OperatoryGrid({
   scrollRef,
   cardVersion,
   nowMinutes,
+  providerFilter,
 }: OperatoryGridProps) {
   const [columnMode, setColumnMode] = useState<ColumnMode>("operatory");
 
@@ -144,15 +150,33 @@ export default function OperatoryGrid({
         string,
         { provider: Provider; patients: Patient[] }
       >();
-      for (const p of patients) {
-        if (!p.provider) continue;
-        const entry = byProvider.get(p.provider.id) ?? {
-          provider: p.provider,
-          patients: [],
-        };
-        entry.patients.push(p);
-        byProvider.set(p.provider.id, entry);
+      const add = (provider: Provider, patient: Patient) => {
+        const entry = byProvider.get(provider.id) ?? { provider, patients: [] };
+        entry.patients.push(patient);
+        byProvider.set(provider.id, entry);
+      };
+
+      // With a provider filter on, the columns ARE the selection. A patient is
+      // filed under whichever selected clinician they match — their lead by
+      // preference, otherwise the hygienist assisting — so selecting one
+      // hygienist gives one column of their cases, not their cases scattered
+      // across the dentists who happened to lead them.
+      if (providerFilter.length > 0) {
+        for (const p of patients) {
+          const lead =
+            p.provider && providerFilter.includes(p.provider.id)
+              ? p.provider
+              : p.hygienist && providerFilter.includes(p.hygienist.id)
+                ? p.hygienist
+                : undefined;
+          if (lead) add(lead, p);
+        }
+      } else {
+        for (const p of patients) {
+          if (p.provider) add(p.provider, p);
+        }
       }
+
       return [...byProvider.values()]
         .sort((a, b) => a.provider.name.localeCompare(b.provider.name))
         .map((e) => ({
@@ -168,7 +192,7 @@ export default function OperatoryGrid({
       patients: patients.filter((p) => p.operatory === op),
       blocks: mockBlocks.filter((b) => b.operatory === op),
     }));
-  }, [columnMode, patients, operatories]);
+  }, [columnMode, patients, operatories, providerFilter]);
 
   // Don't let a small set of columns stretch across the whole container (cards
   // get too wide). This applies in the focused operatory view AND the provider
@@ -239,17 +263,10 @@ export default function OperatoryGrid({
               {col.operatory !== undefined ? (
                 <OperatoryHeader
                   operatory={col.operatory}
-                  occupied={!!inChairPatient}
-                  activePatientName={inChairPatient?.name}
                   onClick={
                     focused
                       ? undefined
                       : () => onOperatoriesChange([col.operatory!])
-                  }
-                  onPatientNameClick={
-                    inChairPatient
-                      ? () => scrollToPatient(inChairPatient)
-                      : undefined
                   }
                 />
               ) : (
@@ -339,6 +356,7 @@ export default function OperatoryGrid({
                 ))}
 
                 <OperatoryColumn
+                  showOperatory={columnMode === "provider"}
                   patients={col.patients}
                   blocks={col.blocks}
                   privacyMode={privacyMode}
